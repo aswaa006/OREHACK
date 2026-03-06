@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import CardSwap, { Card } from './CardSwap'
 
 const features = [
   {
@@ -32,39 +33,55 @@ const features = [
 
 const AboutOregent = () => {
   return (
-    <section id="about" className="py-24 relative">
+    <section id="about" className="py-24 relative overflow-hidden">
       <div className="container mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="mb-12 max-w-2xl"
-        >
-          <h2 className="text-3xl font-bold text-foreground mb-3">Built by Oregent</h2>
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            Orehack is developed by Oregent — focused on building agentic systems and controlled execution platforms
-            for the next generation of technical infrastructure.
-          </p>
-        </motion.div>
+        <div className="flex flex-col md:flex-row items-center gap-12">
+          {/* Text section */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="flex-1 max-w-2xl"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">Built by <span className="text-primary">Oregent</span></h2>
+            <p className="text-muted-foreground text-lg leading-relaxed mb-8">
+              Orehack is developed by Oregent — focused on building agentic systems and controlled execution platforms
+              for the next generation of technical infrastructure.
+            </p>
+          </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {features.map((f, i) => (
-            <motion.div
-              key={f.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="surface-elevated rounded-xl p-6"
-            >
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4">
-                {f.icon}
-              </div>
-              <h3 className="text-base font-semibold text-foreground mb-2">{f.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
-            </motion.div>
-          ))}
+          {/* Cards Section */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="flex-1 flex justify-center w-full"
+          >
+            <div style={{ height: '450px', width: '100%', maxWidth: '400px', position: 'relative', display: 'flex', justifyContent: 'center' }}>
+              <CardSwap
+                cardDistance={35}
+                verticalDistance={40}
+                delay={2500}
+                pauseOnHover={false}
+                width={320}
+                height={280}
+              >
+                {features.map((f, i) => (
+                  <Card key={i}>
+                    <div className="surface-elevated rounded-[1.5rem] p-8 h-full flex flex-col justify-center shadow-2xl bg-card border border-border/50 text-card-foreground hover:border-primary/50 transition-colors">
+                      <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6 ring-1 ring-primary/20">
+                        {f.icon}
+                      </div>
+                      <h3 className="text-xl font-bold mb-3 tracking-tight">{f.title}</h3>
+                      <p className="text-[15px] text-muted-foreground leading-relaxed">{f.desc}</p>
+                    </div>
+                  </Card>
+                ))}
+              </CardSwap>
+            </div>
+          </motion.div>
         </div>
       </div>
     </section>
