@@ -1,84 +1,78 @@
 import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { LogoSection } from "./navbar/LogoSection";
-import { CenterSection } from "./navbar/CenterSection";
-import { ActionButtons } from "./navbar/ActionButtons";
-import styles from "./navbar/Navbar.module.css";
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
-  const [progress, setProgress] = useState(0);
+  const navigate = useNavigate();
+  const [adminSequence, setAdminSequence] = useState<string[]>([]);
+  const TARGET = ["1", "2", "3", "4", "5", "6", "7", "8"];
 
-  // Handle scroll event
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-      // Update progress based on scroll
-      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const scrollProgress = (window.scrollY / totalHeight) * 100;
-      setProgress(Math.min(scrollProgress, 100));
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Handle theme
   useEffect(() => {
-    const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-  }, [theme]);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      setAdminSequence((prev) => {
+        const next = [...prev, e.key].slice(-8);
+        if (next.join("") === TARGET.join("")) {
+          setTimeout(() => navigate("/admin/auth"), 100);
+          return [];
+        }
+        return next;
+      });
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [navigate]);
 
-  // Close menu on route change
-  const handleNavClick = (id: string) => {
+  const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-    }
+    if (el) el.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
-    <>
-      <motion.nav
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? "bg-card/95 backdrop-blur-xl border-b border-border/40 shadow-lg " +
-              styles.scrolled
-            : "bg-gradient-to-b from-background/80 via-background/40 to-transparent"
-        }`}
-      >
-        {/* Main navbar container */}
-        <div className="h-16 md:h-20 flex items-center justify-between px-4 md:px-8 lg:px-12 max-w-7xl mx-auto w-full">
-          {/* Logo Section */}
-          <LogoSection />
+    <motion.nav
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.4 }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled ? "surface-elevated backdrop-blur-xl bg-card/80" : "bg-transparent"
+      }`}
+    >
+      <div className="container mx-auto flex items-center justify-between py-4 px-6">
+        <Link to="/" className="flex items-center gap-2">
+          <span className="text-xl font-bold tracking-tight text-foreground">
+            Ore<span className="text-gradient-primary">hack</span>
+          </span>
+          <span className="text-xs text-muted-foreground font-medium mt-1">by Oregent</span>
+        </Link>
 
-          {/* Center Section - Hidden on mobile menu */}
-          <div className="flex-1 flex justify-center">
-            <CenterSection
-              theme={theme}
-              setTheme={setTheme}
-              progress={progress}
-            />
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex-shrink-0">
-            <ActionButtons />
-          </div>
+        <div className="hidden md:flex items-center gap-8">
+          <button
+            onClick={() => scrollToSection("hackathons")}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-300"
+          >
+            Live Hackathons
+          </button>
+          <button
+            onClick={() => scrollToSection("how-it-works")}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-300"
+          >
+            How It Works
+          </button>
+          <button
+            onClick={() => scrollToSection("about")}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-300"
+          >
+            About Oregent
+          </button>
         </div>
-      </motion.nav>
-
-      {/* Navbar spacing */}
-      <div className="h-16 md:h-20" />
-    </>
+      </div>
+    </motion.nav>
   );
 };
 
