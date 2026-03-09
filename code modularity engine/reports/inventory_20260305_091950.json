@@ -1,0 +1,107 @@
+{
+  "repo_path": "temp_repo",
+  "timestamp": "2026-03-05T09:17:38.952749",
+  "files": {
+    "CODE_OF_CONDUCT.md": {
+      "filename": "CODE_OF_CONDUCT.md",
+      "extension": ".md",
+      "is_code_file": true,
+      "status": "analyzed",
+      "metrics": {
+        "functions": 0,
+        "classes": 0,
+        "complexity": 1.0,
+        "maintainability": 50.0,
+        "comment_ratio": 0.273
+      },
+      "error": null
+    },
+    "index.html": {
+      "filename": "index.html",
+      "extension": ".html",
+      "is_code_file": true,
+      "status": "analyzed",
+      "metrics": {
+        "functions": 0,
+        "classes": 0,
+        "complexity": 1.3,
+        "maintainability": 85,
+        "comment_ratio": 0.0
+      },
+      "error": null
+    },
+    "LICENSE": {
+      "filename": "LICENSE",
+      "extension": "",
+      "is_code_file": false,
+      "status": "pending",
+      "metrics": null,
+      "error": null
+    },
+    "README.md": {
+      "filename": "README.md",
+      "extension": ".md",
+      "is_code_file": true,
+      "status": "analyzed",
+      "metrics": {
+        "functions": 0,
+        "classes": 0,
+        "complexity": 1.0,
+        "maintainability": 50.0,
+        "comment_ratio": 0.333
+      },
+      "error": null
+    },
+    "SECURITY.md": {
+      "filename": "SECURITY.md",
+      "extension": ".md",
+      "is_code_file": true,
+      "status": "analyzed",
+      "metrics": {
+        "functions": 0,
+        "classes": 0,
+        "complexity": 1.0,
+        "maintainability": 50.0,
+        "comment_ratio": 0.385
+      },
+      "error": null
+    },
+    ".github/CODEOWNERS": {
+      "filename": "CODEOWNERS",
+      "extension": "",
+      "is_code_file": false,
+      "status": "pending",
+      "metrics": null,
+      "error": null
+    },
+    "images/firefox-icon.png": {
+      "filename": "firefox-icon.png",
+      "extension": ".png",
+      "is_code_file": false,
+      "status": "pending",
+      "metrics": null,
+      "error": null
+    },
+    "styles/style.css": {
+      "filename": "style.css",
+      "extension": ".css",
+      "is_code_file": true,
+      "status": "analyzed",
+      "metrics": {
+        "functions": 0,
+        "classes": 0,
+        "complexity": 1.0,
+        "maintainability": 100,
+        "comment_ratio": 0.0
+      },
+      "error": null
+    }
+  },
+  "summary": {
+    "total_files": 8,
+    "analyzed_files": 5,
+    "skipped_files": 0,
+    "failed_files": 0,
+    "coverage_percent": 62.5
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "description": "Custom scoring criteria for code modularity analysis. Adjust values to fit your project's standards.",
+  "criteria": {
+    "complexity_weight": {
+      "value": 2.0,
+      "description": "Weight for cyclomatic complexity in scoring (higher = penalizes complex code more)",
+      "range": "0.5 - 5.0"
+    },
+    "coupling_weight": {
+      "value": 1.5,
+      "description": "Weight for coupling (interdependencies) in scoring",
+      "range": "0.5 - 5.0"
+    },
+    "duplication_weight": {
+      "value": 3.0,
+      "description": "Weight for code duplication in scoring (higher = penalizes duplication heavily)",
+      "range": "0.5 - 5.0"
+    },
+    "min_modularity_score": {
+      "value": 60.0,
+      "description": "Minimum acceptable modularity score (0-100)",
+      "range": "0 - 100"
+    },
+    "min_maintainability": {
+      "value": 40.0,
+      "description": "Minimum acceptable maintainability index",
+      "range": "0 - 100"
+    },
+    "max_complexity": {
+      "value": 10.0,
+      "description": "Maximum acceptable cyclomatic complexity per function",
+      "range": "1 - 20"
+    }
+  },
+  "example_tuning": {
+    "strict_standards": {
+      "complexity_weight": 3.0,
+      "coupling_weight": 2.0,
+      "duplication_weight": 4.0,
+      "min_modularity_score": 75.0,
+      "min_maintainability": 60.0,
+      "max_complexity": 5.0
+    },
+    "lenient_standards": {
+      "complexity_weight": 1.0,
+      "coupling_weight": 0.8,
+      "duplication_weight": 2.0,
+      "min_modularity_score": 50.0,
+      "min_maintainability": 30.0,
+      "max_complexity": 15.0
+    }
+  }
+}

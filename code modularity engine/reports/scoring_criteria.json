@@ -1,0 +1,8 @@
+{
+  "complexity_weight": 2.0,
+  "coupling_weight": 1.5,
+  "duplication_weight": 3.0,
+  "min_modularity_score": 60.0,
+  "min_maintainability": 40.0,
+  "max_complexity": 10.0
+}
