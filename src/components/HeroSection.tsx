@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import Shuffle from "./Shuffle";
 
 const HeroSection = () => {
   const scrollToHackathons = () => {
@@ -21,10 +22,15 @@ const HeroSection = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
         >
-          <h1 className="text-6xl md:text-8xl font-bold tracking-tight mb-4">
-            <span className="text-foreground">Ore</span>
-            <span className="text-gradient-primary">hack</span>
-          </h1>
+          <Shuffle
+            text="Orehack"
+            tag="h1"
+            className="text-6xl md:text-8xl font-bold tracking-tight mb-4"
+            duration={0.4}
+            stagger={0.05}
+            shuffleDirection="right"
+            shuffleTimes={1}
+          />
         </motion.div>
 
         <motion.p
