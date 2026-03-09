@@ -25,7 +25,7 @@ const HeroSection = () => {
           <Shuffle
             text="Orehack"
             tag="h1"
-            className="text-6xl md:text-8xl font-bold tracking-tight mb-4"
+            className="text-4xl md:text-6xl font-bold tracking-tight mb-4"
             duration={0.4}
             stagger={0.05}
             shuffleDirection="right"
@@ -37,7 +37,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.15, ease: "easeOut" }}
-          className="text-lg md:text-xl text-muted-foreground font-medium mb-3 tracking-wide"
+          className="text-base md:text-lg text-muted-foreground font-medium mb-3 tracking-wide"
         >
           A Controlled Technical Evaluation System.
         </motion.p>
