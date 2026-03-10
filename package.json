@@ -58,12 +58,8 @@
     "input-otp": "^1.4.2",
     "lenis": "^1.3.13",
     "lucide-react": "^0.462.0",
-<<<<<<< HEAD
-    "motion": "^12.23.12",
-=======
     "meshline": "^3.3.1",
     "motion": "^12.35.2",
->>>>>>> origin/main
     "next-themes": "^0.3.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
