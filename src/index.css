@@ -72,11 +72,16 @@ html.lenis, html.lenis body {
 @layer base {
   * {
     @apply border-border;
+    cursor: none !important;
   }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
+  }
+
+  button, a, input, textarea, select {
+    cursor: none !important;
   }
 }
 
