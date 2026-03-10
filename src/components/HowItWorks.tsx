@@ -11,8 +11,8 @@ const steps = [
     infoValue: "Onboarding",
     roleLabel: "PROCESS",
     roleValue: "Identity Verification",
-    bg: "hsl(220 40% 13%)",
-    accent: "hsl(263 84% 62%)",
+    bg: "hsl(219, 56%, 11%)",
+    accent: "hsl(197, 55%, 11%)",
   },
   {
     num: "02",
@@ -24,8 +24,8 @@ const steps = [
     infoValue: "Submission",
     roleLabel: "PROCESS",
     roleValue: "Code Snapshot",
-    bg: "hsl(263 70% 50%)",
-    accent: "hsl(263 50% 40%)",
+    bg: "hsl(197, 55%, 11%)",
+    accent:"hsl(219, 56%, 11%)",
   },
   {
     num: "03",
@@ -37,8 +37,8 @@ const steps = [
     infoValue: "Analysis",
     roleLabel: "PROCESS",
     roleValue: "AI Code Review",
-    bg: "hsl(150 60% 40%)",
-    accent: "hsl(150 40% 30%)",
+    bg: "hsl(249, 64%, 17%)",
+    accent: "hsl(264, 51%, 10%)",
   },
   {
     num: "04",
@@ -50,8 +50,8 @@ const steps = [
     infoValue: "Results",
     roleLabel: "PROCESS",
     roleValue: "Real-time Ranking",
-    bg: "hsl(25 95% 55%)",
-    accent: "hsl(25 70% 40%)",
+    bg: "hsl(264, 51%, 10%)",
+    accent: "hsl(249, 64%, 17%)",
   },
 ];
 
