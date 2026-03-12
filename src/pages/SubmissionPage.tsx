@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-
-const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+import { submitSubmission } from "@/lib/api";
+import "../components/Stepper.css";
 
 type Phase = "form" | "processing" | "done";
 
@@ -22,12 +22,19 @@ const SubmissionPage = () => {
   const [phase, setPhase] = useState<Phase>("form");
   const [currentStep, setCurrentStep] = useState(0);
   const [error, setError] = useState("");
-  const [submissionId, setSubmissionId] = useState<number | null>(null);
 
   const hackathonName = hackathonId?.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) || "Hackathon";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!hackathonId) {
+      setError("Hackathon context is missing.");
+      return;
+    }
+    if (teamId === "Unknown") {
+      setError("Please login with your team ID before submitting.");
+      return;
+    }
     if (!repoUrl.trim()) {
       setError("Repository URL is required.");
       return;
@@ -39,39 +46,23 @@ const SubmissionPage = () => {
     setError("");
     setPhase("processing");
 
-    // Animate through processing steps while waiting for the API
-    const stepInterval = setInterval(() => {
-      setCurrentStep((prev) => Math.min(prev + 1, processingSteps.length - 1));
-    }, 900);
-
-    try {
-      const res = await fetch(`${API_BASE}/submissions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          participant_id: 1, // placeholder — replace with auth'd user id
-          repo_url: repoUrl.trim(),
-          problem_statement: problemStatement.trim(),
-        }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.detail ?? `Server error ${res.status}`);
-      }
-
-      const data = await res.json();
-      setSubmissionId(data.id);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to submit. Please try again.");
-      setPhase("form");
-      clearInterval(stepInterval);
-      return;
-    } finally {
-      clearInterval(stepInterval);
+    for (let i = 0; i < processingSteps.length; i++) {
+      setCurrentStep(i);
+      await new Promise((r) => setTimeout(r, 900));
     }
 
-    setPhase("done");
+    try {
+      await submitSubmission({
+        hackathonId,
+        teamId,
+        repoUrl: repoUrl.trim(),
+        problemStatement: problemStatement.trim() || undefined,
+      });
+      setPhase("done");
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "Unable to submit your repository.");
+      setPhase("form");
+    }
   };
 
   return (
@@ -141,17 +132,91 @@ const SubmissionPage = () => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
-              className="surface-elevated rounded-xl p-8 text-center"
+              className="surface-elevated rounded-xl p-8"
             >
-              <div className="w-12 h-12 rounded-full border-2 border-primary/30 border-t-primary animate-spin mx-auto mb-6" />
-              <motion.p
-                key={currentStep}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-sm text-muted-foreground font-medium"
-              >
-                {processingSteps[currentStep]}
-              </motion.p>
+              <h2 className="text-lg font-bold text-foreground mb-6 text-center">Processing Submission</h2>
+              
+              <div className="space-y-4">
+                {processingSteps.map((step, index) => {
+                  const isComplete = index < currentStep;
+                  const isActive = index === currentStep;
+                  const isUpcoming = index > currentStep;
+                  
+                  return (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="flex items-center gap-4"
+                    >
+                      <div className="relative flex items-center justify-center">
+                        <motion.div
+                          animate={{
+                            scale: isActive ? 1 : 1,
+                            backgroundColor: isComplete ? "#ff27f8" : isActive ? "#ff27f8" : "#222",
+                          }}
+                          transition={{ duration: 0.3 }}
+                          className="w-10 h-10 rounded-full flex items-center justify-center z-10"
+                        >
+                          {isComplete ? (
+                            <motion.svg
+                              initial={{ pathLength: 0, opacity: 0 }}
+                              animate={{ pathLength: 1, opacity: 1 }}
+                              transition={{ duration: 0.3 }}
+                              className="w-5 h-5 text-white"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </motion.svg>
+                          ) : isActive ? (
+                            <motion.div
+                              animate={{ scale: [1, 1.2, 1] }}
+                              transition={{ repeat: Infinity, duration: 1.5 }}
+                              className="w-3 h-3 rounded-full bg-white"
+                            />
+                          ) : (
+                            <span className="text-sm text-muted-foreground font-medium">{index + 1}</span>
+                          )}
+                        </motion.div>
+                        
+                        {index < processingSteps.length - 1 && (
+                          <motion.div
+                            className="absolute top-full left-1/2 -translate-x-1/2 w-0.5 h-8 bg-border"
+                            animate={{
+                              backgroundColor: isComplete ? "#5227FF" : "#222",
+                            }}
+                            transition={{ duration: 0.3 }}
+                          />
+                        )}
+                      </div>
+                      
+                      <div className="flex-1">
+                        <motion.p
+                          animate={{
+                            color: isComplete || isActive ? "#ffffff" : "#737373",
+                            fontWeight: isActive ? 600 : 400,
+                          }}
+                          transition={{ duration: 0.3 }}
+                          className="text-sm"
+                        >
+                          {step}
+                        </motion.p>
+                        {isActive && (
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: "100%" }}
+                            className="h-0.5 bg-primary mt-1.5 rounded-full"
+                          />
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
             </motion.div>
           )}
 
@@ -170,9 +235,6 @@ const SubmissionPage = () => {
               </div>
               <h2 className="text-lg font-bold text-foreground mb-2">Submission Registered</h2>
               <p className="text-sm text-muted-foreground mb-4">Your repository has been queued for evaluation.</p>
-              {submissionId && (
-                <p className="text-xs text-muted-foreground mb-3">Submission ID: <span className="font-mono text-foreground">#{submissionId}</span></p>
-              )}
               <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                 Status: Queued

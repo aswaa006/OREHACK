@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { loginAdmin } from "@/lib/api";
 
 const AdminAuth = () => {
   const navigate = useNavigate();
@@ -8,14 +9,26 @@ const AdminAuth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password || !role) return;
+    if (!email || !password || !role) {
+      setError("All fields are required.");
+      return;
+    }
+
+    setError("");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 600));
-    setLoading(false);
-    navigate(role === "hackathon" ? "/admin/hackathon" : "/admin/developer");
+
+    try {
+      const result = await loginAdmin(email.trim(), password, role);
+      navigate(result.role === "hackathon" ? "/admin/hackathon" : "/admin/developer");
+    } catch (authError) {
+      setError(authError instanceof Error ? authError.message : "Authentication failed.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -70,6 +83,8 @@ const AdminAuth = () => {
               >
                 ← Back to role selection
               </button>
+
+              {error && <p className="text-xs text-destructive">{error}</p>}
 
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5">Email</label>

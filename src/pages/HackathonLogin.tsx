@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { loginTeam } from "@/lib/api";
 
 const HackathonLogin = () => {
   const { hackathonId } = useParams();
@@ -18,12 +19,22 @@ const HackathonLogin = () => {
       setError("Both fields are required.");
       return;
     }
+    if (!hackathonId) {
+      setError("Hackathon context is missing.");
+      return;
+    }
+
     setError("");
     setLoading(true);
-    // Simulate auth
-    await new Promise((r) => setTimeout(r, 800));
-    setLoading(false);
-    navigate(`/hackathon/${hackathonId}/submit`, { state: { teamId } });
+
+    try {
+      const result = await loginTeam(hackathonId, teamId.trim(), password);
+      navigate(`/hackathon/${hackathonId}/submit`, { state: { teamId: result.teamId } });
+    } catch (authError) {
+      setError(authError instanceof Error ? authError.message : "Authentication failed.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

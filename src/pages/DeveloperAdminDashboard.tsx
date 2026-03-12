@@ -1,11 +1,74 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { getDeveloperHackathons, getDeveloperLogs, getDeveloperOverview } from "@/lib/api";
 
 const tabs = ["System", "Hackathons", "Evaluation", "Logs"];
 
+const fallbackOverview = {
+  activeHackathons: 3,
+  totalSubmissions: 412,
+  engineStatus: "Online",
+  avgEvalTime: "4.2s",
+};
+
+const fallbackHackathons = [
+  { id: "origin-2k26", name: "Origin 2K26", status: "Live", participants: 128, deadline: "March 15, 2026" },
+  { id: "buildcore-v3", name: "BuildCore v3", status: "Upcoming", participants: 0, deadline: "April 5, 2026" },
+  { id: "devstrike-24", name: "DevStrike '24", status: "Completed", participants: 256, deadline: "Ended" },
+];
+
+const fallbackLogs = [
+  { timestamp: "2026-03-02 14:23:01", message: "Evaluation completed: NeuralForge -> 94.2" },
+  { timestamp: "2026-03-02 14:22:58", message: "Repository parsed: github.com/neuralforge/proj" },
+  { timestamp: "2026-03-02 14:22:45", message: "Submission received: NeuralForge" },
+  { timestamp: "2026-03-02 14:20:12", message: "Engine health check: OK" },
+  { timestamp: "2026-03-02 14:15:00", message: "Hackathon \"Origin 2K26\" status: LIVE" },
+];
+
 const DeveloperAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("System");
+  const [overview, setOverview] = useState(fallbackOverview);
+  const [hackathons, setHackathons] = useState(fallbackHackathons);
+  const [logs, setLogs] = useState(fallbackLogs);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadDeveloperDashboard = async () => {
+      try {
+        const [overviewData, hackathonData, logData] = await Promise.all([
+          getDeveloperOverview(),
+          getDeveloperHackathons(),
+          getDeveloperLogs(),
+        ]);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setOverview(overviewData);
+        if (hackathonData.length > 0) {
+          setHackathons(hackathonData);
+        }
+        if (logData.length > 0) {
+          setLogs(logData);
+        }
+      } catch (loadError) {
+        if (!isMounted) {
+          return;
+        }
+        setError(loadError instanceof Error ? loadError.message : "Unable to load developer dashboard data.");
+      }
+    };
+
+    loadDeveloperDashboard();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -27,6 +90,12 @@ const DeveloperAdminDashboard = () => {
       </div>
 
       <div className="container mx-auto px-6 py-6">
+        {error && (
+          <p className="mb-4 text-xs text-destructive">
+            {error}
+          </p>
+        )}
+
         <div className="flex gap-1 mb-8 border-b border-border">
           {tabs.map((tab) => (
             <button
@@ -48,10 +117,10 @@ const DeveloperAdminDashboard = () => {
           <div className="space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: "Active Hackathons", value: "3" },
-                { label: "Total Submissions", value: "412" },
-                { label: "Engine Status", value: "Online", color: "text-success" },
-                { label: "Avg Eval Time", value: "4.2s" },
+                { label: "Active Hackathons", value: String(overview.activeHackathons) },
+                { label: "Total Submissions", value: String(overview.totalSubmissions) },
+                { label: "Engine Status", value: overview.engineStatus, color: "text-success" },
+                { label: "Avg Eval Time", value: overview.avgEvalTime },
               ].map((s) => (
                 <div key={s.label} className="surface-elevated rounded-xl p-5">
                   <p className="text-xs text-muted-foreground mb-1">{s.label}</p>
@@ -80,9 +149,9 @@ const DeveloperAdminDashboard = () => {
           <div className="surface-elevated rounded-xl p-6">
             <h3 className="text-sm font-semibold text-foreground mb-4">Managed Hackathons</h3>
             <div className="space-y-3">
-              {["Origin 2K26", "BuildCore v3", "DevStrike '24"].map((name) => (
-                <div key={name} className="flex items-center justify-between py-3 border-b border-border/50 last:border-0">
-                  <span className="text-sm text-foreground font-medium">{name}</span>
+              {hackathons.map((hackathon) => (
+                <div key={hackathon.id} className="flex items-center justify-between py-3 border-b border-border/50 last:border-0">
+                  <span className="text-sm text-foreground font-medium">{hackathon.name}</span>
                   <button className="text-xs text-primary hover:underline">Manage</button>
                 </div>
               ))}
@@ -101,11 +170,11 @@ const DeveloperAdminDashboard = () => {
 
         {activeTab === "Logs" && (
           <div className="surface-elevated rounded-xl p-6 font-mono text-xs text-muted-foreground space-y-1">
-            <p>[2026-03-02 14:23:01] Evaluation completed: NeuralForge → 94.2</p>
-            <p>[2026-03-02 14:22:58] Repository parsed: github.com/neuralforge/proj</p>
-            <p>[2026-03-02 14:22:45] Submission received: NeuralForge</p>
-            <p>[2026-03-02 14:20:12] Engine health check: OK</p>
-            <p>[2026-03-02 14:15:00] Hackathon "Origin 2K26" status: LIVE</p>
+            {logs.map((log) => (
+              <p key={`${log.timestamp}-${log.message}`}>
+                [{log.timestamp}] {log.message}
+              </p>
+            ))}
           </div>
         )}
       </div>

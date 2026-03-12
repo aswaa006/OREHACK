@@ -1,10 +1,21 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { getHackathons } from "@/lib/api";
 
 /* ══════════════════════════════════════════════════════════
    DATA
 ═══════════════════════════════════════════════════════════ */
-const hackathons = [
+type HackathonStatus = "Live" | "Upcoming" | "Completed";
+
+interface HackathonCardData {
+  id: string;
+  name: string;
+  status: HackathonStatus;
+  participants: number;
+  deadline: string;
+}
+
+const fallbackHackathons: HackathonCardData[] = [
   { id: "origin-2k26", name: "Origin 2K26", status: "Live", participants: 128, deadline: "March 15, 2026" },
   { id: "buildcore-v3", name: "BuildCore v3", status: "Upcoming", participants: 0, deadline: "April 5, 2026" },
   { id: "devstrike-24", name: "DevStrike '24", status: "Completed", participants: 256, deadline: "Ended" },
@@ -32,7 +43,7 @@ const ORIGINS: [number, number][] = [[-160, -130], [160, -130], [-160, 130], [16
 /* ══════════════════════════════════════════════════════════
    EXPLODING CARD
 ═══════════════════════════════════════════════════════════ */
-interface CardProps { h: typeof hackathons[0]; assembled: boolean; active: boolean }
+interface CardProps { h: HackathonCardData; assembled: boolean; active: boolean }
 
 function ExplodingCard({ h, assembled, active }: CardProps) {
   const navigate = useNavigate();
@@ -223,24 +234,58 @@ function StatRow({ label, value, color }: { label: string; value: string; color:
 /* ══════════════════════════════════════════════════════════
    MAIN SECTION — PIN SCROLL
 ═══════════════════════════════════════════════════════════ */
-const N = hackathons.length;
-// Track height: N×100vh → N-1 "transitions" of 100vh each
-const TRACK_VH = N;
-
 export default function ActiveHackathons() {
   const trackRef = useRef<HTMLDivElement>(null);
   const railRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
+  const [hackathons, setHackathons] = useState<HackathonCardData[]>(fallbackHackathons);
 
   // Which cards have assembled
-  const [assembled, setAssembled] = useState<boolean[]>([false, false, false]);
+  const [assembled, setAssembled] = useState<boolean[]>(() => Array(fallbackHackathons.length).fill(false));
   // Active card index (for scale/glow)
   const [activeIdx, setActiveIdx] = useState(0);
-  // Whether section is in sticky mode
-  const [inView, setInView] = useState(false);
 
   const assembledRef = useRef(assembled);
   assembledRef.current = assembled;
+
+  const hackathonsRef = useRef(hackathons);
+  hackathonsRef.current = hackathons;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadHackathons = async () => {
+      try {
+        const rows = await getHackathons();
+        if (!isMounted || rows.length === 0) {
+          return;
+        }
+
+        const normalized = rows.map((row) => ({
+          id: row.id,
+          name: row.name,
+          status: row.status === "Live" || row.status === "Upcoming" || row.status === "Completed" ? row.status : "Upcoming",
+          participants: Number(row.participants || 0),
+          deadline: row.deadline,
+        }));
+
+        setHackathons(normalized);
+      } catch {
+        // Keep fallback cards if API is unavailable.
+      }
+    };
+
+    loadHackathons();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    setAssembled(Array(hackathons.length).fill(false));
+    setActiveIdx(0);
+  }, [hackathons.length]);
 
   const handleScroll = useCallback(() => {
     const track = trackRef.current;
@@ -248,21 +293,20 @@ export default function ActiveHackathons() {
     const pBar = progressBarRef.current;
     if (!track || !rail) return;
 
+    const total = hackathonsRef.current.length;
+    if (total === 0) return;
+
     const rect = track.getBoundingClientRect();
     const trackHeight = track.offsetHeight;
-    const scrollable = trackHeight - window.innerHeight;
+    const scrollable = Math.max(trackHeight - window.innerHeight, 1);
     const scrolledIn = Math.max(0, -rect.top);      // px scrolled past top of track
     const p = Math.min(1, scrolledIn / scrollable); // 0..1
-
-    // Pin detection
-    const isInView = rect.top <= 0 && rect.bottom >= window.innerHeight;
-    setInView(isInView);
 
     // Card width from the rail's first child
     const firstCard = rail.firstElementChild as HTMLElement | null;
     const cw = firstCard ? firstCard.offsetWidth : 400;
     const GAP = 32;
-    const maxOffset = (N - 1) * (cw + GAP);
+    const maxOffset = (total - 1) * (cw + GAP);
 
     // Move rail (direct DOM — no re-render, buttery smooth)
     const tx = -p * maxOffset;
@@ -272,22 +316,28 @@ export default function ActiveHackathons() {
     if (pBar) pBar.style.width = `${p * 100}%`;
 
     // Active index
-    const raw = p * (N - 1);
+    const raw = p * (total - 1);
     const idx = Math.round(raw);
-    setActiveIdx(Math.min(N - 1, idx));
+    setActiveIdx(Math.min(total - 1, idx));
 
     // Dynamic assembly: trigger if nearby in horizontal pin, and section is vertically in view
     const next = [...assembledRef.current];
+    if (next.length !== total) {
+      next.length = total;
+      next.fill(false);
+    }
     const isBelowScreen = rect.top > window.innerHeight - 150;
     const isAboveScreen = rect.bottom < 150;
 
-    hackathons.forEach((_, i) => {
+    hackathonsRef.current.forEach((_, i) => {
       if (isBelowScreen || isAboveScreen) {
         next[i] = false; // Disassemble if completely scrolled past vertically
+      } else if (total === 1) {
+        next[i] = true;
       } else {
-        const targetP = i / (N - 1);
+        const targetP = i / (total - 1);
         const dist = Math.abs(p - targetP);
-        next[i] = dist < 0.85 / (N - 1); // Disassemble if horizontal distance is far
+        next[i] = dist < 0.85 / (total - 1); // Disassemble if horizontal distance is far
       }
     });
 
@@ -318,7 +368,7 @@ export default function ActiveHackathons() {
       <div
         ref={trackRef}
         id="hackathons"
-        style={{ height: `${TRACK_VH * 100}vh`, position: "relative" }}
+        style={{ height: `${Math.max(hackathons.length, 1) * 100}vh`, position: "relative" }}
       >
         {/* ── STICKY CONTAINER ── */}
         <div
@@ -388,7 +438,7 @@ export default function ActiveHackathons() {
                       const track = trackRef.current;
                       if (!track) return;
                       const scrollable = track.offsetHeight - window.innerHeight;
-                      const targetP = i / (N - 1);
+                      const targetP = hackathons.length > 1 ? i / (hackathons.length - 1) : 0;
                       const targetY = track.offsetTop + targetP * scrollable;
                       window.scrollTo({ top: targetY, behavior: "smooth" });
                     }}
@@ -428,7 +478,7 @@ export default function ActiveHackathons() {
               {/* scroll hint */}
               <div style={{ marginTop: "2.5rem", display: "flex", alignItems: "center", gap: "0.5rem", opacity: 0.45 }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                  {[0, 1, 2].map(i => (
+                  {hackathons.slice(0, 3).map((_, i) => (
                     <div key={i} style={{ width: 18, height: 2, borderRadius: 9999, background: "hsl(218 11% 60%)", opacity: i === 1 ? 1 : 0.4 }} />
                   ))}
                 </div>
@@ -468,7 +518,7 @@ export default function ActiveHackathons() {
                   >
                     <ExplodingCard
                       h={h}
-                      assembled={assembled[i]}
+                      assembled={assembled[i] ?? false}
                       active={activeIdx === i}
                     />
                   </div>
