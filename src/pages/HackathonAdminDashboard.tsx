@@ -1,26 +1,19 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { getHackathonOverview, getHackathonSubmissions } from "@/lib/api";
+import { getHackathonOverview, getHackathonSubmissions, type SubmissionRow } from "@/lib/api";
 
 const tabs = ["Overview", "Submissions", "Leaderboard", "Reports"];
 const HACKATHON_ID = "origin-2k26";
 
-const fallbackSubmissions = [
-  { team: "NeuralForge", repo: "github.com/neuralforge/proj", time: "14:23", score: 94.2, status: "Evaluated" },
-  { team: "ByteStorm", repo: "github.com/bytestorm/hack", time: "14:45", score: 91.8, status: "Evaluated" },
-  { team: "CodeVault", repo: "github.com/codevault/app", time: "15:02", score: 88.5, status: "Evaluated" },
-  { team: "QuantumLeap", repo: "github.com/qleap/sub", time: "15:30", score: null, status: "Queued" },
-];
-
 const HackathonAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("Overview");
-  const [submissions, setSubmissions] = useState(fallbackSubmissions);
+  const [submissions, setSubmissions] = useState<SubmissionRow[]>([]);
   const [overview, setOverview] = useState({
-    totalSubmissions: 128,
-    evaluated: 96,
-    queued: 32,
-    avgScore: 78.4,
+    totalSubmissions: 0,
+    evaluated: 0,
+    queued: 0,
+    avgScore: 0,
   });
   const [error, setError] = useState("");
 
@@ -45,9 +38,7 @@ const HackathonAdminDashboard = () => {
           avgScore: Number(overviewData.avg_score || 0),
         });
 
-        if (submissionData.length > 0) {
-          setSubmissions(submissionData);
-        }
+        setSubmissions(submissionData);
       } catch (loadError) {
         if (!isMounted) {
           return;
@@ -119,36 +110,42 @@ const HackathonAdminDashboard = () => {
 
         {activeTab === "Submissions" && (
           <div className="surface-elevated rounded-xl overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">Team</th>
-                  <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">Repository</th>
-                  <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">Score</th>
-                  <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {submissions.map((s) => (
-                  <tr key={s.team} className="border-b border-border/50 last:border-0">
-                    <td className="px-6 py-4 text-sm font-medium text-foreground">{s.team}</td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground font-mono">{s.repo.replace(/^https:\/\//, "")}</td>
-                    <td className="px-6 py-4 text-sm text-foreground text-right font-mono">
-                      {s.score ?? "—"}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <span
-                        className={`text-xs font-medium px-2 py-1 rounded-full ${
-                          s.status === "Evaluated" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"
-                        }`}
-                      >
-                        {s.status}
-                      </span>
-                    </td>
+            {submissions.length === 0 ? (
+              <div className="p-6">
+                <p className="text-sm text-muted-foreground">No submissions have been received yet.</p>
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">Team</th>
+                    <th className="text-left text-xs font-medium text-muted-foreground px-6 py-3">Repository</th>
+                    <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">Score</th>
+                    <th className="text-right text-xs font-medium text-muted-foreground px-6 py-3">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {submissions.map((s) => (
+                    <tr key={s.id} className="border-b border-border/50 last:border-0">
+                      <td className="px-6 py-4 text-sm font-medium text-foreground">{s.team}</td>
+                      <td className="px-6 py-4 text-sm text-muted-foreground font-mono">{s.repo.replace(/^https:\/\//, "")}</td>
+                      <td className="px-6 py-4 text-sm text-foreground text-right font-mono">
+                        {s.score ?? "—"}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <span
+                          className={`text-xs font-medium px-2 py-1 rounded-full ${
+                            s.status === "Evaluated" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"
+                          }`}
+                        >
+                          {s.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
 

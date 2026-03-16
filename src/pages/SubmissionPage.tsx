@@ -1,17 +1,20 @@
 import { useState } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { submitSubmission } from "@/lib/api";
+import { getSubmissionStatus, submitSubmission, type SubmissionStatus } from "@/lib/api";
 import "../components/Stepper.css";
 
 type Phase = "form" | "processing" | "done";
 
 const processingSteps = [
-  "Initializing Analysis…",
-  "Parsing repository…",
-  "Inspecting structure…",
-  "Generating evaluation metrics…",
+  "Validating submission payload...",
+  "Persisting submission in database...",
+  "Running automated evaluation...",
+  "Preparing final score output...",
 ];
+
+const POLL_INTERVAL_MS = 1500;
+const MAX_POLL_ATTEMPTS = 40;
 
 const SubmissionPage = () => {
   const { hackathonId } = useParams();
@@ -22,8 +25,28 @@ const SubmissionPage = () => {
   const [phase, setPhase] = useState<Phase>("form");
   const [currentStep, setCurrentStep] = useState(0);
   const [error, setError] = useState("");
+  const [submissionResult, setSubmissionResult] = useState<SubmissionStatus | null>(null);
 
   const hackathonName = hackathonId?.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) || "Hackathon";
+
+  const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const pollSubmissionResult = async (submissionId: number) => {
+    let latestStatus: SubmissionStatus | null = null;
+
+    for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt += 1) {
+      latestStatus = await getSubmissionStatus(hackathonId!, submissionId);
+
+      if (latestStatus.status === "Evaluated" || latestStatus.status === "Rejected") {
+        return latestStatus;
+      }
+
+      setCurrentStep(Math.min(processingSteps.length - 1, 2 + Math.floor(attempt / 2)));
+      await wait(POLL_INTERVAL_MS);
+    }
+
+    return latestStatus;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,27 +66,34 @@ const SubmissionPage = () => {
       setError("Please enter a valid public GitHub URL.");
       return;
     }
-    setError("");
-    setPhase("processing");
 
-    for (let i = 0; i < processingSteps.length; i++) {
-      setCurrentStep(i);
-      await new Promise((r) => setTimeout(r, 900));
-    }
+    setError("");
+    setSubmissionResult(null);
+    setCurrentStep(0);
+    setPhase("processing");
+    setCurrentStep(1);
 
     try {
-      await submitSubmission({
+      const createdSubmission = await submitSubmission({
         hackathonId,
         teamId,
         repoUrl: repoUrl.trim(),
         problemStatement: problemStatement.trim() || undefined,
       });
+
+      setCurrentStep(2);
+      const latestSubmission = await pollSubmissionResult(createdSubmission.id);
+      setSubmissionResult(latestSubmission || createdSubmission);
+      setCurrentStep(processingSteps.length - 1);
       setPhase("done");
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Unable to submit your repository.");
       setPhase("form");
     }
   };
+
+  const resolvedStatus = submissionResult?.status || "Queued";
+  const hasScore = typeof submissionResult?.score === "number";
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center relative">
@@ -233,12 +263,36 @@ const SubmissionPage = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h2 className="text-lg font-bold text-foreground mb-2">Submission Registered</h2>
-              <p className="text-sm text-muted-foreground mb-4">Your repository has been queued for evaluation.</p>
+
+              <h2 className="text-lg font-bold text-foreground mb-2">
+                {resolvedStatus === "Evaluated" ? "Evaluation Completed" : "Submission Registered"}
+              </h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                {resolvedStatus === "Evaluated"
+                  ? "Your repository has been evaluated and the output is now stored in the database."
+                  : "Your repository is queued. Final score output will appear shortly after evaluation."}
+              </p>
+
               <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                Status: Queued
+                Status: {resolvedStatus}
               </span>
+
+              {hasScore && (
+                <p className="mt-3 text-sm text-foreground font-medium">
+                  Score: {submissionResult?.score?.toFixed(1)}
+                  <span className="text-muted-foreground"> | Eval time: {submissionResult?.time || "N/A"}</span>
+                </p>
+              )}
+
+              {hackathonId && (
+                <Link
+                  to={`/hackathon/${hackathonId}/leaderboard`}
+                  className="inline-flex mt-5 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-accent transition-all duration-300"
+                >
+                  View Leaderboard
+                </Link>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

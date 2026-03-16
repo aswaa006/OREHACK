@@ -34,11 +34,23 @@ export interface HackathonSummary {
 }
 
 export interface SubmissionRow {
+  id: number;
   team: string;
   repo: string;
   time: string;
   score: number | null;
   status: "Queued" | "Evaluated" | "Rejected";
+}
+
+export interface SubmissionStatus {
+  id: number;
+  team: string;
+  repo: string;
+  problem_statement?: string | null;
+  status: "Queued" | "Evaluated" | "Rejected";
+  score: number | null;
+  time: string | null;
+  submitted_at: string;
 }
 
 export interface LeaderboardRow {
@@ -85,7 +97,7 @@ export function submitSubmission(payload: {
   repoUrl: string;
   problemStatement?: string;
 }) {
-  return request<{ id: number; team: string; repo: string; status: string; submitted_at: string }>(
+  return request<SubmissionStatus>(
     `/hackathons/${payload.hackathonId}/submissions`,
     {
       method: "POST",
@@ -100,6 +112,10 @@ export function submitSubmission(payload: {
 
 export function getHackathonSubmissions(hackathonId: string) {
   return request<SubmissionRow[]>(`/hackathons/${hackathonId}/submissions`);
+}
+
+export function getSubmissionStatus(hackathonId: string, submissionId: number) {
+  return request<SubmissionStatus>(`/hackathons/${hackathonId}/submissions/${submissionId}`);
 }
 
 export function getLeaderboard(hackathonId: string) {

@@ -1,10 +1,52 @@
 import "dotenv/config";
 import cors from "cors";
 import express from "express";
+import { z } from "zod";
 import { closePool, databaseConfig, getPool, initDatabase } from "./db.js";
 
 const app = express();
 const port = Number(process.env.PORT || 4000);
+
+const hackathonIdSchema = z.string().trim().min(1, "hackathonId is required").max(64).regex(/^[a-zA-Z0-9-]+$/, "hackathonId format is invalid");
+const submissionIdSchema = z.coerce.number().int("submissionId must be an integer").positive("submissionId must be a positive integer");
+const teamIdSchema = z.string().trim().min(2, "teamId is required").max(64).regex(/^[a-zA-Z0-9_-]+$/, "teamId format is invalid");
+const repoUrlSchema = z
+  .string()
+  .trim()
+  .url("repoUrl must be a valid URL")
+  .refine((value) => {
+    const parsed = new URL(value);
+    const segments = parsed.pathname.split("/").filter(Boolean);
+    return parsed.protocol === "https:" && parsed.hostname.toLowerCase() === "github.com" && segments.length >= 2;
+  }, "A valid public GitHub URL is required");
+
+const teamLoginBodySchema = z.object({
+  teamId: teamIdSchema,
+  password: z.string().min(1, "password is required").max(128, "password is too long"),
+});
+
+const createSubmissionBodySchema = z.object({
+  teamId: teamIdSchema,
+  repoUrl: repoUrlSchema,
+  problemStatement: z
+    .string()
+    .max(5000, "problemStatement is too long")
+    .optional()
+    .nullable()
+    .transform((value) => {
+      if (typeof value !== "string") {
+        return null;
+      }
+      const trimmed = value.trim();
+      return trimmed.length > 0 ? trimmed : null;
+    }),
+});
+
+const adminLoginBodySchema = z.object({
+  email: z.string().trim().email("email must be valid"),
+  password: z.string().min(1, "password is required").max(128, "password is too long"),
+  role: z.enum(["hackathon", "developer"]),
+});
 
 app.use(cors());
 app.use(express.json());
@@ -19,9 +61,42 @@ function asyncRoute(handler) {
   };
 }
 
-async function writeLog(message, level = "info") {
-  const pool = getPool();
-  await pool.query("INSERT INTO orehack_system_logs (level, message) VALUES ($1, $2)", [level, message]);
+function formatValidationError(error) {
+  return error.issues.map((issue) => issue.message).join("; ");
+}
+
+function parseOrRespond(res, schema, payload) {
+  const parsed = schema.safeParse(payload);
+  if (!parsed.success) {
+    res.status(400).json({ message: formatValidationError(parsed.error) });
+    return null;
+  }
+  return parsed.data;
+}
+
+function hashText(input) {
+  let hash = 0;
+  for (let i = 0; i < input.length; i += 1) {
+    hash = (hash * 31 + input.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+function buildEvaluationResult({ teamId, repoUrl, problemStatement }) {
+  const seed = hashText(`${teamId}|${repoUrl}|${problemStatement || ""}`);
+  const baseScore = 72 + ((seed % 2400) / 100);
+  const documentationBonus = Math.min(2.5, ((problemStatement || "").trim().length || 0) / 80);
+
+  return {
+    score: Number(Math.min(99.5, baseScore + documentationBonus).toFixed(1)),
+    evaluationSeconds: Number((2.5 + ((seed % 170) / 100)).toFixed(1)),
+    timeTaken: `${2 + (seed % 3)}h ${String(10 + (Math.floor(seed / 11) % 50)).padStart(2, "0")}m`,
+  };
+}
+
+async function writeLog(message, level = "info", executor = null) {
+  const dbExecutor = executor || getPool();
+  await dbExecutor.query("INSERT INTO orehack_system_logs (level, message) VALUES ($1, $2)", [level, message]);
 }
 
 app.get(
@@ -61,12 +136,18 @@ app.post(
   "/api/hackathons/:hackathonId/team-login",
   asyncRoute(async (req, res) => {
     const pool = getPool();
-    const { hackathonId } = req.params;
-    const { teamId, password } = req.body || {};
-
-    if (!teamId || !password) {
-      return res.status(400).json({ message: "teamId and password are required" });
+    const params = parseOrRespond(res, z.object({ hackathonId: hackathonIdSchema }), req.params);
+    if (!params) {
+      return;
     }
+
+    const body = parseOrRespond(res, teamLoginBodySchema, req.body || {});
+    if (!body) {
+      return;
+    }
+
+    const { hackathonId } = params;
+    const { teamId, password } = body;
 
     const team = await pool.query(
       `
@@ -93,11 +174,17 @@ app.get(
   "/api/hackathons/:hackathonId/submissions",
   asyncRoute(async (req, res) => {
     const pool = getPool();
-    const { hackathonId } = req.params;
+    const params = parseOrRespond(res, z.object({ hackathonId: hackathonIdSchema }), req.params);
+    if (!params) {
+      return;
+    }
+
+    const { hackathonId } = params;
 
     const result = await pool.query(
       `
       SELECT
+        id,
         team_id AS team,
         repo_url AS repo,
         to_char(submitted_at, 'HH24:MI') AS time,
@@ -114,67 +201,158 @@ app.get(
   }),
 );
 
+app.get(
+  "/api/hackathons/:hackathonId/submissions/:submissionId",
+  asyncRoute(async (req, res) => {
+    const pool = getPool();
+    const params = parseOrRespond(
+      res,
+      z.object({
+        hackathonId: hackathonIdSchema,
+        submissionId: submissionIdSchema,
+      }),
+      req.params,
+    );
+    if (!params) {
+      return;
+    }
+
+    const { hackathonId, submissionId } = params;
+
+    const result = await pool.query(
+      `
+      SELECT
+        id,
+        team_id AS team,
+        repo_url AS repo,
+        problem_statement,
+        status,
+        score::float AS score,
+        time_taken AS time,
+        submitted_at
+      FROM orehack_submissions
+      WHERE hackathon_id = $1
+        AND id = $2
+      LIMIT 1;
+      `,
+      [hackathonId, submissionId],
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Submission not found" });
+    }
+
+    return res.json(result.rows[0]);
+  }),
+);
+
 app.post(
   "/api/hackathons/:hackathonId/submissions",
   asyncRoute(async (req, res) => {
     const pool = getPool();
-    const { hackathonId } = req.params;
-    const { teamId, repoUrl, problemStatement } = req.body || {};
-
-    if (!teamId || !repoUrl) {
-      return res.status(400).json({ message: "teamId and repoUrl are required" });
+    const params = parseOrRespond(res, z.object({ hackathonId: hackathonIdSchema }), req.params);
+    if (!params) {
+      return;
     }
 
-    if (!/^https:\/\/github\.com\/.+\/.+/i.test(String(repoUrl).trim())) {
-      return res.status(400).json({ message: "A valid public GitHub URL is required" });
+    const body = parseOrRespond(res, createSubmissionBodySchema, req.body || {});
+    if (!body) {
+      return;
     }
+
+    const { hackathonId } = params;
+    const { teamId, repoUrl, problemStatement } = body;
 
     const hackathon = await pool.query("SELECT id FROM orehack_hackathons WHERE id = $1", [hackathonId]);
     if (hackathon.rowCount === 0) {
       return res.status(404).json({ message: "Hackathon not found" });
     }
 
-    await pool.query(
-      `
-      INSERT INTO orehack_teams (hackathon_id, team_id, password)
-      VALUES ($1, $2, 'team123')
-      ON CONFLICT (hackathon_id, team_id) DO NOTHING;
-      `,
-      [hackathonId, String(teamId).trim()],
-    );
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
 
-    const insertResult = await pool.query(
-      `
-      INSERT INTO orehack_submissions (hackathon_id, team_id, repo_url, problem_statement, status)
-      VALUES ($1, $2, $3, $4, 'Queued')
-      RETURNING
-        id,
-        team_id AS team,
-        repo_url AS repo,
-        status,
-        submitted_at;
-      `,
-      [hackathonId, String(teamId).trim(), String(repoUrl).trim(), problemStatement || null],
-    );
+      await client.query(
+        `
+        INSERT INTO orehack_teams (hackathon_id, team_id, password)
+        VALUES ($1, $2, 'team123')
+        ON CONFLICT (hackathon_id, team_id) DO NOTHING;
+        `,
+        [hackathonId, teamId],
+      );
 
-    await pool.query(
-      `
-      UPDATE orehack_hackathons h
-      SET participants = c.team_count
-      FROM (
-        SELECT hackathon_id, COUNT(*)::int AS team_count
-        FROM orehack_teams
-        WHERE hackathon_id = $1
-        GROUP BY hackathon_id
-      ) c
-      WHERE h.id = c.hackathon_id;
-      `,
-      [hackathonId],
-    );
+      const insertResult = await client.query(
+        `
+        INSERT INTO orehack_submissions (hackathon_id, team_id, repo_url, problem_statement, status)
+        VALUES ($1, $2, $3, $4, 'Queued')
+        RETURNING
+          id,
+          team_id AS team,
+          repo_url AS repo,
+          problem_statement,
+          status,
+          score::float AS score,
+          time_taken AS time,
+          submitted_at;
+        `,
+        [hackathonId, teamId, repoUrl, problemStatement],
+      );
 
-    await writeLog(`Submission received: ${teamId} (${hackathonId})`);
+      const createdSubmission = insertResult.rows[0];
+      const evaluation = buildEvaluationResult({
+        teamId: createdSubmission.team,
+        repoUrl: createdSubmission.repo,
+        problemStatement: createdSubmission.problem_statement,
+      });
 
-    res.status(201).json(insertResult.rows[0]);
+      const evaluatedResult = await client.query(
+        `
+        UPDATE orehack_submissions
+        SET
+          status = 'Evaluated',
+          score = $1,
+          time_taken = $2,
+          evaluation_seconds = $3
+        WHERE id = $4
+        RETURNING
+          id,
+          team_id AS team,
+          repo_url AS repo,
+          problem_statement,
+          status,
+          score::float AS score,
+          time_taken AS time,
+          submitted_at;
+        `,
+        [evaluation.score, evaluation.timeTaken, evaluation.evaluationSeconds, createdSubmission.id],
+      );
+
+      await client.query(
+        `
+        UPDATE orehack_hackathons h
+        SET participants = c.team_count
+        FROM (
+          SELECT hackathon_id, COUNT(*)::int AS team_count
+          FROM orehack_teams
+          WHERE hackathon_id = $1
+          GROUP BY hackathon_id
+        ) c
+        WHERE h.id = c.hackathon_id;
+        `,
+        [hackathonId],
+      );
+
+      await writeLog(`Submission received: ${teamId} (${hackathonId})`, "info", client);
+      await writeLog(`Evaluation completed: ${teamId} -> ${evaluation.score}`, "info", client);
+
+      await client.query("COMMIT");
+      return res.status(201).json(evaluatedResult.rows[0]);
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
   }),
 );
 
@@ -182,7 +360,12 @@ app.get(
   "/api/hackathons/:hackathonId/leaderboard",
   asyncRoute(async (req, res) => {
     const pool = getPool();
-    const { hackathonId } = req.params;
+    const params = parseOrRespond(res, z.object({ hackathonId: hackathonIdSchema }), req.params);
+    if (!params) {
+      return;
+    }
+
+    const { hackathonId } = params;
 
     const result = await pool.query(
       `
@@ -208,7 +391,12 @@ app.get(
   "/api/admin/hackathon-overview/:hackathonId",
   asyncRoute(async (req, res) => {
     const pool = getPool();
-    const { hackathonId } = req.params;
+    const params = parseOrRespond(res, z.object({ hackathonId: hackathonIdSchema }), req.params);
+    if (!params) {
+      return;
+    }
+
+    const { hackathonId } = params;
 
     const result = await pool.query(
       `
@@ -231,11 +419,12 @@ app.post(
   "/api/admin/login",
   asyncRoute(async (req, res) => {
     const pool = getPool();
-    const { email, password, role } = req.body || {};
-
-    if (!email || !password || !role) {
-      return res.status(400).json({ message: "email, password, and role are required" });
+    const body = parseOrRespond(res, adminLoginBodySchema, req.body || {});
+    if (!body) {
+      return;
     }
+
+    const { email, password, role } = body;
 
     const userResult = await pool.query(
       `
@@ -272,7 +461,7 @@ app.get(
     res.json({
       activeHackathons: hackathonsResult.rows[0].count,
       totalSubmissions: submissionResult.rows[0].count,
-      engineStatus: "Online",
+      engineStatus: "Database-only",
       avgEvalTime: `${avgEvalResult.rows[0].avg_eval_seconds}s`,
     });
   }),

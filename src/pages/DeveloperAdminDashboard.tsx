@@ -5,32 +5,16 @@ import { getDeveloperHackathons, getDeveloperLogs, getDeveloperOverview } from "
 
 const tabs = ["System", "Hackathons", "Evaluation", "Logs"];
 
-const fallbackOverview = {
-  activeHackathons: 3,
-  totalSubmissions: 412,
-  engineStatus: "Online",
-  avgEvalTime: "4.2s",
-};
-
-const fallbackHackathons = [
-  { id: "origin-2k26", name: "Origin 2K26", status: "Live", participants: 128, deadline: "March 15, 2026" },
-  { id: "buildcore-v3", name: "BuildCore v3", status: "Upcoming", participants: 0, deadline: "April 5, 2026" },
-  { id: "devstrike-24", name: "DevStrike '24", status: "Completed", participants: 256, deadline: "Ended" },
-];
-
-const fallbackLogs = [
-  { timestamp: "2026-03-02 14:23:01", message: "Evaluation completed: NeuralForge -> 94.2" },
-  { timestamp: "2026-03-02 14:22:58", message: "Repository parsed: github.com/neuralforge/proj" },
-  { timestamp: "2026-03-02 14:22:45", message: "Submission received: NeuralForge" },
-  { timestamp: "2026-03-02 14:20:12", message: "Engine health check: OK" },
-  { timestamp: "2026-03-02 14:15:00", message: "Hackathon \"Origin 2K26\" status: LIVE" },
-];
-
 const DeveloperAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("System");
-  const [overview, setOverview] = useState(fallbackOverview);
-  const [hackathons, setHackathons] = useState(fallbackHackathons);
-  const [logs, setLogs] = useState(fallbackLogs);
+  const [overview, setOverview] = useState({
+    activeHackathons: 0,
+    totalSubmissions: 0,
+    engineStatus: "Offline",
+    avgEvalTime: "0s",
+  });
+  const [hackathons, setHackathons] = useState<{ id: string; name: string; status: string; participants: number; deadline: string }[]>([]);
+  const [logs, setLogs] = useState<{ timestamp: string; level: string; message: string }[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -49,12 +33,8 @@ const DeveloperAdminDashboard = () => {
         }
 
         setOverview(overviewData);
-        if (hackathonData.length > 0) {
-          setHackathons(hackathonData);
-        }
-        if (logData.length > 0) {
-          setLogs(logData);
-        }
+        setHackathons(hackathonData);
+        setLogs(logData);
       } catch (loadError) {
         if (!isMounted) {
           return;
@@ -148,14 +128,18 @@ const DeveloperAdminDashboard = () => {
         {activeTab === "Hackathons" && (
           <div className="surface-elevated rounded-xl p-6">
             <h3 className="text-sm font-semibold text-foreground mb-4">Managed Hackathons</h3>
-            <div className="space-y-3">
-              {hackathons.map((hackathon) => (
-                <div key={hackathon.id} className="flex items-center justify-between py-3 border-b border-border/50 last:border-0">
-                  <span className="text-sm text-foreground font-medium">{hackathon.name}</span>
-                  <button className="text-xs text-primary hover:underline">Manage</button>
-                </div>
-              ))}
-            </div>
+            {hackathons.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No hackathons available.</p>
+            ) : (
+              <div className="space-y-3">
+                {hackathons.map((hackathon) => (
+                  <div key={hackathon.id} className="flex items-center justify-between py-3 border-b border-border/50 last:border-0">
+                    <span className="text-sm text-foreground font-medium">{hackathon.name}</span>
+                    <button className="text-xs text-primary hover:underline">Manage</button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -170,11 +154,15 @@ const DeveloperAdminDashboard = () => {
 
         {activeTab === "Logs" && (
           <div className="surface-elevated rounded-xl p-6 font-mono text-xs text-muted-foreground space-y-1">
-            {logs.map((log) => (
-              <p key={`${log.timestamp}-${log.message}`}>
-                [{log.timestamp}] {log.message}
-              </p>
-            ))}
+            {logs.length === 0 ? (
+              <p>No logs available.</p>
+            ) : (
+              logs.map((log) => (
+                <p key={`${log.timestamp}-${log.message}`}>
+                  [{log.timestamp}] [{log.level}] {log.message}
+                </p>
+              ))
+            )}
           </div>
         )}
       </div>

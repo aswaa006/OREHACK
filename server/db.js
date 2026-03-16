@@ -2,9 +2,23 @@ import pg from "pg";
 
 const { Client, Pool } = pg;
 
-const DEFAULT_DATABASE_URL = "postgresql://postgres:sas%402006@localhost:5432/hackathon_db";
-const DATABASE_URL = process.env.DATABASE_URL || DEFAULT_DATABASE_URL;
+const defaultHost = process.env.PGHOST || "localhost";
+const defaultPort = process.env.PGPORT || "5432";
+const defaultUser = process.env.PGUSER || "postgres";
+const defaultPassword = process.env.PGPASSWORD || "postgres";
+const defaultDatabase = process.env.PGDATABASE || "hackathon_db";
 
+const localDatabaseCandidates = [
+  `postgresql://${defaultUser}:${encodeURIComponent(defaultPassword)}@${defaultHost}:${defaultPort}/${defaultDatabase}`,
+  `postgresql://${defaultUser}@${defaultHost}:${defaultPort}/${defaultDatabase}`,
+  "postgresql://postgres:sas%402006@localhost:5432/hackathon_db",
+];
+
+const databaseUrlCandidates = process.env.DATABASE_URL
+  ? [process.env.DATABASE_URL]
+  : [...new Set(localDatabaseCandidates)];
+
+let activeDatabaseUrl = databaseUrlCandidates[0];
 let pool;
 
 function safeIdentifier(identifier) {
@@ -14,15 +28,15 @@ function safeIdentifier(identifier) {
   return `"${identifier}"`;
 }
 
-async function ensureDatabaseExists() {
-  const url = new URL(DATABASE_URL);
+async function ensureDatabaseExists(connectionString) {
+  const url = new URL(connectionString);
   const dbName = decodeURIComponent(url.pathname.replace(/^\//, ""));
 
   if (!dbName) {
     throw new Error("DATABASE_URL must contain a database name");
   }
 
-  const adminUrl = new URL(DATABASE_URL);
+  const adminUrl = new URL(connectionString);
   adminUrl.pathname = "/postgres";
 
   const adminClient = new Client({ connectionString: adminUrl.toString() });
@@ -174,15 +188,38 @@ async function seedDefaults() {
 }
 
 export async function initDatabase() {
-  await ensureDatabaseExists();
+  let lastError;
 
-  pool = new Pool({ connectionString: DATABASE_URL });
-  await pool.query("SELECT 1");
+  for (const connectionString of databaseUrlCandidates) {
+    try {
+      await ensureDatabaseExists(connectionString);
 
-  await createSchema();
-  await seedDefaults();
+      pool = new Pool({ connectionString });
+      await pool.query("SELECT 1");
 
-  return pool;
+      activeDatabaseUrl = connectionString;
+      databaseConfig.databaseUrl = activeDatabaseUrl;
+
+      await createSchema();
+      await seedDefaults();
+
+      return pool;
+    } catch (error) {
+      lastError = error;
+      if (pool) {
+        await pool.end().catch(() => {
+          // Ignore pool shutdown failures while trying next candidate.
+        });
+        pool = undefined;
+      }
+    }
+  }
+
+  throw new Error(
+    `Unable to connect to PostgreSQL. Set DATABASE_URL to a valid connection string. Last error: ${
+      lastError instanceof Error ? lastError.message : String(lastError)
+    }`,
+  );
 }
 
 export function getPool() {
@@ -195,9 +232,11 @@ export function getPool() {
 export async function closePool() {
   if (pool) {
     await pool.end();
+    pool = undefined;
   }
 }
 
 export const databaseConfig = {
-  databaseUrl: DATABASE_URL,
+  databaseUrl: activeDatabaseUrl,
+  databaseUrlCandidates,
 };
