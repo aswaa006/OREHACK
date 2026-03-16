@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { getDeveloperHackathons, getDeveloperLogs, getDeveloperOverview } from "@/lib/api";
+import { getDeveloperHackathons, getDeveloperLogs, getDeveloperOverview, subscribeToDatabaseChanges } from "@/lib/api";
 
 const tabs = ["System", "Hackathons", "Evaluation", "Logs"];
 
@@ -17,38 +17,42 @@ const DeveloperAdminDashboard = () => {
   const [logs, setLogs] = useState<{ timestamp: string; level: string; message: string }[]>([]);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    let isMounted = true;
+  const loadDeveloperDashboard = useCallback(async () => {
+    try {
+      const [overviewData, hackathonData, logData] = await Promise.all([
+        getDeveloperOverview(),
+        getDeveloperHackathons(),
+        getDeveloperLogs(),
+      ]);
 
-    const loadDeveloperDashboard = async () => {
-      try {
-        const [overviewData, hackathonData, logData] = await Promise.all([
-          getDeveloperOverview(),
-          getDeveloperHackathons(),
-          getDeveloperLogs(),
-        ]);
-
-        if (!isMounted) {
-          return;
-        }
-
-        setOverview(overviewData);
-        setHackathons(hackathonData);
-        setLogs(logData);
-      } catch (loadError) {
-        if (!isMounted) {
-          return;
-        }
-        setError(loadError instanceof Error ? loadError.message : "Unable to load developer dashboard data.");
-      }
-    };
-
-    loadDeveloperDashboard();
-
-    return () => {
-      isMounted = false;
-    };
+      setOverview(overviewData);
+      setHackathons(hackathonData);
+      setLogs(logData);
+      setError("");
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "Unable to load developer dashboard data.");
+    }
   }, []);
+
+  useEffect(() => {
+    void loadDeveloperDashboard();
+  }, [loadDeveloperDashboard]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToDatabaseChanges((event) => {
+      if (
+        event.table !== "orehack_submissions"
+        && event.table !== "orehack_hackathons"
+        && event.table !== "orehack_system_logs"
+      ) {
+        return;
+      }
+
+      void loadDeveloperDashboard();
+    });
+
+    return unsubscribe;
+  }, [loadDeveloperDashboard]);
 
   return (
     <div className="min-h-screen bg-background">

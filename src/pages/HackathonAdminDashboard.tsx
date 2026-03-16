@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { getHackathonOverview, getHackathonSubmissions, type SubmissionRow } from "@/lib/api";
+import { getHackathonOverview, getHackathonSubmissions, subscribeToDatabaseChanges, type SubmissionRow } from "@/lib/api";
 
 const tabs = ["Overview", "Submissions", "Leaderboard", "Reports"];
 const HACKATHON_ID = "origin-2k26";
@@ -17,42 +17,46 @@ const HackathonAdminDashboard = () => {
   });
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    let isMounted = true;
+  const loadDashboard = useCallback(async () => {
+    try {
+      const [overviewData, submissionData] = await Promise.all([
+        getHackathonOverview(HACKATHON_ID),
+        getHackathonSubmissions(HACKATHON_ID),
+      ]);
 
-    const loadDashboard = async () => {
-      try {
-        const [overviewData, submissionData] = await Promise.all([
-          getHackathonOverview(HACKATHON_ID),
-          getHackathonSubmissions(HACKATHON_ID),
-        ]);
+      setOverview({
+        totalSubmissions: Number(overviewData.total_submissions || 0),
+        evaluated: Number(overviewData.evaluated || 0),
+        queued: Number(overviewData.queued || 0),
+        avgScore: Number(overviewData.avg_score || 0),
+      });
 
-        if (!isMounted) {
-          return;
-        }
-
-        setOverview({
-          totalSubmissions: Number(overviewData.total_submissions || 0),
-          evaluated: Number(overviewData.evaluated || 0),
-          queued: Number(overviewData.queued || 0),
-          avgScore: Number(overviewData.avg_score || 0),
-        });
-
-        setSubmissions(submissionData);
-      } catch (loadError) {
-        if (!isMounted) {
-          return;
-        }
-        setError(loadError instanceof Error ? loadError.message : "Unable to load dashboard data.");
-      }
-    };
-
-    loadDashboard();
-
-    return () => {
-      isMounted = false;
-    };
+      setSubmissions(submissionData);
+      setError("");
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "Unable to load dashboard data.");
+    }
   }, []);
+
+  useEffect(() => {
+    void loadDashboard();
+  }, [loadDashboard]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToDatabaseChanges((event) => {
+      if (event.table !== "orehack_submissions" && event.table !== "orehack_hackathons" && event.table !== "orehack_teams") {
+        return;
+      }
+
+      if (event.hackathonId && event.hackathonId !== HACKATHON_ID) {
+        return;
+      }
+
+      void loadDashboard();
+    });
+
+    return unsubscribe;
+  }, [loadDashboard]);
 
   return (
     <div className="min-h-screen bg-background">

@@ -1,5 +1,17 @@
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") || "/api";
 
+function getRealtimeEndpoint() {
+  if (API_BASE_URL.startsWith("/")) {
+    return "/api/realtime";
+  }
+
+  if (API_BASE_URL.endsWith("/api")) {
+    return `${API_BASE_URL}/realtime`;
+  }
+
+  return `${API_BASE_URL}/api/realtime`;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
@@ -80,6 +92,15 @@ export interface SystemLog {
   message: string;
 }
 
+export interface DatabaseChangeEvent {
+  table: string;
+  operation: "INSERT" | "UPDATE" | "DELETE" | "UNKNOWN";
+  hackathonId?: string | null;
+  id?: string | null;
+  teamId?: string | null;
+  at: string;
+}
+
 export function getHackathons() {
   return request<HackathonSummary[]>("/hackathons");
 }
@@ -143,4 +164,24 @@ export function getDeveloperHackathons() {
 
 export function getDeveloperLogs() {
   return request<SystemLog[]>("/admin/developer/logs");
+}
+
+export function subscribeToDatabaseChanges(onChange: (event: DatabaseChangeEvent) => void) {
+  const eventSource = new EventSource(getRealtimeEndpoint());
+
+  const listener = (event: MessageEvent<string>) => {
+    try {
+      const payload = JSON.parse(event.data) as DatabaseChangeEvent;
+      onChange(payload);
+    } catch {
+      // Ignore invalid realtime payloads and keep the stream connected.
+    }
+  };
+
+  eventSource.addEventListener("db-change", listener as EventListener);
+
+  return () => {
+    eventSource.removeEventListener("db-change", listener as EventListener);
+    eventSource.close();
+  };
 }

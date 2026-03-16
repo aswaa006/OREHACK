@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { getLeaderboard } from "@/lib/api";
+import { getLeaderboard, subscribeToDatabaseChanges } from "@/lib/api";
 
 const Leaderboard = () => {
   const { hackathonId } = useParams();
@@ -40,8 +40,21 @@ const Leaderboard = () => {
 
     loadLeaderboard();
 
+    const unsubscribe = subscribeToDatabaseChanges((event) => {
+      if (event.table !== "orehack_submissions") {
+        return;
+      }
+
+      if (event.hackathonId && event.hackathonId !== hackathonId) {
+        return;
+      }
+
+      void loadLeaderboard();
+    });
+
     return () => {
       isMounted = false;
+      unsubscribe();
     };
   }, [hackathonId]);
 

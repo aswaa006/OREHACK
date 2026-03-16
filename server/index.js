@@ -2,10 +2,13 @@ import "dotenv/config";
 import cors from "cors";
 import express from "express";
 import { z } from "zod";
-import { closePool, databaseConfig, getPool, initDatabase } from "./db.js";
+import { addDatabaseChangeListener, closePool, databaseConfig, getPool, initDatabase, startDatabaseNotifications } from "./db.js";
 
 const app = express();
 const port = Number(process.env.PORT || 4000);
+const realtimeClients = new Set();
+
+let removeDatabaseChangeListener = () => {};
 
 const hackathonIdSchema = z.string().trim().min(1, "hackathonId is required").max(64).regex(/^[a-zA-Z0-9-]+$/, "hackathonId format is invalid");
 const submissionIdSchema = z.coerce.number().int("submissionId must be an integer").positive("submissionId must be a positive integer");
@@ -50,6 +53,26 @@ const adminLoginBodySchema = z.object({
 
 app.use(cors());
 app.use(express.json());
+
+function writeSseEvent(client, eventName, payload) {
+  client.write(`event: ${eventName}\n`);
+  client.write(`data: ${JSON.stringify(payload)}\n\n`);
+}
+
+function broadcastRealtimeEvent(eventName, payload) {
+  const staleClients = [];
+  for (const client of realtimeClients) {
+    try {
+      writeSseEvent(client, eventName, payload);
+    } catch {
+      staleClients.push(client);
+    }
+  }
+
+  for (const staleClient of staleClients) {
+    realtimeClients.delete(staleClient);
+  }
+}
 
 function asyncRoute(handler) {
   return async (req, res, next) => {
@@ -107,6 +130,28 @@ app.get(
     res.json({ ok: true });
   }),
 );
+
+app.get("/api/realtime", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+  res.flushHeaders?.();
+
+  res.write("retry: 3000\n\n");
+  writeSseEvent(res, "connected", { ok: true, at: new Date().toISOString() });
+
+  realtimeClients.add(res);
+
+  const keepAlive = setInterval(() => {
+    res.write(`: ping ${Date.now()}\n\n`);
+  }, 20000);
+
+  req.on("close", () => {
+    clearInterval(keepAlive);
+    realtimeClients.delete(res);
+  });
+});
 
 app.get(
   "/api/hackathons",
@@ -517,6 +562,12 @@ app.use((error, _req, res, _next) => {
 
 async function start() {
   await initDatabase();
+  await startDatabaseNotifications();
+
+  removeDatabaseChangeListener = addDatabaseChangeListener((change) => {
+    broadcastRealtimeEvent("db-change", change);
+  });
+
   app.listen(port, () => {
     const maskedUrl = databaseConfig.databaseUrl.replace(/:\/\/([^:]+):([^@]+)@/, "://$1:****@");
     console.log(`API server listening on http://localhost:${port}`);
@@ -524,18 +575,27 @@ async function start() {
   });
 }
 
+async function shutdown() {
+  removeDatabaseChangeListener();
+  for (const client of realtimeClients) {
+    client.end();
+  }
+  realtimeClients.clear();
+  await closePool();
+}
+
 start().catch(async (error) => {
   console.error("Failed to start API server", error);
-  await closePool();
+  await shutdown();
   process.exit(1);
 });
 
 process.on("SIGINT", async () => {
-  await closePool();
+  await shutdown();
   process.exit(0);
 });
 
 process.on("SIGTERM", async () => {
-  await closePool();
+  await shutdown();
   process.exit(0);
 });

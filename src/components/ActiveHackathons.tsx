@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { getHackathons } from "@/lib/api";
+import { getHackathons, subscribeToDatabaseChanges } from "@/lib/api";
 
 /* ══════════════════════════════════════════════════════════
    DATA
@@ -250,37 +250,48 @@ export default function ActiveHackathons() {
 
   const hackathonsRef = useRef(hackathons);
   hackathonsRef.current = hackathons;
+  const isMountedRef = useRef(true);
+
+  const loadHackathons = useCallback(async () => {
+    try {
+      const rows = await getHackathons();
+      if (!isMountedRef.current || rows.length === 0) {
+        return;
+      }
+
+      const normalized = rows.map((row) => ({
+        id: row.id,
+        name: row.name,
+        status: row.status === "Live" || row.status === "Upcoming" || row.status === "Completed" ? row.status : "Upcoming",
+        participants: Number(row.participants || 0),
+        deadline: row.deadline,
+      }));
+
+      setHackathons(normalized);
+    } catch {
+      // Keep fallback cards if API is unavailable.
+    }
+  }, []);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const loadHackathons = async () => {
-      try {
-        const rows = await getHackathons();
-        if (!isMounted || rows.length === 0) {
-          return;
-        }
-
-        const normalized = rows.map((row) => ({
-          id: row.id,
-          name: row.name,
-          status: row.status === "Live" || row.status === "Upcoming" || row.status === "Completed" ? row.status : "Upcoming",
-          participants: Number(row.participants || 0),
-          deadline: row.deadline,
-        }));
-
-        setHackathons(normalized);
-      } catch {
-        // Keep fallback cards if API is unavailable.
-      }
-    };
-
-    loadHackathons();
-
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    void loadHackathons();
+  }, [loadHackathons]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToDatabaseChanges((event) => {
+      if (event.table === "orehack_hackathons" || event.table === "orehack_teams") {
+        void loadHackathons();
+      }
+    });
+
+    return unsubscribe;
+  }, [loadHackathons]);
 
   useEffect(() => {
     setAssembled(Array(hackathons.length).fill(false));

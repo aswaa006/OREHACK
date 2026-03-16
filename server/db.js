@@ -20,12 +20,26 @@ const databaseUrlCandidates = process.env.DATABASE_URL
 
 let activeDatabaseUrl = databaseUrlCandidates[0];
 let pool;
+let notificationClient;
+
+const realtimeChannel = "orehack_changes";
+const databaseChangeListeners = new Set();
 
 function safeIdentifier(identifier) {
   if (!/^[a-zA-Z0-9_]+$/.test(identifier)) {
     throw new Error("Invalid database name in DATABASE_URL");
   }
   return `"${identifier}"`;
+}
+
+function emitDatabaseChange(payload) {
+  for (const listener of databaseChangeListeners) {
+    try {
+      listener(payload);
+    } catch (error) {
+      console.error("Database change listener failed", error);
+    }
+  }
 }
 
 async function ensureDatabaseExists(connectionString) {
@@ -104,6 +118,95 @@ async function createSchema() {
     CREATE INDEX IF NOT EXISTS idx_orehack_submissions_hackathon ON orehack_submissions(hackathon_id);
     CREATE INDEX IF NOT EXISTS idx_orehack_submissions_hackathon_status ON orehack_submissions(hackathon_id, status);
     CREATE INDEX IF NOT EXISTS idx_orehack_submissions_hackathon_score ON orehack_submissions(hackathon_id, score DESC);
+
+    CREATE OR REPLACE FUNCTION orehack_notify_change()
+    RETURNS TRIGGER AS $$
+    DECLARE
+      row_data JSONB;
+    BEGIN
+      row_data := CASE WHEN TG_OP = 'DELETE' THEN to_jsonb(OLD) ELSE to_jsonb(NEW) END;
+
+      PERFORM pg_notify(
+        'orehack_changes',
+        json_build_object(
+          'table', TG_TABLE_NAME,
+          'operation', TG_OP,
+          'hackathonId', row_data ->> 'hackathon_id',
+          'id', row_data ->> 'id',
+          'teamId', row_data ->> 'team_id',
+          'at', NOW()
+        )::text
+      );
+
+      IF TG_OP = 'DELETE' THEN
+        RETURN OLD;
+      END IF;
+
+      RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+
+    CREATE OR REPLACE FUNCTION orehack_sync_participants()
+    RETURNS TRIGGER AS $$
+    BEGIN
+      IF TG_OP = 'DELETE' THEN
+        UPDATE orehack_hackathons
+        SET participants = (
+          SELECT COUNT(*)::int
+          FROM orehack_teams
+          WHERE hackathon_id = OLD.hackathon_id
+        )
+        WHERE id = OLD.hackathon_id;
+
+        RETURN OLD;
+      END IF;
+
+      UPDATE orehack_hackathons
+      SET participants = (
+        SELECT COUNT(*)::int
+        FROM orehack_teams
+        WHERE hackathon_id = NEW.hackathon_id
+      )
+      WHERE id = NEW.hackathon_id;
+
+      IF TG_OP = 'UPDATE' AND OLD.hackathon_id <> NEW.hackathon_id THEN
+        UPDATE orehack_hackathons
+        SET participants = (
+          SELECT COUNT(*)::int
+          FROM orehack_teams
+          WHERE hackathon_id = OLD.hackathon_id
+        )
+        WHERE id = OLD.hackathon_id;
+      END IF;
+
+      RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+
+    DROP TRIGGER IF EXISTS orehack_hackathons_change_trigger ON orehack_hackathons;
+    CREATE TRIGGER orehack_hackathons_change_trigger
+    AFTER INSERT OR UPDATE OR DELETE ON orehack_hackathons
+    FOR EACH ROW EXECUTE FUNCTION orehack_notify_change();
+
+    DROP TRIGGER IF EXISTS orehack_teams_change_trigger ON orehack_teams;
+    CREATE TRIGGER orehack_teams_change_trigger
+    AFTER INSERT OR UPDATE OR DELETE ON orehack_teams
+    FOR EACH ROW EXECUTE FUNCTION orehack_notify_change();
+
+    DROP TRIGGER IF EXISTS orehack_teams_participant_sync_trigger ON orehack_teams;
+    CREATE TRIGGER orehack_teams_participant_sync_trigger
+    AFTER INSERT OR UPDATE OR DELETE ON orehack_teams
+    FOR EACH ROW EXECUTE FUNCTION orehack_sync_participants();
+
+    DROP TRIGGER IF EXISTS orehack_submissions_change_trigger ON orehack_submissions;
+    CREATE TRIGGER orehack_submissions_change_trigger
+    AFTER INSERT OR UPDATE OR DELETE ON orehack_submissions
+    FOR EACH ROW EXECUTE FUNCTION orehack_notify_change();
+
+    DROP TRIGGER IF EXISTS orehack_system_logs_change_trigger ON orehack_system_logs;
+    CREATE TRIGGER orehack_system_logs_change_trigger
+    AFTER INSERT OR UPDATE OR DELETE ON orehack_system_logs
+    FOR EACH ROW EXECUTE FUNCTION orehack_notify_change();
   `);
 }
 
@@ -229,7 +332,51 @@ export function getPool() {
   return pool;
 }
 
+export function addDatabaseChangeListener(listener) {
+  databaseChangeListeners.add(listener);
+  return () => {
+    databaseChangeListeners.delete(listener);
+  };
+}
+
+export async function startDatabaseNotifications() {
+  if (notificationClient) {
+    return;
+  }
+
+  notificationClient = new Client({ connectionString: activeDatabaseUrl });
+  notificationClient.on("notification", (message) => {
+    if (message.channel !== realtimeChannel || !message.payload) {
+      return;
+    }
+
+    try {
+      emitDatabaseChange(JSON.parse(message.payload));
+    } catch {
+      emitDatabaseChange({
+        table: "unknown",
+        operation: "UNKNOWN",
+        at: new Date().toISOString(),
+      });
+    }
+  });
+
+  notificationClient.on("error", (error) => {
+    console.error("PostgreSQL notification listener error", error);
+  });
+
+  await notificationClient.connect();
+  await notificationClient.query(`LISTEN ${safeIdentifier(realtimeChannel)}`);
+}
+
 export async function closePool() {
+  if (notificationClient) {
+    await notificationClient.end().catch(() => {
+      // Ignore shutdown failures for the notification client.
+    });
+    notificationClient = undefined;
+  }
+
   if (pool) {
     await pool.end();
     pool = undefined;
