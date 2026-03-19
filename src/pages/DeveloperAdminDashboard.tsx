@@ -1,671 +1,684 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { TrendingUp, Zap, BarChart3, FileText, Activity, Clock, CheckCircle } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Line,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { Activity, BarChart3, Calendar, CheckCircle, Clock, FileText, PlusCircle, Rocket, TrendingUp, Zap } from "lucide-react";
 
-const tabs = ["System", "Hackathons", "Evaluation", "Logs"];
+const tabs = ["System", "Hackathons", "Evaluation", "Logs"] as const;
 
-// Mock data for charts
 const evaluationTrendData = [
   { time: "00:00", count: 12, avg: 78 },
-  { time: "04:00", count: 19, avg: 82 },
-  { time: "08:00", count: 28, avg: 85 },
-  { time: "12:00", count: 35, avg: 84 },
+  { time: "04:00", count: 19, avg: 81 },
+  { time: "08:00", count: 28, avg: 84 },
+  { time: "12:00", count: 35, avg: 83 },
   { time: "16:00", count: 42, avg: 87 },
   { time: "20:00", count: 38, avg: 86 },
-  { time: "23:59", count: 45, avg: 88 },
+  { time: "23:59", count: 45, avg: 89 },
 ];
 
-const hackathonStatsData = [
-  { name: "Origin 2K26", submissions: 120, evaluated: 95 },
-  { name: "BuildCore v3", submissions: 85, evaluated: 72 },
-  { name: "DevStrike '24", submissions: 65, evaluated: 58 },
+type HackathonItem = {
+  name: string;
+  slug: string;
+  theme: string;
+  startDate: string;
+  durationHours: number;
+  submissions: number;
+  evaluated: number;
+  status: "live" | "scheduled";
+};
+
+const HACKATHON_STORAGE_KEY = "oregent:hackathons";
+
+const defaultHackathons: HackathonItem[] = [
+  {
+    name: "Origin 2K26",
+    slug: "origin-2k26",
+    theme: "AI + Web + Product",
+    startDate: "",
+    durationHours: 36,
+    submissions: 120,
+    evaluated: 95,
+    status: "live",
+  },
+  {
+    name: "BuildCore v3",
+    slug: "buildcore-v3",
+    theme: "Developer Tools",
+    startDate: "",
+    durationHours: 24,
+    submissions: 85,
+    evaluated: 72,
+    status: "live",
+  },
+  {
+    name: "DevStrike '24",
+    slug: "devstrike-24",
+    theme: "Open Innovation",
+    startDate: "",
+    durationHours: 24,
+    submissions: 65,
+    evaluated: 58,
+    status: "live",
+  },
 ];
+
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
 
 const statusData = [
-  { name: "Online", value: 3, color: "#10b981" },
-  { name: "Offline", value: 0, color: "#6b7280" },
+  { name: "Online", value: 3, color: "#18c99b" },
+  { name: "Offline", value: 0, color: "#50607f" },
 ];
 
-const DeveloperAdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState("System");
+const sectionTransition = { duration: 0.4, ease: "easeOut" as const };
+const contentVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -8 },
+};
+
+type TooltipPayload = {
+  value: number;
+  name: string;
+  color?: string;
+};
+
+const ChartTooltip = ({
+  active,
+  label,
+  payload,
+}: {
+  active?: boolean;
+  label?: string | number;
+  payload?: TooltipPayload[];
+}) => {
+  if (!active || !payload?.length) {
+    return null;
+  }
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Animated 4-Color Gradient Background */}
+    <div className="rounded-lg border border-primary/25 bg-card/95 px-3 py-2 shadow-xl backdrop-blur-sm">
+      <p className="mb-1 text-xs font-medium text-foreground/80">{label}</p>
+      {payload.map((entry) => (
+        <p key={entry.name} className="text-xs text-foreground/90">
+          <span className="mr-2 inline-block h-2 w-2 rounded-full bg-primary/80" />
+          {entry.name}: <span className="font-semibold">{entry.value}</span>
+        </p>
+      ))}
+    </div>
+  );
+};
+
+const DeveloperAdminDashboard = () => {
+  const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("System");
+  const [hackathons, setHackathons] = useState<HackathonItem[]>(defaultHackathons);
+  const [newHackathon, setNewHackathon] = useState({
+    name: "",
+    slug: "",
+    theme: "AI + Web + Product",
+    startDate: "",
+    durationHours: "36",
+  });
+
+  useEffect(() => {
+    const stored = localStorage.getItem(HACKATHON_STORAGE_KEY);
+    if (!stored) {
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(stored) as Partial<HackathonItem>[];
+      const merged = [...defaultHackathons];
+
+      parsed.forEach((item) => {
+        if (!item?.name) return;
+        const slug = slugify(item.slug || item.name);
+        if (!slug || merged.some((existing) => existing.slug === slug)) return;
+        merged.push({
+          name: item.name,
+          slug,
+          theme: item.theme || "General",
+          startDate: item.startDate || "",
+          durationHours: Number(item.durationHours || 24),
+          submissions: Number(item.submissions || 0),
+          evaluated: Number(item.evaluated || 0),
+          status: item.status === "scheduled" ? "scheduled" : "live",
+        });
+      });
+
+      setHackathons(merged);
+    } catch {
+      setHackathons(defaultHackathons);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(HACKATHON_STORAGE_KEY, JSON.stringify(hackathons));
+  }, [hackathons]);
+
+  const hackathonStatsData = useMemo(
+    () => hackathons.slice(0, 6).map((hackathon) => ({
+      name: hackathon.name,
+      submissions: hackathon.submissions,
+      evaluated: hackathon.evaluated,
+    })),
+    [hackathons],
+  );
+
+  const totalSubmissions = useMemo(
+    () => hackathons.reduce((sum, hackathon) => sum + hackathon.submissions, 0),
+    [hackathons],
+  );
+  const totalEvaluated = useMemo(
+    () => hackathons.reduce((sum, hackathon) => sum + hackathon.evaluated, 0),
+    [hackathons],
+  );
+  const activeHackathons = useMemo(
+    () => hackathons.filter((hackathon) => hackathon.status === "live").length,
+    [hackathons],
+  );
+
+  const systemCards = [
+    {
+      label: "Active Hackathons",
+      value: String(activeHackathons),
+      delta: "Origin 2K26 is Live",
+      progress: Math.min(100, 55 + activeHackathons * 10),
+      icon: BarChart3,
+      tone: "from-sky-500/25 via-sky-500/10 to-transparent",
+      iconTone: "from-sky-500 to-blue-600",
+    },
+    {
+      label: "Total Submissions",
+      value: String(totalSubmissions),
+      delta: `${totalEvaluated} already evaluated`,
+      progress: totalSubmissions ? Math.min(100, Math.round((totalEvaluated / totalSubmissions) * 100)) : 0,
+      icon: FileText,
+      tone: "from-violet-500/25 via-violet-500/10 to-transparent",
+      iconTone: "from-violet-500 to-fuchsia-600",
+    },
+    {
+      label: "Engine Status",
+      value: "Online",
+      delta: "99.8% uptime",
+      progress: 92,
+      icon: Activity,
+      tone: "from-emerald-500/25 via-emerald-500/10 to-transparent",
+      iconTone: "from-emerald-500 to-teal-600",
+    },
+    {
+      label: "Avg Eval Time",
+      value: "4.2s",
+      delta: "Stable performance",
+      progress: 68,
+      icon: Clock,
+      tone: "from-cyan-500/25 via-cyan-500/10 to-transparent",
+      iconTone: "from-cyan-500 to-blue-600",
+    },
+  ];
+
+  const handleCreateHackathon = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!newHackathon.name.trim()) return;
+
+    const slug = slugify(newHackathon.slug || newHackathon.name);
+    if (!slug) return;
+    if (hackathons.some((item) => item.slug === slug)) return;
+
+    const item: HackathonItem = {
+      name: newHackathon.name.trim(),
+      slug,
+      theme: newHackathon.theme.trim() || "General",
+      startDate: newHackathon.startDate,
+      durationHours: Number(newHackathon.durationHours || 24),
+      submissions: 0,
+      evaluated: 0,
+      status: "live",
+    };
+
+    setHackathons((prev) => [item, ...prev]);
+    setNewHackathon({
+      name: "",
+      slug: "",
+      theme: "AI + Web + Product",
+      startDate: "",
+      durationHours: "36",
+    });
+  };
+
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-background">
       <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 grid-bg opacity-30" />
         <motion.div
-          className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-500 via-purple-600 to-transparent rounded-full blur-3xl"
-          animate={{
-            x: [0, 50, -50, 0],
-            y: [0, 50, 0, 50],
-            scale: [1, 1.1, 1, 1.05],
-            opacity: [0.3, 0.4, 0.3, 0.35],
-          }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-20 -left-20 h-[26rem] w-[26rem] rounded-full bg-gradient-to-br from-cyan-500/20 via-primary/15 to-transparent blur-3xl"
+          animate={{ x: [0, 24, -16, 0], y: [0, 16, -8, 0], opacity: [0.22, 0.34, 0.22] }}
+          transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute top-1/4 right-0 w-80 h-80 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full blur-3xl"
-          animate={{
-            x: [-50, 50, 0, 50],
-            y: [0, -50, 50, 0],
-            scale: [1, 1.05, 1.1, 1],
-            opacity: [0.25, 0.35, 0.3, 0.28],
-          }}
-          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        />
-        <motion.div
-          className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-gradient-to-tr from-indigo-600 via-purple-500 to-transparent rounded-full blur-3xl"
-          animate={{
-            x: [50, -50, 50, 0],
-            y: [50, 0, -50, 50],
-            scale: [1.05, 1, 1.1, 1],
-            opacity: [0.3, 0.25, 0.35, 0.3],
-          }}
-          transition={{ duration: 13, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        />
-        <motion.div
-          className="absolute bottom-0 right-1/4 w-80 h-80 bg-gradient-to-tl from-teal-500 via-cyan-600 to-transparent rounded-full blur-3xl"
-          animate={{
-            x: [0, -50, 50, -50],
-            y: [-50, 50, 0, 50],
-            scale: [1, 1.08, 1, 1.1],
-            opacity: [0.28, 0.32, 0.3, 0.33],
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 3 }}
+          className="absolute bottom-0 right-0 h-[24rem] w-[24rem] rounded-full bg-gradient-to-tl from-emerald-500/20 via-cyan-500/15 to-transparent blur-3xl"
+          animate={{ x: [0, -20, 10, 0], y: [0, -18, 8, 0], opacity: [0.18, 0.28, 0.18] }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 1.8 }}
         />
       </div>
 
-      {/* Content Overlay */}
       <div className="relative z-10">
-        <div className="border-b border-border/30 backdrop-blur-md bg-gradient-to-r from-background/60 to-background/40 shadow-lg">
-          <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <h1 className="text-lg font-bold text-foreground">
+        <header className="border-b border-border/50 bg-background/40 backdrop-blur-md">
+          <div className="container mx-auto flex items-center justify-between px-6 py-5">
+            <motion.div initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.35 }}>
+              <h1 className="text-xl font-bold text-foreground">
                 Developer Admin
-                <span className="ml-2 text-xs font-normal text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                  Oregent
-                </span>
+                <span className="ml-2 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs text-primary">Oregent</span>
               </h1>
-              <p className="text-xs text-muted-foreground">Full System Control</p>
+              <p className="mt-1 text-xs text-muted-foreground">Full System Control</p>
             </motion.div>
-            <Link to="/" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            <Link to="/" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
               ← Exit
             </Link>
           </div>
-        </div>
+        </header>
 
-        <div className="container mx-auto px-6 py-6">
-        <div className="flex gap-1 mb-8 border-b border-border overflow-x-auto">
-          {tabs.map((tab, idx) => (
-            <motion.button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              whileHover={{ y: -2 }}
-              className={`px-4 py-2.5 text-sm font-medium transition-colors relative whitespace-nowrap ${
-                activeTab === tab ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {tab}
-              {activeTab === tab && (
-                <motion.div layoutId="dev-tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-              )}
-            </motion.button>
-          ))}
-        </div>
-
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {activeTab === "System" && (
-            <div className="space-y-6">
-              {/* Animated Stats Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { label: "Active Hackathons", value: "3", icon: BarChart3, color: "from-blue-500 to-blue-600" },
-                  { label: "Total Submissions", value: "412", icon: FileText, color: "from-purple-500 to-purple-600" },
-                  { label: "Engine Status", value: "Online", icon: Activity, color: "from-cyan-500 to-cyan-600" },
-                  { label: "Avg Eval Time", value: "4.2s", icon: Clock, color: "from-indigo-500 to-indigo-600" },
-                ].map((s, idx) => (
-                  <motion.div
-                    key={s.label}
-                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ delay: idx * 0.12, duration: 0.6, ease: "easeOut" }}
-                    whileHover={{ y: -8, scale: 1.05 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`surface-elevated rounded-xl p-5 border border-primary/20 hover:border-primary/40 transition-all group cursor-pointer bg-gradient-to-br ${s.color}/8`}
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <motion.p 
-                        className="text-xs text-foreground/80 font-medium tracking-wide"
-                        animate={{ opacity: [0.8, 1, 0.8] }}
-                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                      >
-                        {s.label}
-                      </motion.p>
-                      <motion.div
-                        className={`p-2.5 rounded-lg bg-gradient-to-br ${s.color} text-white shadow-lg`}
-                        whileHover={{ rotate: 20, scale: 1.2 }}
-                        whileTap={{ scale: 0.9 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                      >
-                        <s.icon className="w-5 h-5" />
-                      </motion.div>
-                    </div>
-                    <motion.p 
-                      className="text-3xl font-bold text-white"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: idx * 0.12 + 0.2, duration: 0.6 }}
-                    >
-                      {s.value}
-                    </motion.p>
-                    {/* Animated progress bar */}
-                    <div className="h-2 bg-muted rounded-full mt-4 overflow-hidden relative">
-                      <motion.div
-                        className={`h-full bg-gradient-to-r ${s.color} rounded-full`}
-                        initial={{ width: 0 }}
-                        animate={{ width: "85%" }}
-                        transition={{ delay: idx * 0.12 + 0.4, duration: 1.2, ease: "easeOut" }}
-                      />
-                      <motion.div
-                        className={`absolute inset-0 bg-gradient-to-r ${s.color} opacity-40 blur`}
-                        animate={{ x: ["-100%", "100%"] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                      />
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* Evaluation Trend Chart */}
-              <motion.div
-                className="surface-elevated rounded-xl p-6 border border-primary/20 shadow-lg shadow-primary/10"
-                initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ delay: 0.3, duration: 0.7, ease: "easeOut" }}
-                whileHover={{ borderColor: "hsl(var(--primary) / 0.4)", boxShadow: "0 20px 40px rgba(59, 130, 246, 0.15)" }}
-              >
-                <motion.div 
-                  className="flex items-center justify-between mb-6"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                    >
-                      <TrendingUp className="w-4 h-4 text-primary" />
-                    </motion.div>
-                    Evaluation Trend
-                  </h3>
-                  <motion.div 
-                    className="px-3 py-1 rounded-full bg-primary/10 text-xs font-semibold text-primary"
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    Last 24h
-                  </motion.div>
-                </motion.div>
-                <motion.div 
-                  className="h-64 -mx-6"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4, duration: 0.8 }}
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={evaluationTrendData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--primary) / 0.2)" />
-                      <XAxis dataKey="time" stroke="hsl(var(--foreground) / 0.8)" style={{ fontSize: "0.75rem", fill: "hsl(var(--foreground) / 0.9)" }} />
-                      <YAxis stroke="hsl(var(--foreground) / 0.8)" style={{ fontSize: "0.75rem", fill: "hsl(var(--foreground) / 0.9)" }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "var(--background)",
-                          border: "2px solid hsl(var(--primary))",
-                          borderRadius: "0.75rem",
-                          boxShadow: "0 10px 25px rgba(59, 130, 246, 0.2)",
-                        }}
-                        labelStyle={{ color: "var(--foreground)" }}
-                        cursor={{ stroke: "hsl(var(--primary))", strokeWidth: 2 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="count"
-                        stroke="hsl(var(--primary))"
-                        strokeWidth={3}
-                        dot={{ fill: "hsl(var(--primary))", r: 6, strokeWidth: 2, stroke: "var(--background)" }}
-                        activeDot={{ r: 8, strokeWidth: 3 }}
-                        animationDuration={1500}
-                        isAnimationActive={true}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </motion.div>
-              </motion.div>
-
-              {/* Hackathon Stats Chart */}
-              <motion.div
-                className="surface-elevated rounded-xl p-6 border border-primary/20 shadow-lg shadow-primary/10"
-                initial={{ opacity: 0, y: 20 }}
+        <main className="container mx-auto px-6 py-6">
+          <div className="mb-7 flex w-full gap-2 overflow-x-auto rounded-xl border border-border/60 bg-card/40 p-1.5 backdrop-blur-sm">
+            {tabs.map((tab, idx) => (
+              <motion.button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4, duration: 0.5 }}
+                transition={{ delay: idx * 0.05 }}
+                className={`relative rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                  activeTab === tab ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
               >
-                <h3 className="text-sm font-semibold text-foreground mb-4">Submissions by Hackathon</h3>
-                <div className="h-64 -mx-6">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={hackathonStatsData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--primary) / 0.2)" />
-                      <XAxis dataKey="name" stroke="hsl(var(--foreground) / 0.8)" style={{ fontSize: "0.75rem", fill: "hsl(var(--foreground) / 0.9)" }} />
-                      <YAxis stroke="hsl(var(--foreground) / 0.8)" style={{ fontSize: "0.75rem", fill: "hsl(var(--foreground) / 0.9)" }}/>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "var(--background)",
-                          border: "1px solid var(--border)",
-                          borderRadius: "0.5rem",
-                        }}
-                        labelStyle={{ color: "var(--foreground)" }}
-                      />
-                      <Bar dataKey="submissions" fill="hsl(var(--primary))" animationDuration={1000} />
-                      <Bar dataKey="evaluated" fill="hsl(var(--primary) / 0.6)" animationDuration={1000} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </motion.div>
-
-              {/* Quick Actions */}
-              <motion.div
-                className="surface-elevated rounded-xl p-6 border border-primary/20 shadow-lg shadow-primary/10"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.5 }}
-              >
-                <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-primary" />
-                  Quick Actions
-                </h3>
-                <div className="flex flex-wrap gap-3">
-                  {["Re-run All Evaluations", "Override Score", "Manage Hackathons", "Assign Admins"].map((action, idx) => (
-                    <motion.div
-                      key={action}
-                      initial={{ opacity: 0, scale: 0.8, y: 10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      transition={{ delay: 0.5 + idx * 0.1, type: "spring" }}
-                      className="relative group overflow-hidden"
-                    >
-                      <motion.button
-                        whileHover={{ y: -3 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="relative px-4 py-2.5 rounded-lg border border-primary/30 text-sm font-semibold text-primary bg-gradient-to-br from-primary/5 to-transparent hover:from-primary/10 hover:to-primary/5 transition-all duration-300 overflow-hidden"
-                      >
-                        {/* Animated shine effect */}
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/20 to-transparent"
-                          animate={{ x: ["-100%", "100%"] }}
-                          transition={{ duration: 3, repeat: Infinity }}
-                        />
-                        <span className="relative">{action}</span>
-                      </motion.button>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            </div>
-          )}
-
-        {activeTab === "Hackathons" && (
-          <motion.div
-            className="space-y-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            {["Origin 2K26", "BuildCore v3", "DevStrike '24"].map((name, idx) => (
-              <motion.div
-                key={name}
-                initial={{ opacity: 0, x: -40 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.15, duration: 0.7, ease: "easeOut" }}
-                whileHover={{ scale: 1.02, x: 12 }}
-                className="group relative surface-elevated rounded-xl p-6 border border-primary/20 overflow-hidden shadow-lg cursor-pointer"
-              >
-                {/* Animated gradient background on hover */}
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0"
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                  transition={{ duration: 0.4, ease: "easeInOut" }}
-                />
-
-                {/* Animated top border line with smooth animation */}
-                <motion.div
-                  className="absolute top-0 left-0 h-1 bg-gradient-to-r from-primary via-primary/60 to-transparent"
-                  initial={{ width: 0 }}
-                  whileHover={{ width: "100%" }}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
-                />
-
-                {/* Animated right side accent */}
-                <motion.div
-                  className="absolute right-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary via-primary/40 to-transparent"
-                  initial={{ scaleY: 0 }}
-                  whileHover={{ scaleY: 1 }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
-                />
-
-                {/* Content */}
-                <div className="relative flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    {/* Animated status indicator */}
-                    <motion.div
-                      className="relative flex items-center justify-center"
-                      whileHover={{ rotate: 360 }}
-                      transition={{ duration: 0.8, ease: "easeInOut" }}
-                    >
-                      <motion.div
-                        className="absolute w-12 h-12 rounded-full bg-gradient-to-br from-primary/25 to-primary/10"
-                        animate={{ scale: [1, 1.15, 1] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                      />
-                      <motion.div
-                        className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-bold text-sm shadow-lg"
-                        animate={{ boxShadow: ["0 0 0 0 rgba(59, 130, 246, 0.5)", "0 0 0 8px rgba(59, 130, 246, 0)"] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      >
-                        {idx + 1}
-                      </motion.div>
-                    </motion.div>
-
-                    {/* Hackathon info */}
-                    <motion.div 
-                      className="flex flex-col gap-1"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: idx * 0.15 + 0.2 }}
-                    >
-                      <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors duration-300">
-                        {name}
-                      </h3>
-                      <motion.p 
-                        className="text-xs text-muted-foreground"
-                        animate={{ opacity: [0.6, 1, 0.6] }}
-                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                      >
-                        Active • {85 + idx * 5} Submissions
-                      </motion.p>
-                    </motion.div>
-                  </div>
-
-                  {/* Manage button with enhanced animation */}
-                  <motion.button
-                    initial={{ opacity: 0.7, scale: 0.95 }}
-                    whileHover={{ opacity: 1, scale: 1.08 }}
-                    whileTap={{ scale: 0.96 }}
-                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/30 text-xs font-semibold text-primary hover:border-primary/60 transition-all duration-300 relative overflow-hidden group/btn"
-                  >
-                    <motion.span
-                      className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/30 to-primary/0"
-                      animate={{ x: ["-100%", "100%"] }}
-                      transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                    <span className="relative flex items-center gap-2">
-                      Manage
-                      <motion.span 
-                        animate={{ x: [0, 4, 0] }} 
-                        transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-                      >
-                        →
-                      </motion.span>
-                    </span>
-                  </motion.button>
-                </div>
-
-                {/* Stats row - appears on hover */}
-                <motion.div
-                  className="relative mt-5 pt-5 border-t border-primary/10 grid grid-cols-3 gap-4"
-                  initial={{ opacity: 0, y: 10 }}
-                  whileHover={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {[
-                    { label: "Submissions", value: `${85 + idx * 5}` },
-                    { label: "Avg Score", value: `${78 + idx * 2}.5` },
-                    { label: "Status", value: "Live" },
-                  ].map((stat, sidx) => (
-                    <motion.div
-                      key={stat.label}
-                      initial={{ opacity: 0, y: 5 }}
-                      whileHover={{ opacity: 1, y: 0 }}
-                      transition={{ delay: sidx * 0.08 }}
-                      className="text-center"
-                    >
-                      <motion.p 
-                        className="text-xs text-muted-foreground font-medium"
-                        animate={{ opacity: [0.6, 1, 0.6] }}
-                        transition={{ duration: 2.5, repeat: Infinity }}
-                      >
-                        {stat.label}
-                      </motion.p>
-                      <motion.p 
-                        className="text-sm font-semibold text-primary"
-                        animate={{ scale: [1, 1.05, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      >
-                        {stat.value}
-                      </motion.p>
-                    </motion.div>
-                  ))}
-                </motion.div>
-              </motion.div>
+                {activeTab === tab && <motion.span layoutId="active-dev-tab" className="absolute inset-0 rounded-lg bg-primary/15" />}
+                <span className="relative">{tab}</span>
+              </motion.button>
             ))}
-          </motion.div>
-        )}
+          </div>
 
-        {activeTab === "Evaluation" && (
-          <motion.div
-            className="space-y-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <motion.div
-              className="surface-elevated rounded-xl p-6 border border-primary/20 shadow-lg shadow-primary/10"
-              initial={{ opacity: 0, y: 30, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: 0.1, duration: 0.7, ease: "easeOut" }}
-              whileHover={{ borderColor: "hsl(var(--primary) / 0.4)" }}
+          <AnimatePresence mode="wait">
+            <motion.section
+              key={activeTab}
+              variants={contentVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              transition={sectionTransition}
+              className="space-y-6"
             >
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                  >
-                    <Zap className="w-4 h-4 text-primary" />
-                  </motion.div>
-                  Evaluation Engine
-                </h3>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Override scores, re-run evaluations, and monitor pipeline health from here.
-                </p>
-              </motion.div>
+              {activeTab === "System" && (
+                <>
+                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    {systemCards.map((card, idx) => (
+                      <motion.div
+                        key={card.label}
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.35, delay: idx * 0.06 }}
+                        whileHover={{ y: -4 }}
+                        className={`surface-elevated rounded-2xl border border-border/70 bg-gradient-to-br ${card.tone} p-5 shadow-lg shadow-black/15`}
+                      >
+                        <div className="mb-4 flex items-start justify-between">
+                          <p className="text-xs font-medium text-foreground/80">{card.label}</p>
+                          <div className={`rounded-lg bg-gradient-to-br p-2.5 text-white ${card.iconTone}`}>
+                            <card.icon className="h-4 w-4" />
+                          </div>
+                        </div>
+                        <p className="text-3xl font-semibold text-foreground">{card.value}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{card.delta}</p>
+                        <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted/70">
+                          <motion.div
+                            className="h-full rounded-full bg-gradient-to-r from-primary to-cyan-400"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${card.progress}%` }}
+                            transition={{ duration: 0.95, delay: idx * 0.08 + 0.2, ease: "easeOut" }}
+                          />
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
 
-              <motion.div
-                className="h-64 -mx-6"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3, duration: 0.8 }}
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={hackathonStatsData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--primary) / 0.2)" />
-                    <XAxis dataKey="name" stroke="hsl(var(--foreground) / 0.8)" style={{ fontSize: "0.75rem", fill: "hsl(var(--foreground) / 0.9)" }} />
-                    <YAxis stroke="hsl(var(--foreground) / 0.8)" style={{ fontSize: "0.75rem", fill: "hsl(var(--foreground) / 0.9)" }} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "var(--background)",
-                        border: "2px solid hsl(var(--primary))",
-                        borderRadius: "0.75rem",
-                        boxShadow: "0 10px 25px rgba(59, 130, 246, 0.2)",
-                      }}
-                      labelStyle={{ color: "var(--foreground)" }}
-                    />
-                    <Bar dataKey="evaluated" fill="hsl(var(--primary))" animationDuration={1500} isAnimationActive={true} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </motion.div>
-            </motion.div>
-
-            <motion.div
-              className="grid grid-cols-2 gap-4"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-            >
-              {[
-                { label: "Evaluations/Hour", value: "124", icon: BarChart3, color: "from-blue-400 to-blue-500" },
-                { label: "Success Rate", value: "99.8%", icon: CheckCircle, color: "from-indigo-400 to-indigo-500" },
-              ].map((stat, idx) => (
-                <motion.div
-                  key={stat.label}
-                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ delay: 0.2 + idx * 0.1, duration: 0.6, ease: "easeOut" }}
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  className={`surface-elevated rounded-xl p-5 border border-primary/20 hover:border-primary/40 group cursor-pointer bg-gradient-to-br ${stat.color}/8`}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <motion.p 
-                      className="text-xs text-muted-foreground/90 font-medium"
-                      animate={{ opacity: [0.8, 1, 0.8] }}
-                      transition={{ duration: 3, repeat: Infinity }}
-                    >
-                      {stat.label}
-                    </motion.p>
+                  <div className="grid gap-4 xl:grid-cols-3">
                     <motion.div
-                      className={`p-2 rounded-lg bg-gradient-to-br ${stat.color} text-white`}
-                      whileHover={{ rotate: 15, scale: 1.15 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2, duration: 0.35 }}
+                      className="surface-elevated col-span-2 rounded-2xl border border-border/70 p-6"
                     >
-                      <stat.icon className="w-4 h-4" />
+                      <div className="mb-5 flex items-center justify-between">
+                        <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                          <TrendingUp className="h-4 w-4 text-primary" />
+                          Evaluation Trend
+                        </h3>
+                        <span className="rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs text-primary">Last 24h</span>
+                      </div>
+
+                      <div className="h-72">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={evaluationTrendData} margin={{ top: 8, right: 10, left: -10, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="countArea" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.35} />
+                                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                              </linearGradient>
+                              <linearGradient id="countLine" x1="0" y1="0" x2="1" y2="0">
+                                <stop offset="0%" stopColor="#60a5fa" />
+                                <stop offset="100%" stopColor="hsl(var(--primary))" />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid stroke="hsl(var(--primary) / 0.15)" strokeDasharray="3 3" />
+                            <XAxis dataKey="time" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} axisLine={false} tickLine={false} />
+                            <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} axisLine={false} tickLine={false} />
+                            <Tooltip content={<ChartTooltip />} cursor={{ stroke: "hsl(var(--primary) / 0.45)", strokeWidth: 1 }} />
+                            <Area
+                              type="monotone"
+                              dataKey="count"
+                              name="Evaluations"
+                              stroke="url(#countLine)"
+                              fill="url(#countArea)"
+                              strokeWidth={2.8}
+                              animationDuration={1100}
+                              animationEasing="ease-out"
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="avg"
+                              name="Avg Score"
+                              stroke="#9ca3af"
+                              strokeDasharray="6 6"
+                              strokeWidth={2}
+                              dot={false}
+                              animationDuration={1300}
+                              animationBegin={140}
+                              animationEasing="ease-out"
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.28, duration: 0.35 }}
+                      className="surface-elevated rounded-2xl border border-border/70 p-6"
+                    >
+                      <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <Activity className="h-4 w-4 text-emerald-400" />
+                        Engine Health
+                      </h3>
+                      <div className="h-56">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={statusData}
+                              dataKey="value"
+                              nameKey="name"
+                              innerRadius={56}
+                              outerRadius={82}
+                              paddingAngle={5}
+                              animationDuration={900}
+                            >
+                              {statusData.map((entry) => (
+                                <Cell key={entry.name} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip content={<ChartTooltip />} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <p className="text-center text-xs text-muted-foreground">3 / 3 nodes online and processing requests.</p>
                     </motion.div>
                   </div>
-                  <motion.p 
-                    className="text-2xl font-bold text-white"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 + idx * 0.1 + 0.2 }}
-                  >
-                    {stat.value}
-                  </motion.p>
-                </motion.div>
-              ))}
-            </motion.div>
-          </motion.div>
-        )}
 
-        {activeTab === "Logs" && (
-          <motion.div
-            className="space-y-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <motion.div
-              className="surface-elevated rounded-xl p-6 border border-primary/20 bg-gradient-to-b from-background/50 to-background/25 max-h-96 overflow-y-auto"
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <motion.div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                <h3 className="text-sm font-semibold text-foreground">System Logs</h3>
-              </div>
-
-              <div className="space-y-2 font-mono text-xs">
-                {[
-                  { time: "14:23:01", action: "Evaluation completed", details: "NeuralForge → 94.2", type: "success" },
-                  { time: "14:22:58", action: "Repository parsed", details: "github.com/neuralforge/proj", type: "info" },
-                  { time: "14:22:45", action: "Submission received", details: "NeuralForge", type: "info" },
-                  { time: "14:20:12", action: "Engine health check", details: "OK", type: "success" },
-                  { time: "14:15:00", action: "Hackathon status", details: "LIVE", type: "success" },
-                ].map((log, idx) => (
                   <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    whileHover={{ x: 5, backgroundColor: "rgba(59, 130, 246, 0.05)" }}
-                    className="flex gap-4 p-2 rounded border border-transparent hover:border-primary/20 transition-all duration-300 group"
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.35, duration: 0.35 }}
+                    className="surface-elevated rounded-2xl border border-border/70 p-6"
                   >
-                    <div className="flex items-center gap-2 min-w-fit">
-                      <motion.div
-                        className={`w-2 h-2 rounded-full ${log.type === "success" ? "bg-success" : "bg-primary"}`}
-                        animate={{ scale: [1, 1.3, 1] }}
-                        transition={{ duration: 2, repeat: Infinity, delay: idx * 0.1 }}
-                      />
-                      <span className="text-muted-foreground font-mono text-xs">[{log.time}]</span>
+                    <div className="mb-5 flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-foreground">Submissions by Hackathon</h3>
+                      <span className="text-xs text-muted-foreground">Compared with evaluated count</span>
                     </div>
-                    <div className="flex-1 flex flex-col gap-1">
-                      <span className="text-foreground group-hover:text-primary transition-colors font-medium">{log.action}</span>
-                      <span className="text-muted-foreground text-xs">{log.details}</span>
+                    <div className="h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={hackathonStatsData} margin={{ top: 6, right: 8, left: -12, bottom: 0 }}>
+                          <CartesianGrid stroke="hsl(var(--primary) / 0.12)" strokeDasharray="3 3" />
+                          <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} axisLine={false} tickLine={false} />
+                          <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} axisLine={false} tickLine={false} />
+                          <Tooltip content={<ChartTooltip />} />
+                          <Bar dataKey="submissions" name="Submissions" radius={[8, 8, 0, 0]} fill="hsl(var(--primary))" animationDuration={900} />
+                          <Bar dataKey="evaluated" name="Evaluated" radius={[8, 8, 0, 0]} fill="#60a5fa" animationDuration={1200} />
+                        </BarChart>
+                      </ResponsiveContainer>
                     </div>
-                    <motion.div
-                      className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                        log.type === "success" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"
-                      }`}
-                      whileHover={{ scale: 1.1 }}
-                    >
-                      {log.type === "success" ? "✓" : "ℹ"}
-                    </motion.div>
                   </motion.div>
-                ))}
-              </div>
-            </motion.div>
+                </>
+              )}
 
-            {/* Log controls */}
-            <motion.div
-              className="flex gap-3"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-            >
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/30 text-xs font-semibold text-primary hover:border-primary/60 transition-all"
-              >
-                Clear Logs
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/30 text-xs font-semibold text-primary hover:border-primary/60 transition-all"
-              >
-                Export
-              </motion.button>
-            </motion.div>
-          </motion.div>
-        )}
-        </motion.div>
-      </div>
+              {activeTab === "Hackathons" && (
+                <div className="grid gap-5 xl:grid-cols-3">
+                  <motion.form
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35 }}
+                    onSubmit={handleCreateHackathon}
+                    className="surface-elevated rounded-2xl border border-border/70 p-5 xl:col-span-1"
+                  >
+                    <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <PlusCircle className="h-4 w-4 text-primary" />
+                      Add New Hackathon
+                    </h3>
+                    <div className="space-y-3">
+                      <input
+                        value={newHackathon.name}
+                        onChange={(event) => setNewHackathon((prev) => ({ ...prev, name: event.target.value }))}
+                        placeholder="Hackathon Name"
+                        className="w-full rounded-lg border border-border/70 bg-card/70 px-3 py-2 text-sm outline-none transition-colors focus:border-primary/50"
+                      />
+                      <input
+                        value={newHackathon.slug}
+                        onChange={(event) => setNewHackathon((prev) => ({ ...prev, slug: event.target.value }))}
+                        placeholder="Slug (optional)"
+                        className="w-full rounded-lg border border-border/70 bg-card/70 px-3 py-2 text-sm outline-none transition-colors focus:border-primary/50"
+                      />
+                      <input
+                        value={newHackathon.theme}
+                        onChange={(event) => setNewHackathon((prev) => ({ ...prev, theme: event.target.value }))}
+                        placeholder="Theme"
+                        className="w-full rounded-lg border border-border/70 bg-card/70 px-3 py-2 text-sm outline-none transition-colors focus:border-primary/50"
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="datetime-local"
+                          title="Hackathon start date and time"
+                          value={newHackathon.startDate}
+                          onChange={(event) => setNewHackathon((prev) => ({ ...prev, startDate: event.target.value }))}
+                          className="w-full rounded-lg border border-border/70 bg-card/70 px-3 py-2 text-sm outline-none transition-colors focus:border-primary/50"
+                        />
+                        <input
+                          type="number"
+                          min={1}
+                          title="Hackathon duration in hours"
+                          placeholder="Duration"
+                          value={newHackathon.durationHours}
+                          onChange={(event) => setNewHackathon((prev) => ({ ...prev, durationHours: event.target.value }))}
+                          className="w-full rounded-lg border border-border/70 bg-card/70 px-3 py-2 text-sm outline-none transition-colors focus:border-primary/50"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
+                      >
+                        <Rocket className="h-4 w-4" />
+                        Create Live Hackathon
+                      </button>
+                    </div>
+                    <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                      <Calendar className="h-3.5 w-3.5 text-primary" />
+                      New hackathons appear instantly in this list.
+                    </p>
+                  </motion.form>
+
+                  <div className="space-y-4 xl:col-span-2">
+                    {hackathons.map((hackathon, idx) => {
+                      const progress = hackathon.submissions ? Math.round((hackathon.evaluated / hackathon.submissions) * 100) : 0;
+                      return (
+                        <motion.div
+                          key={hackathon.slug}
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.06 }}
+                          whileHover={{ y: -3 }}
+                          className="surface-elevated rounded-2xl border border-border/70 p-5"
+                        >
+                          <div className="mb-3 flex items-center justify-between gap-3">
+                            <div>
+                              <h3 className="text-sm font-semibold text-foreground">{hackathon.name}</h3>
+                              <p className="text-xs text-muted-foreground">{hackathon.theme}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-400">
+                                {hackathon.status === "live" ? "Live" : "Scheduled"}
+                              </span>
+                              <Link
+                                to={`/hackathon/${hackathon.slug}/login`}
+                                className="rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs text-primary transition-colors hover:bg-primary/20"
+                              >
+                                Open Live
+                              </Link>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-3 gap-3 text-xs text-muted-foreground">
+                            <p>Submissions: {hackathon.submissions}</p>
+                            <p>Evaluated: {hackathon.evaluated}</p>
+                            <p>Duration: {hackathon.durationHours}h</p>
+                          </div>
+                          <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted/70">
+                            <motion.div
+                              className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-primary"
+                              initial={{ width: 0 }}
+                              animate={{ width: `${progress}%` }}
+                              transition={{ duration: 0.75, delay: idx * 0.08 + 0.15, ease: "easeOut" }}
+                            />
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "Evaluation" && (
+                <div className="grid gap-4 lg:grid-cols-3">
+                  <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="surface-elevated rounded-2xl border border-border/70 p-6 lg:col-span-2"
+                  >
+                    <h3 className="mb-5 flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <Zap className="h-4 w-4 text-primary" />
+                      Evaluation Pipeline Throughput
+                    </h3>
+                    <div className="h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={hackathonStatsData.map((h) => ({ ...h, efficiency: Math.round((h.evaluated / h.submissions) * 100) }))}>
+                          <defs>
+                            <linearGradient id="effGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.4} />
+                              <stop offset="100%" stopColor="#22d3ee" stopOpacity={0.05} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid stroke="hsl(var(--primary) / 0.12)" strokeDasharray="3 3" />
+                          <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} axisLine={false} tickLine={false} />
+                          <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} axisLine={false} tickLine={false} />
+                          <Tooltip content={<ChartTooltip />} />
+                          <Area dataKey="efficiency" name="Efficiency %" stroke="#22d3ee" fill="url(#effGradient)" strokeWidth={2.5} animationDuration={900} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="surface-elevated space-y-4 rounded-2xl border border-border/70 p-6"
+                  >
+                    {[{ label: "Evaluations / hour", value: "124", icon: BarChart3 }, { label: "Success rate", value: "99.8%", icon: CheckCircle }].map((item, idx) => (
+                      <motion.div
+                        key={item.label}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.08 + 0.2 }}
+                        className="rounded-xl border border-border/70 bg-card/70 p-4"
+                      >
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">{item.label}</span>
+                          <item.icon className="h-4 w-4 text-primary" />
+                        </div>
+                        <p className="text-2xl font-semibold text-foreground">{item.value}</p>
+                      </motion.div>
+                    ))}
+                    <button className="w-full rounded-lg border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20">
+                      Re-run All Evaluations
+                    </button>
+                  </motion.div>
+                </div>
+              )}
+
+              {activeTab === "Logs" && (
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="surface-elevated rounded-2xl border border-border/70 p-6">
+                  <h3 className="mb-4 text-sm font-semibold text-foreground">System Logs</h3>
+                  <div className="space-y-2 text-xs">
+                    {[
+                      { time: "14:23:01", action: "Evaluation completed", details: "NeuralForge -> 94.2", type: "success" },
+                      { time: "14:22:58", action: "Repository parsed", details: "github.com/neuralforge/proj", type: "info" },
+                      { time: "14:22:45", action: "Submission received", details: "NeuralForge", type: "info" },
+                      { time: "14:20:12", action: "Engine health check", details: "OK", type: "success" },
+                      { time: "14:15:00", action: "Hackathon status", details: "LIVE", type: "success" },
+                    ].map((log, idx) => (
+                      <motion.div
+                        key={log.time}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        className="flex items-center gap-3 rounded-lg border border-border/60 bg-card/60 p-3"
+                      >
+                        <span className={`h-2 w-2 rounded-full ${log.type === "success" ? "bg-emerald-400" : "bg-cyan-400"}`} />
+                        <span className="font-mono text-muted-foreground">[{log.time}]</span>
+                        <span className="text-foreground">{log.action}</span>
+                        <span className="text-muted-foreground">{log.details}</span>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </motion.section>
+          </AnimatePresence>
+        </main>
       </div>
     </div>
   );
