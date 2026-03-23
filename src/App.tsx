@@ -14,9 +14,34 @@ import Leaderboard from "./pages/Leaderboard";
 import AdminAuth from "./pages/AdminAuth";
 import HackathonAdminDashboard from "./pages/HackathonAdminDashboard";
 import DeveloperAdminDashboard from "./pages/DeveloperAdminDashboard";
+import { LoadingScreen } from "./components/LoadingScreen";
 
 const queryClient = new QueryClient();
 
+/**
+ * The permanent background watermark, always present behind the site content.
+ */
+function LogoBackgroundWatermark() {
+  if (typeof document === 'undefined') return null;
+  return createPortal(
+    <img
+      src="/oregent-logo.png"
+      aria-hidden="true"
+      className="site-logo-bg"
+      alt=""
+    />,
+    document.body
+  );
+}
+
+const App = () => {
+  // `isRevealed` becomes true when the loading screen blast animation reaches the point
+  // where the site content should start fading/scaling in.
+  const [isRevealed, setIsRevealed] = useState(false);
+
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 0.2,
 const App = () => {
   useEffect(() => {
     const lenis = new Lenis({
@@ -39,6 +64,31 @@ const App = () => {
   }, []);
 
   return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        {/* The permanent low-opacity watermark */}
+        <LogoBackgroundWatermark />
+        {/* The cinematic loading screen (unmounts after it finishes) */}
+        <LoadingScreen onReveal={() => setIsRevealed(true)} />
+
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <div className={isRevealed ? 'site-ready' : ''} style={{ opacity: isRevealed ? undefined : 0 }}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/hackathon/:hackathonId/login" element={<HackathonLogin />} />
+              <Route path="/hackathon/:hackathonId/submit" element={<SubmissionPage />} />
+              <Route path="/hackathon/:hackathonId/leaderboard" element={<Leaderboard />} />
+              <Route path="/admin/auth" element={<AdminAuth />} />
+              <Route path="/admin/hackathon" element={<HackathonAdminDashboard />} />
+              <Route path="/admin/developer" element={<DeveloperAdminDashboard />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <SmoothCursor />
