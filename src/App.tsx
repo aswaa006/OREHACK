@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
+import { useEffect } from "react";
 import Lenis from "lenis";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { SmoothCursor } from "@/components/ui/smooth-cursor";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import HackathonLogin from "./pages/HackathonLogin";
@@ -42,6 +42,10 @@ const App = () => {
   useEffect(() => {
     const lenis = new Lenis({
       duration: 0.2,
+const App = () => {
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.6,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
       wheelMultiplier: 0.85,
@@ -85,6 +89,25 @@ const App = () => {
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <SmoothCursor />
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/hackathon/:hackathonId/login" element={<HackathonLogin />} />
+          <Route path="/hackathon/:hackathonId/submit" element={<SubmissionPage />} />
+          <Route path="/hackathon/:hackathonId/leaderboard" element={<Leaderboard />} />
+          <Route path="/admin/auth" element={<AdminAuth />} />
+          <Route path="/admin/hackathon" element={<HackathonAdminDashboard />} />
+          <Route path="/admin/developer" element={<DeveloperAdminDashboard />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
   );
 
 };

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -55,6 +55,7 @@
 
 html.lenis,
 html.lenis body {
+html.lenis, html.lenis body {
   height: auto;
 }
 
@@ -73,6 +74,7 @@ html.lenis body {
 @layer base {
   * {
     @apply border-border;
+    cursor: none !important;
   }
 
   body {
@@ -85,6 +87,7 @@ html.lenis body {
   input,
   textarea,
   select {
+  button, a, input, textarea, select {
     cursor: none !important;
   }
 }
