@@ -1,0 +1,155 @@
+/* ===== Hamburger Menu Toggle ===== */
+.menuToggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 30px;
+  height: 24px;
+  padding: 0;
+  z-index: 1001;
+  transition: all 0.3s ease;
+}
+
+.menuToggle:hover .line {
+  background-color: hsl(var(--primary));
+}
+
+.menuToggle[aria-expanded="true"] .line:nth-child(1) {
+  transform: translateY(9px) rotate(45deg);
+  transform-origin: center;
+}
+
+.menuToggle[aria-expanded="true"] .line:nth-child(2) {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.menuToggle[aria-expanded="true"] .line:nth-child(3) {
+  transform: translateY(-9px) rotate(-45deg);
+  transform-origin: center;
+}
+
+.line {
+  display: block;
+  width: 100%;
+  height: 2.5px;
+  background-color: currentColor;
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin: 3px 0;
+}
+
+/* ===== Navigation Menu ===== */
+.mainNavigation {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+ 
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  padding: 16px 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mainNavigation.isOpen {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.navigationList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+.navigationList li {
+  margin: 8px 0;
+}
+
+.navigationLink {
+  background: none;
+  border: none;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 1);
+  padding: 12px 20px;
+  display: block;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  position: relative;
+}
+
+.navigationLink::before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  bottom: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.navigationLink:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: hsl(var(--primary));
+}
+
+.navigationLink:hover::before {
+  width: calc(100% - 40px);
+}
+
+.navigationLink:active {
+  transform: scale(0.98);
+}
+
+/* Progress Bar Animation */
+.progressBar {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--primary)),
+    hsl(var(--accent))
+  );
+  border-radius: 9999px;
+  height: 100%;
+}
+
+/* Smooth transitions */
+@keyframes slideIn {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.navbarContainer {
+  animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Scrolled navbar styles */
+.scrolled {
+  background: rgba(var(--card), 0.95);
+  border-bottom: 1px solid hsl(var(--border));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Theme transition */
+.themeTransition {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}

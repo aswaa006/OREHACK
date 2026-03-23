@@ -1,0 +1,209 @@
+.scroll-stack-scroller {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: visible;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: auto;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: scroll-position;
+}
+
+/* When using window scroll, don't create a nested scroll container */
+.scroll-stack-scroller.scroll-stack-window-mode {
+  height: auto;
+  overflow: visible;
+  overscroll-behavior: auto;
+  will-change: auto;
+}
+
+.scroll-stack-inner {
+  padding: 10vh 0 50rem;
+  min-height: 100vh;
+}
+
+.scroll-stack-window-mode .scroll-stack-inner {
+  padding: 5vh 0 40rem;
+}
+
+.scroll-stack-card-wrapper {
+  position: relative;
+}
+
+.scroll-stack-card {
+  transform-origin: top center;
+  will-change: transform, filter;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  box-shadow: 0 8px 60px rgba(0, 0, 0, 0.25);
+  min-height: 85vh;
+  width: 100%;
+  margin: 30px 0;
+  padding: 0;
+  border-radius: 32px;
+  box-sizing: border-box;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  position: relative;
+  overflow: hidden;
+  transition: filter 0.4s ease-out;
+}
+
+.scroll-stack-end {
+  width: 100%;
+  height: 1px;
+}
+
+/* ── HowItWorks card styles ── */
+
+.hiw-card {
+  width: 100%;
+  height: 100%;
+  min-height: 85vh;
+  display: flex;
+  align-items: stretch;
+  border-radius: 32px;
+  overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.hiw-card-left {
+  flex: 1;
+  padding: clamp(2.5rem, 5vw, 4.5rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.hiw-step-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  margin: 0;
+}
+
+.hiw-title {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: clamp(3rem, 7vw, 5.5rem);
+  font-weight: 900;
+  color: #fff;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  margin: 0;
+  white-space: pre-line;
+  text-transform: uppercase;
+}
+
+.hiw-desc {
+  font-size: clamp(0.9rem, 1.2vw, 1.05rem);
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.7;
+  max-width: 520px;
+  margin: 0;
+  font-style: italic;
+}
+
+.hiw-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.hiw-tag {
+  padding: 0.45rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.75);
+  background: transparent;
+  letter-spacing: 0.02em;
+}
+
+.hiw-card-right {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: clamp(2rem, 4vw, 3.5rem);
+  padding-left: 0;
+}
+
+.hiw-info-box {
+  border-radius: 20px;
+  padding: 2rem 1.8rem;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  position: relative;
+}
+
+.hiw-arrow-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fff;
+  color: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+.hiw-info-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.hiw-info-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.hiw-info-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .hiw-card {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .scroll-stack-card {
+    min-height: auto;
+  }
+
+  .hiw-card-left {
+    padding: 2rem 1.5rem;
+  }
+
+  .hiw-title {
+    font-size: clamp(2rem, 10vw, 3.2rem);
+  }
+
+  .hiw-card-right {
+    padding: 0 1.5rem 2rem;
+    justify-content: flex-start;
+  }
+
+  .hiw-info-box {
+    min-width: unset;
+    width: 100%;
+  }
+}
