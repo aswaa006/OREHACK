@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -53,14 +53,40 @@
   }
 }
 
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
 @layer base {
   * {
     @apply border-border;
+    cursor: none !important;
   }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
+  }
+
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    cursor: none !important;
   }
 }
 
@@ -102,9 +128,2101 @@
       opacity: 0;
       transform: translateY(20px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
+
+}
+
+@keyframes logo-bg-spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes logo-bg-breathe {
+
+  0%,
+  100% {
+    opacity: 0.04;
+  }
+
+  50% {
+    opacity: 0.08;
+  }
+}
+
+/* ============================================================
+   PERSISTENT BACKGROUND WATERMARK
+   ============================================================ */
+.site-logo-bg {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 60vmin;
+  height: 60vmin;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+  object-fit: contain;
+  opacity: 0.04;
+  animation: logo-bg-spin 20s linear infinite, logo-bg-breathe 8s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* ============================================================
+   MODERN FUTURISTIC LOADING SCREEN (.cl-*)
+   ============================================================ */
+
+.cinematic-loader-root {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  overflow: hidden;
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  gap: 3rem;
+}
+
+.cinematic-loader-fading {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ============================================================
+   BACKGROUND EFFECTS
+   ============================================================ */
+
+.cl-bg-glow-1,
+.cl-bg-glow-2 {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.02) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.cl-bg-glow-1 {
+  animation: clBgPulse1 4s ease-in-out infinite;
+}
+
+.cl-bg-glow-2 {
+  animation: clBgPulse2 4s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+/* Center ambient glow - floating effect */
+.cl-center-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 50vmin;
+  height: 50vmin;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.04) 0%, transparent 70%);
+  border-radius: 50%;
+  opacity: 0;
+  animation: clCenterGlow 4s cubic-bezier(0.4, 0.1, 0.2, 1) forwards;
+  filter: blur(50px);
+}
+
+/* Particle effects - anti-gravity floating */
+.cl-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cl-particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.7), transparent);
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
+}
+
+.cl-particle-1 {
+  top: 20%;
+  left: 15%;
+  animation: clFloatParticle1 4s ease-in-out forwards;
+}
+
+.cl-particle-2 {
+  top: 25%;
+  right: 12%;
+  animation: clFloatParticle2 4s ease-in-out forwards;
+}
+
+.cl-particle-3 {
+  bottom: 25%;
+  left: 10%;
+  animation: clFloatParticle3 4s ease-in-out forwards;
+}
+
+.cl-particle-4 {
+  bottom: 20%;
+  right: 15%;
+  animation: clFloatParticle4 4s ease-in-out forwards;
+}
+
+/* ============================================================
+   MAIN LOGO CONTAINER
+   ============================================================ */
+
+.cl-container {
+  position: relative;
+  width: min(40vw, 240px);
+  height: min(40vw, 240px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  animation: clContainerRotate 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.cl-logo-image-main {
+  position: absolute;
+  width: 70%;
+  height: 70%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  object-fit: contain;
+  z-index: 10;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.2));
+  animation: clLogoMainBreathe 4s ease-out forwards;
+}
+
+/* ============================================================
+   BURST PARTICLES - Scattered when logo explodes
+   ============================================================ */
+
+.cl-burst-particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 8;
+}
+
+.cl-burst-particle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.2));
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
+  opacity: 0;
+}
+
+.cl-burst-0 { animation: clBurst0 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-1 { animation: clBurst1 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-2 { animation: clBurst2 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-3 { animation: clBurst3 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-4 { animation: clBurst4 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-5 { animation: clBurst5 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-6 { animation: clBurst6 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-7 { animation: clBurst7 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-8 { animation: clBurst8 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-9 { animation: clBurst9 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-10 { animation: clBurst10 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-11 { animation: clBurst11 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-12 { animation: clBurst12 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-13 { animation: clBurst13 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-14 { animation: clBurst14 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-15 { animation: clBurst15 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-16 { animation: clBurst16 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-17 { animation: clBurst17 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-18 { animation: clBurst18 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-19 { animation: clBurst19 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-20 { animation: clBurst20 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-21 { animation: clBurst21 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-22 { animation: clBurst22 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+.cl-burst-23 { animation: clBurst23 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3s forwards; }
+
+/* Constellation SVG */
+.cl-constellation-svg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  z-index: 5;
+}
+
+/* Constellation Nodes - particles that pulse */
+.cl-node {
+  opacity: 0;
+  will-change: transform, opacity, r;
+}
+
+.cl-node-1 { animation: clNodePulse1 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.cl-node-2 { animation: clNodePulse2 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.1s; }
+.cl-node-3 { animation: clNodePulse3 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.2s; }
+.cl-node-4 { animation: clNodePulse4 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.3s; }
+.cl-node-5 { animation: clNodePulse5 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.15s; }
+.cl-node-6 { animation: clNodePulse6 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.25s; }
+.cl-node-7 { animation: clNodePulse7 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.35s; }
+.cl-node-8 { animation: clNodePulse8 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.4s; }
+
+/* Center node */
+.cl-center-node {
+  opacity: 0;
+  animation: clCenterNodePulse 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Connection lines between nodes */
+.cl-connection-line {
+  opacity: 0;
+  will-change: opacity, stroke-width;
+  stroke-linecap: round;
+}
+
+.cl-line-1 { animation: clLineConnect1 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.cl-line-2 { animation: clLineConnect2 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.1s; }
+.cl-line-3 { animation: clLineConnect3 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.2s; }
+.cl-line-4 { animation: clLineConnect4 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.3s; }
+.cl-line-5 { animation: clLineConnect5 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.15s; }
+.cl-line-6 { animation: clLineConnect6 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.25s; }
+.cl-line-7 { animation: clLineConnect7 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.35s; }
+.cl-line-8 { animation: clLineConnect8 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.4s; }
+
+/* Disassembled Logo Fragments */
+.cl-logo-fragments {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.cl-logo-fragment {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  object-fit: contain;
+  object-position: center;
+  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.4));
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* SVG Curved Logo Style */
+.cl-logo-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  animation: clLogoScale 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Curve animations - smooth curved disassembly */
+.cl-curve {
+  opacity: 0;
+  stroke-dasharray: 200;
+  stroke-dashoffset: 0;
+  will-change: transform, opacity, stroke-dashoffset;
+}
+
+/* Outer Curve 1 - Top Arc (scatters upward) */
+.cl-curve-1 {
+  animation: clCurveDisassemble1 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Outer Curve 2 - Right Arc (scatters right) */
+.cl-curve-2 {
+  animation: clCurveDisassemble2 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation-delay: 0.1s;
+}
+
+/* Outer Curve 3 - Bottom Arc (scatters down) */
+.cl-curve-3 {
+  animation: clCurveDisassemble3 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation-delay: 0.2s;
+}
+
+/* Outer Curve 4 - Left Arc (scatters left) */
+.cl-curve-4 {
+  animation: clCurveDisassemble4 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation-delay: 0.3s;
+}
+
+/* Inner curves with longer delays */
+.cl-curve-5 {
+  animation: clCurveDisassemble1 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation-delay: 0.15s;
+}
+
+.cl-curve-6 {
+  animation: clCurveDisassemble2 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation-delay: 0.25s;
+}
+
+.cl-curve-7 {
+  animation: clCurveDisassemble3 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation-delay: 0.35s;
+}
+
+.cl-curve-8 {
+  animation: clCurveDisassemble4 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation-delay: 0.4s;
+}
+
+/* Center spiral */
+.cl-curve-9 {
+  animation: clCurveDisassembleCenter 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation-delay: 0.2s;
+}
+
+/* Center core */
+.cl-curve-core {
+  opacity: 0;
+  animation: clCoreEmerge 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Rings - floating orbits */
+.cl-ring {
+  transform-origin: 50px 50px;
+  will-change: transform, opacity;
+  transition: stroke 0.3s ease;
+}
+
+.cl-ring-outer {
+  animation: clRingOuter 4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.cl-ring-mid {
+  animation: clRingMid 4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation-delay: 0.2s;
+}
+
+.cl-ring-inner {
+  animation: clRingInner 4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation-delay: 0.4s;
+}
+
+/* Connector lines - assembling */
+.cl-line {
+  transform-origin: 50px 50px;
+  will-change: transform, opacity;
+}
+
+.cl-line-1 { animation: clLineAssemble1 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.cl-line-2 { animation: clLineAssemble2 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.1s; }
+.cl-line-3 { animation: clLineAssemble3 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.2s; }
+.cl-line-4 { animation: clLineAssemble4 4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.3s; }
+
+/* Center core - pulsing energy */
+.cl-core {
+  transform-origin: 50px 50px;
+  animation: clCorePulse 4s cubic-bezier(0.4, 0.1, 0.2, 1) forwards;
+  will-change: transform, opacity, filter;
+}
+
+/* Orbital dots - floating geometry */
+.cl-orbit-dot {
+  transform-origin: 50px 50px;
+  will-change: transform, opacity;
+}
+
+.cl-orbit-dot-1 { animation: clOrbitalDot1 4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+.cl-orbit-dot-2 { animation: clOrbitalDot2 4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.15s; }
+.cl-orbit-dot-3 { animation: clOrbitalDot3 4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.3s; }
+.cl-orbit-dot-4 { animation: clOrbitalDot4 4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.45s; }
+
+/* Highlight sweep */
+.cl-highlight {
+  opacity: 0;
+  animation: clHighlightSweep 4s ease-in-out forwards;
+}
+
+/* ============================================================
+   STATUS INDICATOR
+   ============================================================ */
+
+.cl-status {
+  position: absolute;
+  bottom: 100px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  opacity: 0;
+  animation: clStatusFadeIn 4s cubic-bezier(0.4, 0.1, 0.2, 1) forwards;
+  animation-delay: 0.5s;
+}
+
+.cl-dot-pulse {
+  width: 6px;
+  height: 6px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+  animation: clPulseDot 1.5s ease-in-out infinite;
+}
+
+.cl-status-text {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+  font-family: 'Inter', 'Helvetica', 'Arial', sans-serif;
+  animation: clStatusFade 0.8s ease-in-out;
+}
+
+.cl-welcome-fade {
+  animation: clWelcomeFadeOut 0.8s ease-in forwards !important;
+}
+
+.cl-almost-there {
+  animation: clAlmostThereFadeUp 1.4s ease-out forwards !important;
+}
+
+.cl-status-text:last-child {
+  animation: clStatusFadeUp 0.8s ease-out;
+}
+
+/* ============================================================
+   PROGRESS BAR
+   ============================================================ */
+
+.cl-progress-bar-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: rgba(64, 64, 64, 0.2);
+  z-index: 99998;
+  overflow: hidden;
+}
+
+.cl-progress-bar-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.8));
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: clProgressFill 4s ease-in-out forwards;
+}
+
+.cinematic-loader-fading .cl-progress-bar-container {
+  animation: clProgressBarFadeOut 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ============================================================
+   KEYFRAME ANIMATIONS
+   ============================================================ */
+
+/* Background glow pulses */
+@keyframes clBgPulse1 {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes clBgPulse2 {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.5; }
+}
+
+/* Center glow emergence */
+@keyframes clCenterGlow {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+  15% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  100% {
+    opacity: 0.4;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+}
+
+/* Floating particles */
+@keyframes clFloatParticle1 {
+  0% {
+    opacity: 0;
+    transform: translate(0, 40px) scale(0);
+  }
+  10% {
+    opacity: 1;
+    transform: translate(-20px, -10px) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(30px, -50px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(50px, -80px) scale(0.5);
+  }
+}
+
+@keyframes clFloatParticle2 {
+  0% {
+    opacity: 0;
+    transform: translate(0, -60px) scale(0);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(25px, -20px) scale(1);
+  }
+  75% {
+    opacity: 1;
+    transform: translate(-40px, 30px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-70px, 60px) scale(0.5);
+  }
+}
+
+@keyframes clFloatParticle3 {
+  0% {
+    opacity: 0;
+    transform: translate(0, 50px) scale(0);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(40px, 10px) scale(1);
+  }
+  70% {
+    opacity: 1;
+    transform: translate(-30px, -40px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-60px, -80px) scale(0.5);
+  }
+}
+
+@keyframes clFloatParticle4 {
+  0% {
+    opacity: 0;
+    transform: translate(0, -40px) scale(0);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(-30px, 20px) scale(1);
+  }
+  72% {
+    opacity: 1;
+    transform: translate(35px, -30px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(70px, -70px) scale(0.5);
+  }
+}
+
+/* Logo scale animation */
+@keyframes clLogoScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  10% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  75% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Container rotation - enhances the scaling and rotation effect */
+@keyframes clContainerRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  60% {
+    transform: rotate(360deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Logo breathing - subtle scale and glow */
+@keyframes clLogoMainBreathe {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.05) rotate(0deg);
+  }
+  5% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.15) rotate(60deg);
+  }
+  10% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.3) rotate(90deg);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.45) rotate(120deg);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.65) rotate(180deg);
+  }
+  30% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.85) rotate(260deg);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.3) rotate(360deg);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.35) rotate(360deg);
+  }
+  70% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.4) rotate(360deg);
+  }
+  75% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.45) rotate(360deg);
+  }
+  78% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.5) rotate(368deg);
+  }
+  81% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.8) rotate(373deg);
+  }
+  84% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(2.3) rotate(378deg);
+  }
+  87% {
+    opacity: 0.2;
+    transform: translate(-50%, -50%) scale(3.2) rotate(395deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(4.5) rotate(420deg);
+  }
+}
+
+/* Node Pulse Animations - nodes appear and pulse */
+
+@keyframes clNodePulse1 {
+  0% {
+    opacity: 0;
+    transform: translate(0, -60px) scale(0.1);
+  }
+  20% {
+    opacity: 0.4;
+    transform: translate(0, -50px) scale(0.5);
+  }
+  40% {
+    opacity: 1;
+    transform: translate(0, -30px) scale(1);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(0, -10px) scale(0.9);
+  }
+  85% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes clNodePulse2 {
+  0% {
+    opacity: 0;
+    transform: translate(60px, 0) scale(0.1);
+  }
+  20% {
+    opacity: 0.4;
+    transform: translate(50px, 0) scale(0.5);
+  }
+  40% {
+    opacity: 1;
+    transform: translate(30px, 0) scale(1);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(10px, 0) scale(0.9);
+  }
+  85% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes clNodePulse3 {
+  0% {
+    opacity: 0;
+    transform: translate(0, 60px) scale(0.1);
+  }
+  20% {
+    opacity: 0.4;
+    transform: translate(0, 50px) scale(0.5);
+  }
+  40% {
+    opacity: 1;
+    transform: translate(0, 30px) scale(1);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(0, 10px) scale(0.9);
+  }
+  85% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes clNodePulse4 {
+  0% {
+    opacity: 0;
+    transform: translate(-60px, 0) scale(0.1);
+  }
+  20% {
+    opacity: 0.4;
+    transform: translate(-50px, 0) scale(0.5);
+  }
+  40% {
+    opacity: 1;
+    transform: translate(-30px, 0) scale(1);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(-10px, 0) scale(0.9);
+  }
+  85% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes clNodePulse5 {
+  0% {
+    opacity: 0;
+    transform: translate(50px, -50px) scale(0.1);
+  }
+  20% {
+    opacity: 0.4;
+    transform: translate(40px, -40px) scale(0.5);
+  }
+  40% {
+    opacity: 1;
+    transform: translate(25px, -25px) scale(1);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(10px, -10px) scale(0.9);
+  }
+  85% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes clNodePulse6 {
+  0% {
+    opacity: 0;
+    transform: translate(50px, 50px) scale(0.1);
+  }
+  20% {
+    opacity: 0.4;
+    transform: translate(40px, 40px) scale(0.5);
+  }
+  40% {
+    opacity: 1;
+    transform: translate(25px, 25px) scale(1);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(10px, 10px) scale(0.9);
+  }
+  85% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes clNodePulse7 {
+  0% {
+    opacity: 0;
+    transform: translate(-50px, 50px) scale(0.1);
+  }
+  20% {
+    opacity: 0.4;
+    transform: translate(-40px, 40px) scale(0.5);
+  }
+  40% {
+    opacity: 1;
+    transform: translate(-25px, 25px) scale(1);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(-10px, 10px) scale(0.9);
+  }
+  85% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes clNodePulse8 {
+  0% {
+    opacity: 0;
+    transform: translate(-50px, -50px) scale(0.1);
+  }
+  20% {
+    opacity: 0.4;
+    transform: translate(-40px, -40px) scale(0.5);
+  }
+  40% {
+    opacity: 1;
+    transform: translate(-25px, -25px) scale(1);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(-10px, -10px) scale(0.9);
+  }
+  85% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+/* Center node - pulses as other nodes connect */
+@keyframes clCenterNodePulse {
+  0% {
+    opacity: 0;
+    r: 2px;
+  }
+  15% {
+    opacity: 1;
+    r: 8px;
+  }
+  35% {
+    opacity: 1;
+    r: 5px;
+  }
+  60% {
+    opacity: 1;
+    r: 7px;
+  }
+  100% {
+    opacity: 1;
+    r: 6px;
+  }
+}
+
+/* Connection Lines - glow and connect */
+
+@keyframes clLineConnect1 {
+  0% {
+    opacity: 0;
+    stroke-width: 0;
+  }
+  25% {
+    opacity: 0.3;
+    stroke-width: 1.5;
+  }
+  60% {
+    opacity: 0.6;
+    stroke-width: 1.5;
+  }
+  100% {
+    opacity: 0.4;
+    stroke-width: 1.5;
+  }
+}
+
+@keyframes clLineConnect2 {
+  0% {
+    opacity: 0;
+    stroke-width: 0;
+  }
+  25% {
+    opacity: 0.3;
+    stroke-width: 1.5;
+  }
+  60% {
+    opacity: 0.6;
+    stroke-width: 1.5;
+  }
+  100% {
+    opacity: 0.4;
+    stroke-width: 1.5;
+  }
+}
+
+@keyframes clLineConnect3 {
+  0% {
+    opacity: 0;
+    stroke-width: 0;
+  }
+  25% {
+    opacity: 0.3;
+    stroke-width: 1.5;
+  }
+  60% {
+    opacity: 0.6;
+    stroke-width: 1.5;
+  }
+  100% {
+    opacity: 0.4;
+    stroke-width: 1.5;
+  }
+}
+
+@keyframes clLineConnect4 {
+  0% {
+    opacity: 0;
+    stroke-width: 0;
+  }
+  25% {
+    opacity: 0.3;
+    stroke-width: 1.5;
+  }
+  60% {
+    opacity: 0.6;
+    stroke-width: 1.5;
+  }
+  100% {
+    opacity: 0.4;
+    stroke-width: 1.5;
+  }
+}
+
+@keyframes clLineConnect5 {
+  0% {
+    opacity: 0;
+    stroke-width: 0;
+  }
+  30% {
+    opacity: 0.2;
+    stroke-width: 1;
+  }
+  65% {
+    opacity: 0.4;
+    stroke-width: 1;
+  }
+  100% {
+    opacity: 0.25;
+    stroke-width: 1;
+  }
+}
+
+@keyframes clLineConnect6 {
+  0% {
+    opacity: 0;
+    stroke-width: 0;
+  }
+  30% {
+    opacity: 0.2;
+    stroke-width: 1;
+  }
+  65% {
+    opacity: 0.4;
+    stroke-width: 1;
+  }
+  100% {
+    opacity: 0.25;
+    stroke-width: 1;
+  }
+}
+
+@keyframes clLineConnect7 {
+  0% {
+    opacity: 0;
+    stroke-width: 0;
+  }
+  30% {
+    opacity: 0.2;
+    stroke-width: 1;
+  }
+  65% {
+    opacity: 0.4;
+    stroke-width: 1;
+  }
+  100% {
+    opacity: 0.25;
+    stroke-width: 1;
+  }
+}
+
+@keyframes clLineConnect8 {
+  0% {
+    opacity: 0;
+    stroke-width: 0;
+  }
+  30% {
+    opacity: 0.2;
+    stroke-width: 1;
+  }
+  65% {
+    opacity: 0.4;
+    stroke-width: 1;
+  }
+  100% {
+    opacity: 0.25;
+    stroke-width: 1;
+  }
+}
+
+/* ============================================================
+   LOGO BURST PARTICLE ANIMATIONS - Scattered explosion
+   ============================================================ */
+
+/* Each particle bursts in a different direction */
+
+/* 0° - Right */
+@keyframes clBurst0 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(180px, 0) scale(0.3) rotate(360deg);
+  }
+}
+
+/* 30° */
+@keyframes clBurst1 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(156px, 90px) scale(0.3) rotate(360deg);
+  }
+}
+
+/* 60° */
+@keyframes clBurst2 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(90px, 156px) scale(0.3) rotate(360deg);
+  }
+}
+
+/* 90° - Down */
+@keyframes clBurst3 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0, 180px) scale(0.3) rotate(360deg);
+  }
+}
+
+/* 120° */
+@keyframes clBurst4 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-90px, 156px) scale(0.3) rotate(360deg);
+  }
+}
+
+/* 150° */
+@keyframes clBurst5 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-156px, 90px) scale(0.3) rotate(360deg);
+  }
+}
+
+/* 180° - Left */
+@keyframes clBurst6 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-180px, 0) scale(0.3) rotate(360deg);
+  }
+}
+
+/* 210° */
+@keyframes clBurst7 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-156px, -90px) scale(0.3) rotate(360deg);
+  }
+}
+
+/* 240° */
+@keyframes clBurst8 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-90px, -156px) scale(0.3) rotate(360deg);
+  }
+}
+
+/* 270° - Up */
+@keyframes clBurst9 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0, -180px) scale(0.3) rotate(360deg);
+  }
+}
+
+/* 300° */
+@keyframes clBurst10 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(90px, -156px) scale(0.3) rotate(360deg);
+  }
+}
+
+/* 330° */
+@keyframes clBurst11 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(156px, -90px) scale(0.3) rotate(360deg);
+  }
+}
+
+/* Additional burst particles for crazier effect */
+
+/* 180° - Left */
+@keyframes clBurst12 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-250px, 0) scale(0.25) rotate(-360deg);
+  }
+}
+
+/* 195° */
+@keyframes clBurst13 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-241px, -65px) scale(0.25) rotate(-360deg);
+  }
+}
+
+/* 210° */
+@keyframes clBurst14 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-216px, -125px) scale(0.25) rotate(-360deg);
+  }
+}
+
+/* 225° */
+@keyframes clBurst15 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-177px, -177px) scale(0.25) rotate(-360deg);
+  }
+}
+
+/* 240° */
+@keyframes clBurst16 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-125px, -216px) scale(0.25) rotate(-360deg);
+  }
+}
+
+/* 255° */
+@keyframes clBurst17 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-65px, -241px) scale(0.25) rotate(-360deg);
+  }
+}
+
+/* 270° - Up */
+@keyframes clBurst18 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0, -250px) scale(0.25) rotate(-360deg);
+  }
+}
+
+/* 285° */
+@keyframes clBurst19 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(65px, -241px) scale(0.25) rotate(-360deg);
+  }
+}
+
+/* 300° */
+@keyframes clBurst20 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(125px, -216px) scale(0.25) rotate(-360deg);
+  }
+}
+
+/* 315° */
+@keyframes clBurst21 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(177px, -177px) scale(0.25) rotate(-360deg);
+  }
+}
+
+/* 330° */
+@keyframes clBurst22 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(216px, -125px) scale(0.25) rotate(-360deg);
+  }
+}
+
+/* 345° */
+@keyframes clBurst23 {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(241px, -65px) scale(0.25) rotate(-360deg);
+  }
+}
+
+/* Curved Disassembly Animations - Smooth curved expansion and contraction */
+
+/* Curve 1: Top Arc - expands upward along curve */
+@keyframes clCurveDisassemble1 {
+  0% {
+    opacity: 0;
+    transform: translate(0, -80px) scale(0.2);
+    stroke-dashoffset: 200;
+  }
+  10% {
+    opacity: 0.3;
+    transform: translate(0, -60px) scale(0.5);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(0, -40px) scale(0.8);
+    stroke-dashoffset: 100;
+  }
+  55% {
+    opacity: 1;
+    transform: translate(0, -15px) scale(0.95);
+    stroke-dashoffset: 20;
+  }
+  90% {
+    opacity: 1;
+    transform: translate(0, 0px) scale(1);
+    stroke-dashoffset: 0;
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0px) scale(1);
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Curve 2: Right Arc - expands rightward along curve */
+@keyframes clCurveDisassemble2 {
+  0% {
+    opacity: 0;
+    transform: translate(80px, 0) scale(0.2);
+    stroke-dashoffset: 200;
+  }
+  10% {
+    opacity: 0.3;
+    transform: translate(60px, 0) scale(0.5);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(40px, 0) scale(0.8);
+    stroke-dashoffset: 100;
+  }
+  55% {
+    opacity: 1;
+    transform: translate(15px, 0) scale(0.95);
+    stroke-dashoffset: 20;
+  }
+  90% {
+    opacity: 1;
+    transform: translate(0px, 0) scale(1);
+    stroke-dashoffset: 0;
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0px, 0) scale(1);
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Curve 3: Bottom Arc - expands downward along curve */
+@keyframes clCurveDisassemble3 {
+  0% {
+    opacity: 0;
+    transform: translate(0, 80px) scale(0.2);
+    stroke-dashoffset: 200;
+  }
+  10% {
+    opacity: 0.3;
+    transform: translate(0, 60px) scale(0.5);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(0, 40px) scale(0.8);
+    stroke-dashoffset: 100;
+  }
+  55% {
+    opacity: 1;
+    transform: translate(0, 15px) scale(0.95);
+    stroke-dashoffset: 20;
+  }
+  90% {
+    opacity: 1;
+    transform: translate(0, 0px) scale(1);
+    stroke-dashoffset: 0;
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0px) scale(1);
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Curve 4: Left Arc - expands leftward along curve */
+@keyframes clCurveDisassemble4 {
+  0% {
+    opacity: 0;
+    transform: translate(-80px, 0) scale(0.2);
+    stroke-dashoffset: 200;
+  }
+  10% {
+    opacity: 0.3;
+    transform: translate(-60px, 0) scale(0.5);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(-40px, 0) scale(0.8);
+    stroke-dashoffset: 100;
+  }
+  55% {
+    opacity: 1;
+    transform: translate(-15px, 0) scale(0.95);
+    stroke-dashoffset: 20;
+  }
+  90% {
+    opacity: 1;
+    transform: translate(0px, 0) scale(1);
+    stroke-dashoffset: 0;
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0px, 0) scale(1);
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Center spiral - expands outward in spiral, contracts smoothly */
+@keyframes clCurveDisassembleCenter {
+  0% {
+    opacity: 0;
+    transform: translate(30px, 30px) scale(0.1);
+    stroke-dashoffset: 200;
+  }
+  15% {
+    opacity: 1;
+    transform: translate(20px, 20px) scale(0.5);
+  }
+  40% {
+    opacity: 1;
+    transform: translate(10px, 10px) scale(0.85);
+    stroke-dashoffset: 50;
+  }
+  70% {
+    opacity: 1;
+    transform: translate(0px, 0px) scale(0.95);
+    stroke-dashoffset: 10;
+  }
+  95% {
+    opacity: 1;
+    transform: translate(0px, 0px) scale(1);
+    stroke-dashoffset: 0;
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0px, 0px) scale(1);
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Core emergence - pulses as curves assemble */
+@keyframes clCoreEmerge {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  20% {
+    opacity: 0.5;
+    transform: scale(0.6);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.9);
+  }
+  85% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Ring animations - orbital descent */
+@keyframes clRingOuter {
+  0% {
+    opacity: 0;
+    transform: translateY(-60px) scale(0.3) rotate(0deg);
+  }
+  15% {
+    opacity: 0.6;
+    transform: translateY(-20px) scale(0.8) rotate(-90deg);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(0) scale(1.05) rotate(-180deg);
+  }
+  75% {
+    opacity: 1;
+    transform: translateY(5px) scale(1) rotate(180deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(360deg);
+  }
+}
+
+@keyframes clRingMid {
+  0% {
+    opacity: 0;
+    transform: translateY(50px) scale(0.3) rotate(0deg);
+  }
+  15% {
+    opacity: 0.7;
+    transform: translateY(20px) scale(0.8) rotate(90deg);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(0) scale(1.05) rotate(180deg);
+  }
+  75% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(-180deg);
+  }
+}
+
+@keyframes clRingInner {
+  0% {
+    opacity: 0;
+    transform: translate(40px, 30px) scale(0.4) rotate(0deg);
+  }
+  15% {
+    opacity: 0.8;
+    transform: translate(15px, 10px) scale(0.85) rotate(45deg);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(0) translateX(0) scale(1.05) rotate(90deg);
+  }
+  75% {
+    opacity: 1;
+    transform: translateY(0) translateX(0) scale(1) rotate(45deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) translateX(0) scale(1) rotate(0deg);
+  }
+}
+
+/* Connecting lines assembly */
+@keyframes clLineAssemble1 {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.3);
+  }
+  15% {
+    opacity: 0.4;
+    transform: scaleY(0.6);
+  }
+  40% {
+    opacity: 0.8;
+    transform: scaleY(1.1);
+  }
+  100% {
+    opacity: 0.8;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes clLineAssemble2 {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.3);
+  }
+  15% {
+    opacity: 0.4;
+    transform: scaleX(0.6);
+  }
+  40% {
+    opacity: 0.8;
+    transform: scaleX(1.1);
+  }
+  100% {
+    opacity: 0.8;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes clLineAssemble3 {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.3);
+  }
+  15% {
+    opacity: 0.4;
+    transform: scaleY(0.6);
+  }
+  40% {
+    opacity: 0.8;
+    transform: scaleY(1.1);
+  }
+  100% {
+    opacity: 0.8;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes clLineAssemble4 {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.3);
+  }
+  15% {
+    opacity: 0.4;
+    transform: scaleX(0.6);
+  }
+  40% {
+    opacity: 0.8;
+    transform: scaleX(1.1);
+  }
+  100% {
+    opacity: 0.8;
+    transform: scaleX(1);
+  }
+}
+
+/* Core pulsing */
+@keyframes clCorePulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+    filter: blur(4px);
+  }
+  15% {
+    opacity: 1;
+    transform: scale(1.2);
+    filter: blur(0);
+  }
+  40% {
+    transform: scale(0.9);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Orbital dots animation */
+@keyframes clOrbitalDot1 {
+  0% {
+    opacity: 0;
+    transform: translateY(-45px) scale(0);
+  }
+  15% {
+    opacity: 0.6;
+    transform: translateY(-40px) scale(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-42px) scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(-42px) scale(1);
+  }
+}
+
+@keyframes clOrbitalDot2 {
+  0% {
+    opacity: 0;
+    transform: translateX(45px) scale(0);
+  }
+  15% {
+    opacity: 0.6;
+    transform: translateX(40px) scale(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(42px) scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(42px) scale(1);
+  }
+}
+
+@keyframes clOrbitalDot3 {
+  0% {
+    opacity: 0;
+    transform: translateY(45px) scale(0);
+  }
+  15% {
+    opacity: 0.6;
+    transform: translateY(40px) scale(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(42px) scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(42px) scale(1);
+  }
+}
+
+@keyframes clOrbitalDot4 {
+  0% {
+    opacity: 0;
+    transform: translateX(-45px) scale(0);
+  }
+  15% {
+    opacity: 0.6;
+    transform: translateX(-40px) scale(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-42px) scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-42px) scale(1);
+  }
+}
+
+/* Highlight sweep */
+@keyframes clHighlightSweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-100%) skewX(-20deg);
+  }
+  50% {
+    opacity: 0;
+  }
+  65% {
+    opacity: 1;
+    transform: translateX(0) skewX(-20deg);
+  }
+  80% {
+    opacity: 0;
+    transform: translateX(100%) skewX(-20deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(100%) skewX(-20deg);
+  }
+}
+
+/* Status indicator fade in */
+@keyframes clStatusFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Pulse dot animation */
+@keyframes clPulseDot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
+}
+
+/* Status text fade animation */
+@keyframes clStatusFade {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Status text fade up animation */
+@keyframes clStatusFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Almost there - fade up late at the end */
+@keyframes clAlmostThereFadeUp {
+  0% {
+    opacity: 0.05;
+    transform: translateY(0px);
+  }
+  85% {
+    opacity: 0.05;
+    transform: translateY(0px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(-10px);
+  }
+}
+
+/* Welcome message fade out animation */
+@keyframes clWelcomeFadeOut {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Progress bar fill animation - synchronized with loader timeline */
+@keyframes clProgressFill {
+  0% {
+    transform: scaleX(0);
+  }
+  37.5% {
+    transform: scaleX(0.375);
+  }
+  75% {
+    transform: scaleX(0.75);
+  }
+  95% {
+    transform: scaleX(0.95);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+/* Progress bar fade out with loader */
+@keyframes clProgressBarFadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ============================================================
+   SITE CONTENT ENTRANCE ANIMATION (DIRECTIONAL)
+   ============================================================ */
+.site-ready .reveal-nav {
+  animation: revealFromTopLeft 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.1s;
+}
+
+.site-ready .reveal-hero {
+  animation: revealFromTopRight 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.2s;
+}
+
+.site-ready .reveal-body {
+  animation: revealFromBottom 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.3s;
+}
+
+/* ============================================================
+   GLOBAL PREMIUM SAAS STYLE UPGRADES
+   ============================================================ */
+@layer base {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply tracking-tight font-medium;
+  }
+}
+
+@layer utilities {
+  .btn-premium {
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    background: linear-gradient(180deg, hsl(263 84% 65%), hsl(263 84% 50%));
+    box-shadow: 0 4px 14px 0 hsl(263 84% 58% / 0.39);
+    border: 1px solid hsl(263 84% 75% / 0.2);
+    @apply inline-flex items-center gap-2 px-8 py-3.5 rounded-lg text-primary-foreground font-semibold text-sm tracking-wide;
+  }
+
+  .btn-premium:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 20px 0 hsl(263 84% 58% / 0.6);
+    filter: brightness(1.1);
+  }
+
+  .btn-premium:active {
+    transform: translateY(0px) scale(0.98);
+  }
+}
+
+/* ============================================================
+   DIRECTIONAL REVEAL ANIMATIONS
+   ============================================================ */
+@keyframes revealFromTopLeft {
+  from {
+    opacity: 0;
+    transform: translate(-40px, -40px) scale(0.95);
+    filter: blur(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes revealFromTopRight {
+  from {
+    opacity: 0;
+    transform: translate(40px, -40px) scale(0.95);
+    filter: blur(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes revealFromBottom {
+  from {
+    opacity: 0;
+    transform: translate(0, 60px) scale(0.95);
+    filter: blur(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.reveal-nav {
+  animation: revealFromTopLeft 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.reveal-hero {
+  animation: revealFromTopRight 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.reveal-body {
+  animation: revealFromBottom 1s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
