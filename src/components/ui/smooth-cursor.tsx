@@ -81,9 +81,9 @@ const DefaultCursorSVG: FC = () => {
 export function SmoothCursor({
   cursor = <DefaultCursorSVG />,
   springConfig = {
-    damping: 45,
-    stiffness: 400,
-    mass: 1,
+    damping: 28,
+    stiffness: 800,
+    mass: 0.5,
     restDelta: 0.001,
   },
 }: SmoothCursorProps) {
@@ -97,13 +97,13 @@ export function SmoothCursor({
   const cursorY = useSpring(0, springConfig)
   const rotation = useSpring(0, {
     ...springConfig,
-    damping: 60,
-    stiffness: 300,
+    damping: 50,
+    stiffness: 400,
   })
   const scale = useSpring(1, {
     ...springConfig,
-    stiffness: 500,
-    damping: 35,
+    stiffness: 600,
+    damping: 30,
   })
 
   useEffect(() => {
@@ -159,23 +159,13 @@ export function SmoothCursor({
       }
     }
 
-    let rafId: number
-    const throttledMouseMove = (e: MouseEvent) => {
-      if (rafId) return
-
-      rafId = requestAnimationFrame(() => {
-        smoothMouseMove(e)
-        rafId = 0
-      })
-    }
-
+    // Process every mousemove directly — no rAF throttling to avoid dropped events
     document.body.style.cursor = "none"
-    window.addEventListener("mousemove", throttledMouseMove)
+    window.addEventListener("mousemove", smoothMouseMove, { passive: true })
 
     return () => {
-      window.removeEventListener("mousemove", throttledMouseMove)
+      window.removeEventListener("mousemove", smoothMouseMove)
       document.body.style.cursor = "auto"
-      if (rafId) cancelAnimationFrame(rafId)
       if (timeout !== null) {
         clearTimeout(timeout)
       }
@@ -195,13 +185,15 @@ export function SmoothCursor({
         zIndex: 100,
         pointerEvents: "none",
         willChange: "transform",
+        backfaceVisibility: "hidden",
+        WebkitBackfaceVisibility: "hidden",
       }}
       initial={{ scale: 0 }}
       animate={{ scale: 1 }}
       transition={{
         type: "spring",
-        stiffness: 400,
-        damping: 30,
+        stiffness: 800,
+        damping: 28,
       }}
     >
       {cursor}
