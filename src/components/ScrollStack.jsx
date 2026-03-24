@@ -61,14 +61,25 @@ const ScrollStack = ({
     }
   }, [useWindowScroll]);
 
+  // Walk the offsetParent chain to get document-flow position
+  // (immune to CSS transforms, unlike getBoundingClientRect)
+  const getDocumentOffset = useCallback((el) => {
+    let top = 0;
+    let current = el;
+    while (current) {
+      top += current.offsetTop;
+      current = current.offsetParent;
+    }
+    return top;
+  }, []);
+
   const recalculateOffsets = useCallback(() => {
     const cards = cardsRef.current;
     if (!cards.length) return;
 
     cardOffsetsRef.current = cards.map(card => {
       if (useWindowScroll) {
-        const rect = card.getBoundingClientRect();
-        return rect.top + window.scrollY;
+        return getDocumentOffset(card);
       }
       return card.offsetTop;
     });
@@ -79,10 +90,10 @@ const ScrollStack = ({
 
     if (endElement) {
       endOffsetRef.current = useWindowScroll
-        ? endElement.getBoundingClientRect().top + window.scrollY
+        ? getDocumentOffset(endElement)
         : endElement.offsetTop;
     }
-  }, [useWindowScroll]);
+  }, [useWindowScroll, getDocumentOffset]);
 
   const updateCardTransforms = useCallback(() => {
     if (!cardsRef.current.length || isUpdatingRef.current) return;
@@ -188,6 +199,7 @@ const ScrollStack = ({
   ]);
 
   const rafIdRef = useRef(null);
+  const rafLoopRef = useRef(null);
 
   const handleScroll = useCallback(() => {
     if (rafIdRef.current) return;
@@ -196,6 +208,23 @@ const ScrollStack = ({
       rafIdRef.current = null;
     });
   }, [updateCardTransforms]);
+
+  // rAF loop for window scroll mode — runs every frame unconditionally
+  // to stay in sync with Lenis smooth-scroll interpolation
+  const startRAFLoop = useCallback(() => {
+    const loop = () => {
+      updateCardTransforms();
+      rafLoopRef.current = requestAnimationFrame(loop);
+    };
+    rafLoopRef.current = requestAnimationFrame(loop);
+  }, [updateCardTransforms]);
+
+  const stopRAFLoop = useCallback(() => {
+    if (rafLoopRef.current) {
+      cancelAnimationFrame(rafLoopRef.current);
+      rafLoopRef.current = null;
+    }
+  }, []);
 
   const setupLenis = useCallback(() => {
     if (useWindowScroll) {
@@ -266,6 +295,17 @@ const ScrollStack = ({
     setupLenis();
 
     if (useWindowScroll) {
+      // Recalculate after layout settles (Lenis + async rendering)
+      const recalcTimer = setTimeout(() => {
+        recalculateOffsets();
+        updateCardTransforms();
+      }, 100);
+      // Secondary recalc for lazy-loaded content
+      const recalcTimer2 = setTimeout(() => {
+        recalculateOffsets();
+        updateCardTransforms();
+      }, 500);
+
       window.addEventListener('scroll', handleScroll, { passive: true });
       const handleResize = () => {
         recalculateOffsets();
@@ -273,9 +313,13 @@ const ScrollStack = ({
       };
       window.addEventListener('resize', handleResize);
       window.addEventListener('load', handleResize);
+      startRAFLoop();
       updateCardTransforms();
 
       return () => {
+        clearTimeout(recalcTimer);
+        clearTimeout(recalcTimer2);
+        stopRAFLoop();
         window.removeEventListener('scroll', handleScroll);
         window.removeEventListener('resize', handleResize);
         window.removeEventListener('load', handleResize);
@@ -330,11 +374,16 @@ const ScrollStack = ({
     onStackComplete,
     recalculateOffsets,
     setupLenis,
-    updateCardTransforms
+    updateCardTransforms,
+    startRAFLoop,
+    stopRAFLoop
   ]);
 
   return (
-    <div className={`scroll-stack-scroller ${className}`.trim()} ref={scrollerRef}>
+    <div
+      className={`scroll-stack-scroller ${useWindowScroll ? 'scroll-stack-window-mode' : ''} ${className}`.trim()}
+      ref={scrollerRef}
+    >
       <div className="scroll-stack-inner">
         {children}
         {/* Spacer so the last pin can release cleanly */}

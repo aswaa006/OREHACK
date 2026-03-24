@@ -12,9 +12,21 @@
   will-change: scroll-position;
 }
 
+/* When using window scroll, don't create a nested scroll container */
+.scroll-stack-scroller.scroll-stack-window-mode {
+  height: auto;
+  overflow: visible;
+  overscroll-behavior: auto;
+  will-change: auto;
+}
+
 .scroll-stack-inner {
   padding: 10vh 0 50rem;
   min-height: 100vh;
+}
+
+.scroll-stack-window-mode .scroll-stack-inner {
+  padding: 5vh 0 40rem;
 }
 
 .scroll-stack-card-wrapper {

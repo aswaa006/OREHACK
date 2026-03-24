@@ -131,7 +131,12 @@ function ExplodingCard({ h, assembled, active }: CardProps) {
 
       {/* ── CARD CONTENT ── */}
       <div
-        onClick={() => h.status === "Live" && assembled && navigate(`/hackathon/${h.id}/login`)}
+        onClick={() => {
+          if (h.status === "Live" && assembled) {
+            window.dispatchEvent(new Event('logoTurbo'));
+            navigate(`/hackathon/${h.id}/login`);
+          }
+        }}
         style={{
           position: "relative",
           zIndex: 10,
