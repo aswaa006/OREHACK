@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 
 type Phase = 'animating' | 'fading' | 'done';
@@ -7,73 +7,171 @@ interface Props {
     onReveal: () => void;
 }
 
+/* ── Status messages that cycle during load ── */
+const STATUS_MESSAGES = [
+    'INITIALIZING',
+    'LOADING MODULES',
+    'CALIBRATING SYSTEMS',
+    'GETTING READY',
+    'WELCOME TO OREHACK',
+];
+
+/* ── Words that orbit the logo ── */
+const ORBITAL_WORDS = [
+    'INNOVATE', 'CREATE', 'BUILD', 'HACK',
+    'DESIGN', 'CODE', 'LAUNCH', 'DEPLOY',
+];
+
 export function LoadingScreen({ onReveal }: Props) {
     const [phase, setPhase] = useState<Phase>('animating');
-    const [status, setStatus] = useState('Initializing…');
+    const [statusIdx, setStatusIdx] = useState(0);
+    const [glitchActive, setGlitchActive] = useState(false);
+
+    /* Generate random scanline positions once */
+    const scanlines = useMemo(() =>
+        Array.from({ length: 6 }, (_, i) => ({
+            id: i,
+            delay: Math.random() * 2,
+            duration: 1.5 + Math.random() * 1.5,
+        })), []);
 
     useEffect(() => {
-        // Update status messages at different times
-        const t1 = setTimeout(() => setStatus('Finalizing…'), 1500);
-        const t2 = setTimeout(() => setStatus('Welcome'), 3000);
+        /* Cycle through status messages */
+        const msgInterval = setInterval(() => {
+            setStatusIdx(prev => {
+                if (prev < STATUS_MESSAGES.length - 1) return prev + 1;
+                clearInterval(msgInterval);
+                return prev;
+            });
+        }, 800);
 
-        // Phase 5: Website Reveal (4s - 4.5s) begins
-        const t3 = setTimeout(() => {
+        /* Glitch effect every 600ms */
+        const glitchInterval = setInterval(() => {
+            setGlitchActive(true);
+            setTimeout(() => setGlitchActive(false), 150);
+        }, 600);
+
+        /* Website Reveal at 4s */
+        const tReveal = setTimeout(() => {
             onReveal();
             setPhase('fading');
         }, 4000);
 
-        // Remove from DOM safely after completion
-        const t4 = setTimeout(() => setPhase('done'), 5000);
+        /* Remove from DOM after fade-out */
+        const tDone = setTimeout(() => setPhase('done'), 5000);
 
-        // Add burst particles dynamically at 3s for visual effect
-        const t5 = setTimeout(() => {
+        /* Burst particles at 3s */
+        const tBurst = setTimeout(() => {
             const container = document.querySelector('.cl-burst-particles');
             if (container) {
                 for (let i = 0; i < 24; i++) {
-                    const particle = document.createElement('div');
-                    particle.className = `cl-burst-particle cl-burst-${i}`;
-                    container.appendChild(particle);
+                    const p = document.createElement('div');
+                    p.className = `cl-burst-particle cl-burst-${i}`;
+                    container.appendChild(p);
                 }
             }
         }, 3000);
 
-        return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); clearTimeout(t5); };
+        return () => {
+            clearInterval(msgInterval);
+            clearInterval(glitchInterval);
+            clearTimeout(tReveal);
+            clearTimeout(tDone);
+            clearTimeout(tBurst);
+        };
     }, [onReveal]);
 
     if (typeof document === 'undefined' || phase === 'done') return null;
 
+    const currentStatus = STATUS_MESSAGES[statusIdx];
+
     return createPortal(
         <div className={`cinematic-loader-root cinematic-loader-${phase}`} aria-hidden="true" id="premium-loader">
-            {/* Animated background gradients */}
+            {/* Background gradients */}
             <div className="cl-bg-glow cl-bg-glow-1" />
             <div className="cl-bg-glow cl-bg-glow-2" />
-            
+
+            {/* Scan line sweep */}
+            <div className="cl-scanline-container">
+                {scanlines.map(s => (
+                    <div
+                        key={s.id}
+                        className="cl-scanline"
+                        style={{
+                            animationDelay: `${s.delay}s`,
+                            animationDuration: `${s.duration}s`,
+                        }}
+                    />
+                ))}
+            </div>
+
             {/* Center ambient glow */}
             <div className="cl-center-glow" />
 
-            {/* Burst particle container */}
+            {/* Burst particles */}
             <div className="cl-burst-particles" />
 
-            {/* Main logo container */}
-            <div className="cl-container">
-                {/* Clean logo animation without constellation nodes */}
-                <svg className="cl-constellation-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+            {/* ── Pulsing energy rings ── */}
+            <div className="cl-energy-rings">
+                <div className="cl-energy-ring cl-energy-ring-1" />
+                <div className="cl-energy-ring cl-energy-ring-2" />
+                <div className="cl-energy-ring cl-energy-ring-3" />
+            </div>
+
+            {/* ── Orbiting words ring ── */}
+            <div className="cl-word-orbit">
+                <svg viewBox="0 0 400 400" className="cl-word-orbit-svg">
+                    <defs>
+                        <path
+                            id="wordCircle"
+                            d="M 200,200 m -160,0 a 160,160 0 1,1 320,0 a 160,160 0 1,1 -320,0"
+                            fill="none"
+                        />
+                    </defs>
+                    <g className="cl-word-orbit-spin">
+                        {ORBITAL_WORDS.map((word, i) => {
+                            const offset = `${(i / ORBITAL_WORDS.length) * 100}%`;
+                            return (
+                                <text key={word} className="cl-orbit-word" dy="-8">
+                                    <textPath
+                                        href="#wordCircle"
+                                        startOffset={offset}
+                                        textAnchor="middle"
+                                    >
+                                        {word}
+                                    </textPath>
+                                </text>
+                            );
+                        })}
+                    </g>
                 </svg>
-
-                {/* Actual Logo - centered and prominently displayed */}
-                <img 
-                    src="/oregent-logo.png" 
-                    alt="Oregent Logo"
-                    className="cl-logo-image-main"
-                />
             </div>
 
-            {/* Status text indicator */}
-            <div className="cl-status">
-                <span className={`cl-status-text ${status === 'Welcome' ? 'cl-welcome-fade' : ''}`}>{status}</span>
+            {/* Main logo */}
+            <div className="cl-container">
+                <svg className="cl-constellation-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" />
+                <img src="/oregent-logo.png" alt="Oregent Logo" className="cl-logo-image-main" />
             </div>
 
-            {/* Progress bar - synced with animation timeline */}
+            {/* ── Status text with glitch effect ── */}
+            <div className={`cl-status-block ${glitchActive ? 'cl-glitch' : ''}`}>
+                <div className="cl-status-label">
+                    <span className="cl-status-bracket">[</span>
+                    <span className="cl-status-dot" />
+                    <span className="cl-status-text" key={statusIdx}>
+                        {currentStatus}
+                    </span>
+                    <span className="cl-status-cursor">_</span>
+                    <span className="cl-status-bracket">]</span>
+                </div>
+                <div className="cl-substatus">
+                    {statusIdx < STATUS_MESSAGES.length - 1
+                        ? `STEP ${statusIdx + 1} OF ${STATUS_MESSAGES.length}`
+                        : 'READY'}
+                </div>
+            </div>
+
+            {/* Progress bar */}
             <div className="cl-progress-bar-container">
                 <div className="cl-progress-bar-fill" />
             </div>
