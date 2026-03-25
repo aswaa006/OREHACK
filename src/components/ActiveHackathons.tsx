@@ -334,7 +334,7 @@ export default function ActiveHackathons() {
             overflow: "hidden",
             display: "flex",
             alignItems: "center",
-            background: "hsl(222 40% 7%)",
+            background: "transparent",
           }}
         >
           {/* subtle grid */}

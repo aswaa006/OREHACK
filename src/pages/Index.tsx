@@ -5,10 +5,12 @@ import HowItWorks from "@/components/HowItWorks";
 import AboutOregent from "@/components/AboutOregent";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
+import GlobalBackground from "@/components/GlobalBackground";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen text-foreground relative z-0">
+      <GlobalBackground />
       <Navbar />
       <HeroSection />
       <ActiveHackathons />
