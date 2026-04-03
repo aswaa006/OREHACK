@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { supabase } from "@/lib/supabase";
 
 const HackathonLogin = () => {
   const { hackathonId } = useParams();
   const navigate = useNavigate();
   const [teamId, setTeamId] = useState("");
+  const [teamName, setTeamName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -13,16 +15,19 @@ const HackathonLogin = () => {
   const [authState, setAuthState] = useState<"idle" | "checking" | "granted">("idle");
 
   const hackathonName = hackathonId?.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) || "Hackathon";
-  const teamLabel = teamId.trim() || "XYZ";
+  const teamLabel = teamName.trim() || teamId.trim() || "XYZ";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const normalizedTeamId = teamId.trim();
+    const normalizedTeamName = teamName.trim();
+    const normalizedPassword = password.trim();
     const idValid = /^[A-Za-z0-9_-]{3,24}$/.test(normalizedTeamId);
-    const passValid = password.trim().length >= 6;
+    const nameValid = normalizedTeamName.length >= 2 && normalizedTeamName.length <= 60;
+    const passValid = normalizedPassword.length >= 6;
 
-    if (!idValid || !passValid) {
-      setError("Enter a valid Team ID and a password with at least 6 characters.");
+    if (!idValid || !nameValid || !passValid) {
+      setError("Enter a valid Team ID, Team Name, and a password with at least 6 characters.");
       setShakeTick((prev) => prev + 1);
       return;
     }
@@ -30,11 +35,75 @@ const HackathonLogin = () => {
     setError("");
     setLoading(true);
     setAuthState("checking");
+
+    const { data: submission, error: loginError } = await supabase
+      .from("submissions")
+      .select("teamID, Team_Name, password")
+      .eq("teamID", normalizedTeamId)
+      .maybeSingle();
+
+    if (loginError) {
+      setError(loginError.message || "Login failed. Please try again.");
+      setAuthState("idle");
+      setLoading(false);
+      setShakeTick((prev) => prev + 1);
+      return;
+    }
+
+    if (!submission) {
+      setError("Invalid Team ID, Team Name, or password.");
+      setAuthState("idle");
+      setLoading(false);
+      setShakeTick((prev) => prev + 1);
+      return;
+    }
+
+    const dbTeamName = ((submission.Team_Name as string | undefined) || "").trim();
+    const dbPassword = ((submission.password as string | undefined) || "").trim();
+
+    if (dbTeamName.toLowerCase() !== normalizedTeamName.toLowerCase()) {
+      setError("Team name does not match this Team ID.");
+      setAuthState("idle");
+      setLoading(false);
+      setShakeTick((prev) => prev + 1);
+      return;
+    }
+
+    if (dbPassword !== normalizedPassword) {
+      setError("Password does not match this Team ID.");
+      setAuthState("idle");
+      setLoading(false);
+      setShakeTick((prev) => prev + 1);
+      return;
+    }
+
+    const resolvedTeamId =
+      (submission.teamID as string | undefined) || normalizedTeamId;
+
+    const resolvedTeamName = dbTeamName || normalizedTeamName;
+
+    await supabase
+      .from("submissions")
+      .update({
+        Team_Name: resolvedTeamName,
+      })
+      .eq("teamID", resolvedTeamId);
+
     await new Promise((r) => setTimeout(r, 700));
     setAuthState("granted");
     await new Promise((r) => setTimeout(r, 1900));
+    localStorage.setItem(
+      "orehack_team_session",
+      JSON.stringify({
+        hackathonId,
+        teamId: resolvedTeamId,
+        teamName: resolvedTeamName,
+      }),
+    );
     setLoading(false);
-    navigate(`/hackathon/${hackathonId}/submit`, { state: { teamId: normalizedTeamId } });
+    navigate(`/hackathon/${hackathonId}/submit`, {
+      state: { teamId: resolvedTeamId, teamName: resolvedTeamName },
+    });
   };
 
   return (
@@ -210,6 +279,23 @@ const HackathonLogin = () => {
                     onChange={(e) => setTeamId(e.target.value)}
                     className="w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-sm text-white placeholder:text-fuchsia-100/45 outline-none transition-all duration-300 focus:border-fuchsia-300/60 focus:bg-white/[0.1] focus:shadow-[0_0_0_4px_rgba(217,70,239,0.14)]"
                     placeholder="Enter your team ID"
+                  />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.28, duration: 0.45 }}
+                >
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.18em] text-fuchsia-100/70">
+                    Team Name
+                  </label>
+                  <input
+                    type="text"
+                    value={teamName}
+                    onChange={(e) => setTeamName(e.target.value)}
+                    className="w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-sm text-white placeholder:text-fuchsia-100/45 outline-none transition-all duration-300 focus:border-fuchsia-300/60 focus:bg-white/[0.1] focus:shadow-[0_0_0_4px_rgba(217,70,239,0.14)]"
+                    placeholder="Enter your team name"
                   />
                 </motion.div>
 

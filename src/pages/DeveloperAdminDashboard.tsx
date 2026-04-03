@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -17,6 +17,7 @@ import {
   YAxis,
 } from "recharts";
 import { Activity, BarChart3, Calendar, CheckCircle, Clock, FileText, PlusCircle, Rocket, TrendingUp, Zap } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 const tabs = ["System", "Hackathons", "Evaluation", "Logs"] as const;
 
@@ -40,8 +41,6 @@ type HackathonItem = {
   evaluated: number;
   status: "live" | "scheduled";
 };
-
-const HACKATHON_STORAGE_KEY = "oregent:hackathons";
 
 const defaultHackathons: HackathonItem[] = [
   {
@@ -131,6 +130,8 @@ const ChartTooltip = ({
 const DeveloperAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("System");
   const [hackathons, setHackathons] = useState<HackathonItem[]>(defaultHackathons);
+  const [userCount, setUserCount] = useState(0);
+  const [syncError, setSyncError] = useState("");
   const [newHackathon, setNewHackathon] = useState({
     name: "",
     slug: "",
@@ -139,41 +140,54 @@ const DeveloperAdminDashboard = () => {
     durationHours: "36",
   });
 
-  useEffect(() => {
-    const stored = localStorage.getItem(HACKATHON_STORAGE_KEY);
-    if (!stored) {
+  const loadDashboardData = useCallback(async () => {
+    setSyncError("");
+
+    const [hackathonsRes, usersRes] = await Promise.all([
+      supabase
+        .from("hackathons")
+        .select("name, slug, theme, start_date, duration_hours, status")
+        .order("created_at", { ascending: false }),
+      supabase.from("users").select("id", { count: "exact", head: true }),
+    ]);
+
+    if (hackathonsRes.error) {
+      setSyncError(hackathonsRes.error.message || "Failed to sync dashboard data.");
+      setHackathons(defaultHackathons);
       return;
     }
 
-    try {
-      const parsed = JSON.parse(stored) as Partial<HackathonItem>[];
-      const merged = [...defaultHackathons];
+    const mappedHackathons: HackathonItem[] = (hackathonsRes.data || []).map((hackathon) => {
+      return {
+        name: hackathon.name || "Untitled Hackathon",
+        slug: hackathon.slug || slugify(hackathon.name || "hackathon"),
+        theme: hackathon.theme || "General",
+        startDate: hackathon.start_date || "",
+        durationHours: Number(hackathon.duration_hours || 24),
+        submissions: 0,
+        evaluated: 0,
+        status: hackathon.status === "scheduled" ? "scheduled" : "live",
+      };
+    });
 
-      parsed.forEach((item) => {
-        if (!item?.name) return;
-        const slug = slugify(item.slug || item.name);
-        if (!slug || merged.some((existing) => existing.slug === slug)) return;
-        merged.push({
-          name: item.name,
-          slug,
-          theme: item.theme || "General",
-          startDate: item.startDate || "",
-          durationHours: Number(item.durationHours || 24),
-          submissions: Number(item.submissions || 0),
-          evaluated: Number(item.evaluated || 0),
-          status: item.status === "scheduled" ? "scheduled" : "live",
-        });
-      });
-
-      setHackathons(merged);
-    } catch {
-      setHackathons(defaultHackathons);
-    }
+    setHackathons(mappedHackathons.length ? mappedHackathons : defaultHackathons);
+    setUserCount(usersRes.count || 0);
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(HACKATHON_STORAGE_KEY, JSON.stringify(hackathons));
-  }, [hackathons]);
+    loadDashboardData();
+
+    const channel = supabase
+      .channel("developer-admin-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "hackathons" }, loadDashboardData)
+      .on("postgres_changes", { event: "*", schema: "public", table: "submissions" }, loadDashboardData)
+      .on("postgres_changes", { event: "*", schema: "public", table: "users" }, loadDashboardData)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [loadDashboardData]);
 
   const hackathonStatsData = useMemo(
     () => hackathons.slice(0, 6).map((hackathon) => ({
@@ -217,10 +231,10 @@ const DeveloperAdminDashboard = () => {
       iconTone: "from-violet-500 to-fuchsia-600",
     },
     {
-      label: "Engine Status",
-      value: "Online",
-      delta: "99.8% uptime",
-      progress: 92,
+      label: "Registered Users",
+      value: String(userCount),
+      delta: "Live from users database",
+      progress: Math.min(100, userCount ? 40 + userCount : 25),
       icon: Activity,
       tone: "from-emerald-500/25 via-emerald-500/10 to-transparent",
       iconTone: "from-emerald-500 to-teal-600",
@@ -236,7 +250,7 @@ const DeveloperAdminDashboard = () => {
     },
   ];
 
-  const handleCreateHackathon = (event: React.FormEvent) => {
+  const handleCreateHackathon = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!newHackathon.name.trim()) return;
 
@@ -244,18 +258,22 @@ const DeveloperAdminDashboard = () => {
     if (!slug) return;
     if (hackathons.some((item) => item.slug === slug)) return;
 
-    const item: HackathonItem = {
+    const { error } = await supabase.from("hackathons").insert({
       name: newHackathon.name.trim(),
       slug,
       theme: newHackathon.theme.trim() || "General",
-      startDate: newHackathon.startDate,
-      durationHours: Number(newHackathon.durationHours || 24),
+      start_date: newHackathon.startDate || null,
+      duration_hours: Number(newHackathon.durationHours || 24),
+      status: "live",
       submissions: 0,
       evaluated: 0,
-      status: "live",
-    };
+    });
 
-    setHackathons((prev) => [item, ...prev]);
+    if (error) {
+      setSyncError(error.message || "Unable to create hackathon.");
+      return;
+    }
+
     setNewHackathon({
       name: "",
       slug: "",
@@ -263,6 +281,8 @@ const DeveloperAdminDashboard = () => {
       startDate: "",
       durationHours: "36",
     });
+
+    await loadDashboardData();
   };
 
   return (
@@ -315,6 +335,8 @@ const DeveloperAdminDashboard = () => {
               </motion.button>
             ))}
           </div>
+
+          {syncError && <p className="mb-4 text-sm text-destructive">{syncError}</p>}
 
           <AnimatePresence mode="wait">
             <motion.section

@@ -2,6 +2,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Calendar, Rocket, Sparkles, Trophy } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 type HackathonFormState = {
   name: string;
@@ -30,37 +31,47 @@ const slugify = (value: string) =>
 const CreateHackathon = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState<HackathonFormState>(defaultState);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const computedSlug = useMemo(() => (form.slug ? slugify(form.slug) : slugify(form.name)), [form.name, form.slug]);
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
     if (!form.name.trim()) {
       return;
     }
 
+    setError("");
+    setLoading(true);
+
     const liveSlug = computedSlug || "live-hackathon";
 
-    // Store minimal metadata so this can be picked up later by dashboard integrations.
-    const newHackathon = {
+    const { error: insertError } = await supabase.from("hackathons").insert({
       name: form.name.trim(),
       slug: liveSlug,
-      theme: form.theme.trim(),
-      startDate: form.startDate,
-      durationHours: Number(form.durationHours || 0),
-      createdAt: new Date().toISOString(),
+      theme: form.theme.trim() || "General",
+      start_date: form.startDate || null,
+      duration_hours: Number(form.durationHours || 24),
       status: "live",
-    };
+      submissions: 0,
+      evaluated: 0,
+    });
 
-    const existing = JSON.parse(localStorage.getItem("oregent:hackathons") || "[]") as unknown[];
-    localStorage.setItem("oregent:hackathons", JSON.stringify([newHackathon, ...existing]));
+    if (insertError) {
+      setLoading(false);
+      setError(insertError.message || "Unable to create hackathon.");
+      return;
+    }
 
     // Auto-redirect to the live hackathon entry flow.
     navigate(`/hackathon/${liveSlug}/login`, {
       replace: true,
       state: { created: true, hackathonName: form.name.trim() },
     });
+
+    setLoading(false);
   };
 
   return (
@@ -160,18 +171,21 @@ const CreateHackathon = () => {
               </div>
             </div>
 
+            {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
+
             <div className="mt-6 flex justify-end gap-3">
               <Link to="/admin/hackathon" className="rounded-lg border border-border/70 px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
                 Cancel
               </Link>
               <motion.button
                 type="submit"
+                disabled={loading}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.98 }}
-                className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
+                className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 <Sparkles className="h-4 w-4" />
-                Create & Go Live
+                {loading ? "Creating..." : "Create & Go Live"}
               </motion.button>
             </div>
           </motion.form>
