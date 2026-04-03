@@ -45,6 +45,66 @@ const App = () => {
   const logoRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
+    const handleScroll = () => {
+      const el = logoRef.current;
+      const footer = document.querySelector('footer');
+      if (!el) return;
+
+      let targetOpacity = 0.04;
+      let isFullOpacity = false;
+
+      if (footer) {
+        const rect = footer.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        // rect.bottom is the absolute bottom edge of the footer relative to viewport.
+        // When it reaches windowHeight, the page is perfectly scrolled to the end.
+        const distanceToBottom = rect.bottom - windowHeight;
+
+        // Start ramping up opacity over the last 800px of scrolling
+        const rampDistance = 800;
+
+        if (distanceToBottom <= rampDistance && distanceToBottom > 0) {
+          const t = 1 - (distanceToBottom / rampDistance);
+          const clampedT = Math.max(0, Math.min(1, t));
+          targetOpacity = 0.04 + (0.76 * clampedT);
+        } else if (distanceToBottom <= 0) {
+          targetOpacity = 0.8;
+        }
+
+        // Stop spinning exactly when we hit the absolute bottom
+        isFullOpacity = distanceToBottom <= 10;
+      }
+
+      el.style.opacity = targetOpacity.toString();
+
+      if (isFullOpacity && !el.classList.contains('site-logo-bg--footer')) {
+        // Capture the current rotation from the running animation
+        const computedStyle = window.getComputedStyle(el);
+        const matrix = computedStyle.transform;
+        let angle = 0;
+        if (matrix && matrix !== 'none') {
+          const values = matrix.split('(')[1]?.split(')')[0]?.split(',');
+          if (values && values.length >= 2) {
+            angle = Math.round(Math.atan2(parseFloat(values[1]), parseFloat(values[0])) * (180 / Math.PI));
+          }
+        }
+
+        // Pause the CSS animation and transition smoothly from current angle
+        el.style.animationPlayState = 'paused';
+        el.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+        el.classList.add('site-logo-bg--footer');
+      } else if (!isFullOpacity && el.classList.contains('site-logo-bg--footer')) {
+        // Resume spinning from current position
+        el.classList.remove('site-logo-bg--footer');
+        el.style.transform = '';
+        el.style.animationPlayState = '';
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Trigger once on mount to set initial opacity
+    handleScroll();
+
     const lenis = new Lenis({
       duration: 1.6,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -55,70 +115,17 @@ const App = () => {
       syncTouchLerp: 0.06,
     });
 
-    lenis.on('scroll', (e: any) => {
-      const el = logoRef.current;
-      if (el) {
-        // Calculate how far we are from the bottom of the page
-        const scrollHeight = document.documentElement.scrollHeight;
-        const windowHeight = window.innerHeight;
-        const maxScroll = scrollHeight - windowHeight;
-        const currentScroll = typeof e.scroll === 'number' ? e.scroll : window.scrollY;
-        
-        const distanceToBottom = maxScroll - currentScroll;
-        
-        // Define the threshold (e.g., last 900px) when opacity starts rapidly increasing
-        const rampStart = 900;
-        let targetOpacity = 0.04;
-        
-        if (distanceToBottom < rampStart && distanceToBottom >= 0) {
-          // Normalize the progress within the last 900px (0 to 1)
-          const t = 1 - (distanceToBottom / rampStart);
-          const clampedT = Math.max(0, Math.min(1, t));
-          // Scale rapidly from 0.04 up to 0.80
-          targetOpacity = 0.04 + (0.76 * clampedT);
-        } else if (distanceToBottom < 0) {
-          targetOpacity = 0.8;
-        }
-
-        el.style.opacity = targetOpacity.toString();
-
-        // Stop spinning only when reaching the absolute bottom (full opacity)
-        const isFullOpacity = distanceToBottom <= 15;
-
-        if (isFullOpacity && !el.classList.contains('site-logo-bg--footer')) {
-          // Capture the current rotation from the running animation
-          const computedStyle = window.getComputedStyle(el);
-          const matrix = computedStyle.transform;
-          let angle = 0;
-          if (matrix && matrix !== 'none') {
-            const values = matrix.split('(')[1]?.split(')')[0]?.split(',');
-            if (values && values.length >= 2) {
-              const a = parseFloat(values[0]);
-              const b = parseFloat(values[1]);
-              angle = Math.round(Math.atan2(b, a) * (180 / Math.PI));
-            }
-          }
-
-          // Pause the CSS animation and transition smoothly from current angle
-          el.style.animationPlayState = 'paused';
-          el.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
-          el.classList.add('site-logo-bg--footer');
-        } else if (!isFullOpacity && el.classList.contains('site-logo-bg--footer')) {
-          // Resume spinning from current position
-          el.classList.remove('site-logo-bg--footer');
-          el.style.transform = '';
-          el.style.animationPlayState = '';
-        }
-      }
-    });
-
+    // Tie lenis updates into standard requestAnimationFrame
     const raf = (time: number) => {
       lenis.raf(time);
       requestAnimationFrame(raf);
     };
     requestAnimationFrame(raf);
 
-    return () => lenis.destroy();
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      lenis.destroy();
+    };
   }, [isRevealed]);
 
   // Listen for the "Enter Portal" turbo event fired from ActiveHackathons
