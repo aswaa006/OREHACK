@@ -5,32 +5,87 @@ import { useNavigate } from "react-router-dom";
    DATA
 ═══════════════════════════════════════════════════════════ */
 const hackathons = [
-  { id: "origin-2k26", name: "Origin 2K26", status: "Live", participants: 128, deadline: "March 15, 2026" },
-  { id: "buildcore-v3", name: "BuildCore v3", status: "Upcoming", participants: 0, deadline: "April 5, 2026" },
-  { id: "devstrike-24", name: "DevStrike '24", status: "Completed", participants: 256, deadline: "Ended" },
+  {
+    id: "origin-2k26",
+    name: "Origin 2K26",
+    status: "Live",
+    participants: 128,
+    deadline: "March 15, 2026",
+    bounty: "$2,500",
+    stack: ["Python", "LLM", "FastAPI"],
+    sparkline: [4, 7, 5, 9, 12, 8, 15, 11, 18, 14, 20, 16],
+  },
+  {
+    id: "buildcore-v3",
+    name: "BuildCore v3",
+    status: "Upcoming",
+    participants: 0,
+    deadline: "April 5, 2026",
+    bounty: "$1,800",
+    stack: ["Rust", "WebAssembly", "Go"],
+    sparkline: [2, 2, 3, 2, 4, 3, 5, 4, 6, 5, 7, 6],
+  },
+  {
+    id: "devstrike-24",
+    name: "DevStrike '24",
+    status: "Completed",
+    participants: 256,
+    deadline: "Ended",
+    bounty: "$3,000",
+    stack: ["TypeScript", "React", "Solidity"],
+    sparkline: [12, 18, 14, 20, 16, 22, 18, 15, 10, 6, 3, 1],
+  },
 ];
 
 const STATUS = {
-  Live: { badge: "LIVE", card: "hsl(142 71% 45%)", glow: "hsl(142 71% 45% / 0.25)", bg: "hsl(142 71% 45% / 0.12)", border: "hsl(142 71% 45% / 0.40)", dot: true },
-  Upcoming: { badge: "UPCOMING", card: "hsl(263 84% 68%)", glow: "hsl(263 84% 58% / 0.25)", bg: "hsl(263 84% 58% / 0.10)", border: "hsl(263 84% 58% / 0.35)", dot: false },
-  Completed: { badge: "COMPLETED", card: "hsl(218 11% 65%)", glow: "transparent", bg: "hsl(217 33% 17% / 0.50)", border: "hsl(217 33% 22%)", dot: false },
+  Live: { badge: "LIVE", card: "hsl(142 71% 45%)", glow: "hsl(142 71% 45% / 0.30)", bg: "hsl(142 71% 45% / 0.08)", border: "hsl(142 71% 45% / 0.45)", dot: true, pulse: true },
+  Upcoming: { badge: "UPCOMING", card: "hsl(217 91% 60%)", glow: "hsl(217 91% 60% / 0.20)", bg: "hsl(217 91% 60% / 0.07)", border: "hsl(217 91% 60% / 0.35)", dot: false, pulse: false },
+  Completed: { badge: "COMPLETED", card: "hsl(218 11% 55%)", glow: "transparent", bg: "hsl(217 33% 14% / 0.60)", border: "hsl(217 33% 22%)", dot: false, pulse: false },
 };
 
 /* ══════════════════════════════════════════════════════════
-   FRAGMENT GEOMETRY (6 clip-paths that tile the full rect)
+   FRAGMENT GEOMETRY
 ═══════════════════════════════════════════════════════════ */
 const CLIPS = [
-  "polygon(0% 0%, 55% 0%, 42% 50%, 0% 50%)",         // TL
-  "polygon(45% 0%, 100% 0%, 100% 50%, 58% 50%)",      // TR
-  "polygon(0% 50%, 42% 50%, 55% 100%, 0% 100%)",      // BL
-  "polygon(58% 50%, 100% 50%, 100% 100%, 45% 100%)",  // BR
-  "polygon(42% 50%, 58% 50%, 45% 100%, 55% 100%)",    // B-sliver
-  "polygon(45% 0%, 55% 0%, 58% 50%, 42% 50%)",        // T-sliver
+  "polygon(0% 0%, 55% 0%, 42% 50%, 0% 50%)",
+  "polygon(45% 0%, 100% 0%, 100% 50%, 58% 50%)",
+  "polygon(0% 50%, 42% 50%, 55% 100%, 0% 100%)",
+  "polygon(58% 50%, 100% 50%, 100% 100%, 45% 100%)",
+  "polygon(42% 50%, 58% 50%, 45% 100%, 55% 100%)",
+  "polygon(45% 0%, 55% 0%, 58% 50%, 42% 50%)",
 ];
 const ORIGINS: [number, number][] = [[-160, -130], [160, -130], [-160, 130], [160, 130], [0, 200], [0, -200]];
 
 /* ══════════════════════════════════════════════════════════
-   EXPLODING CARD
+   SPARKLINE
+═══════════════════════════════════════════════════════════ */
+function Sparkline({ data, color }: { data: number[]; color: string }) {
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const w = 80, h = 24;
+  const pts = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * w;
+    const y = h - ((v - min) / (max - min || 1)) * h;
+    return `${x},${y}`;
+  }).join(" ");
+  const filled = `${pts} ${w},${h} 0,${h}`;
+
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ overflow: "visible" }}>
+      <defs>
+        <linearGradient id={`sg-${color.slice(4, 7)}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.35" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon points={filled} fill={`url(#sg-${color.slice(4, 7)})`} />
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   EXPLODING CARD  (glassmorphic)
 ═══════════════════════════════════════════════════════════ */
 interface CardProps { h: typeof hackathons[0]; assembled: boolean; active: boolean }
 
@@ -39,7 +94,6 @@ function ExplodingCard({ h, assembled, active }: CardProps) {
   const [locked, setLocked] = useState(false);
   const prevAssembled = useRef(false);
 
-  // fire lock-flash when assembled transitions false→true
   useEffect(() => {
     let t: ReturnType<typeof setTimeout>;
     if (assembled && !prevAssembled.current) {
@@ -59,12 +113,28 @@ function ExplodingCard({ h, assembled, active }: CardProps) {
         position: "relative",
         width: "100%",
         height: "100%",
-        borderRadius: "1rem",
-        transform: active ? "scale(1)" : "scale(0.96)",
-        transition: "transform 0.45s cubic-bezier(0.22,1,0.36,1)",
+        borderRadius: "1.1rem",
+        transform: active ? "scale(1) translateZ(0)" : "scale(0.94) translateZ(-30px)",
+        opacity: active ? 1 : 0.65,
+        transition: "transform 0.5s cubic-bezier(0.22,1,0.36,1), opacity 0.5s ease",
       }}
     >
-      {/* ── background fragments ── */}
+      {/* ── glassmorphic background ── */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          borderRadius: "1.1rem",
+          background: "hsl(220 30% 10% / 0.55)",
+          backdropFilter: "blur(14px)",
+          WebkitBackdropFilter: "blur(14px)",
+          opacity: assembled ? 1 : 0,
+          transition: "opacity 0.4s ease 0.3s",
+        }}
+      />
+
+      {/* ── fragment shards (assemble animation) ── */}
       {CLIPS.map((clip, fi) => {
         const [ox, oy] = ORIGINS[fi];
         return (
@@ -75,12 +145,11 @@ function ExplodingCard({ h, assembled, active }: CardProps) {
               position: "absolute",
               inset: 0,
               clipPath: clip,
-              background: `linear-gradient(135deg, hsl(220 33% 12%), hsl(220 33% 9%))`,
-              border: "1px solid hsl(217 33% 18%)",
-              borderRadius: "1rem",
-              transform: assembled
-                ? "translate(0,0) scale(1)"
-                : `translate(${ox}px,${oy}px) scale(0.80)`,
+              background: "linear-gradient(135deg, hsl(220 33% 14% / 0.7), hsl(220 33% 9% / 0.8))",
+              border: "1px solid hsl(217 33% 18% / 0.6)",
+              borderRadius: "1.1rem",
+              backdropFilter: "blur(14px)",
+              transform: assembled ? "translate(0,0) scale(1)" : `translate(${ox}px,${oy}px) scale(0.80)`,
               opacity: assembled ? 1 : 0,
               transition: assembled
                 ? `transform ${0.55 + fi * 0.045}s cubic-bezier(0.22,1,0.36,1) ${fi * 30}ms,
@@ -91,41 +160,26 @@ function ExplodingCard({ h, assembled, active }: CardProps) {
         );
       })}
 
-      {/* ── lock-flash (reduced) ── */}
+      {/* ── status border glow  ── */}
       <div
         aria-hidden
+        className={sc.pulse && locked ? "live-border-glow" : ""}
         style={{
           position: "absolute",
-          inset: 0,
-          borderRadius: "1rem",
+          inset: -1,
+          borderRadius: "1.15rem",
           pointerEvents: "none",
-          boxShadow: locked ? `0 0 0 0 transparent` : `0 0 20px 2px ${sc.glow}, inset 0 0 10px 1px ${sc.bg}`,
           border: locked ? `1px solid ${sc.border}` : "1px solid transparent",
+          boxShadow: locked ? `0 0 22px 2px ${sc.glow}, inset 0 0 12px 2px ${sc.bg}` : "none",
           transition: "box-shadow 0.7s ease, border-color 0.5s ease",
         }}
       />
 
-      {/* ── active card highlight ── */}
-      {active && locked && (
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
-            inset: -1,
-            borderRadius: "1.05rem",
-            pointerEvents: "none",
-            boxShadow: `0 4px 20px -5px ${sc.glow}`,
-            border: `1px solid ${sc.border}`,
-            transition: "opacity 0.4s",
-          }}
-        />
-      )}
-
-      {/* ── seam lines at join ── */}
+      {/* ── seam lines ── */}
       {assembled && !locked && (
-        <svg aria-hidden style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
-          <line x1="42%" y1="0%" x2="55%" y2="50%" stroke={sc.card} strokeWidth="1" strokeOpacity="0.4" />
-          <line x1="58%" y1="50%" x2="45%" y2="100%" stroke={sc.card} strokeWidth="1" strokeOpacity="0.4" />
+        <svg aria-hidden style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", borderRadius: "1.1rem", overflow: "hidden" }}>
+          <line x1="42%" y1="0%" x2="55%" y2="50%" stroke={sc.card} strokeWidth="1" strokeOpacity="0.35" />
+          <line x1="58%" y1="50%" x2="45%" y2="100%" stroke={sc.card} strokeWidth="1" strokeOpacity="0.35" />
         </svg>
       )}
 
@@ -133,7 +187,7 @@ function ExplodingCard({ h, assembled, active }: CardProps) {
       <div
         onClick={() => {
           if (h.status === "Live" && assembled) {
-            window.dispatchEvent(new Event('logoTurbo'));
+            window.dispatchEvent(new Event("logoTurbo"));
             navigate(`/hackathon/${h.id}/login`);
           }
         }}
@@ -141,38 +195,37 @@ function ExplodingCard({ h, assembled, active }: CardProps) {
           position: "relative",
           zIndex: 10,
           height: "100%",
-          padding: "2rem 2rem 1.75rem",
-          borderRadius: "1rem",
+          padding: "1.6rem 1.75rem 1.5rem",
+          borderRadius: "1.1rem",
           cursor: h.status === "Live" ? "pointer" : "default",
           opacity: assembled ? 1 : 0,
           transition: "opacity 0.35s ease 0.55s",
           display: "flex",
           flexDirection: "column",
-          gap: "1.25rem",
+          gap: "0.9rem",
         }}
       >
+        {/* top window controls */}
+        <div style={{ display: "flex", gap: "0.4rem", marginBottom: "-0.2rem" }}>
+          <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ff5f56", boxShadow: "inset 0 0 4px rgba(0,0,0,0.2)" }} />
+          <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ffbd2e", boxShadow: "inset 0 0 4px rgba(0,0,0,0.2)" }} />
+          <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#27c93f", boxShadow: "inset 0 0 4px rgba(0,0,0,0.2)" }} />
+        </div>
+
         {/* top: name + badge */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "0.75rem" }}>
-          <h3 style={{ fontSize: "1.5rem", fontWeight: 800, color: "hsl(220 14% 97%)", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
+          <h3 style={{ fontSize: "1.4rem", fontWeight: 800, color: "hsl(220 14% 97%)", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
             {h.name}
           </h3>
           <span style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.35rem",
-            fontSize: "0.65rem",
-            fontWeight: 700,
-            letterSpacing: "0.1em",
-            padding: "0.3rem 0.85rem",
-            borderRadius: "9999px",
-            border: `1px solid ${sc.border}`,
-            color: sc.card,
-            background: sc.bg,
-            flexShrink: 0,
-            marginTop: "0.2rem",
+            display: "inline-flex", alignItems: "center", gap: "0.35rem",
+            fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.12em",
+            padding: "0.28rem 0.75rem", borderRadius: "9999px",
+            border: `1px solid ${sc.border}`, color: sc.card, background: sc.bg,
+            flexShrink: 0, marginTop: "0.25rem",
           }}>
             {sc.dot && (
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: sc.card, display: "inline-block", animation: "pulse 1.5s infinite" }} />
+              <span style={{ width: 5, height: 5, borderRadius: "50%", background: sc.card, display: "inline-block", animation: "pulse 1.5s infinite" }} />
             )}
             {sc.badge}
           </span>
@@ -181,32 +234,71 @@ function ExplodingCard({ h, assembled, active }: CardProps) {
         {/* divider */}
         <div style={{ height: 1, background: `linear-gradient(90deg, ${sc.border}, transparent)` }} />
 
-        {/* stats */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.9rem", flex: 1 }}>
+        {/* stats row */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
           <StatRow label="Participants" value={h.participants.toLocaleString()} color={sc.card} />
           <StatRow label="Deadline" value={h.deadline} color={sc.card} />
         </div>
 
-        {/* CTA */}
+        {/* ── SPARKLINE + BOUNTY ROW ── */}
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "0.75rem" }}>
+          <div>
+            <p style={{ fontSize: "0.6rem", color: "hsl(218 11% 45%)", letterSpacing: "0.1em", marginBottom: "0.3rem" }}>
+              ACTIVITY · 24H
+            </p>
+            <Sparkline data={h.sparkline} color={sc.card} />
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <p style={{ fontSize: "0.6rem", color: "hsl(218 11% 45%)", letterSpacing: "0.1em", marginBottom: "0.3rem" }}>
+              BOUNTY
+            </p>
+            <span style={{
+              fontSize: "0.85rem", fontWeight: 800, color: sc.card,
+              background: sc.bg, border: `1px solid ${sc.border}`,
+              padding: "0.2rem 0.65rem", borderRadius: "9999px",
+              letterSpacing: "-0.01em",
+            }}>
+              {h.bounty}
+            </span>
+          </div>
+        </div>
+
+        {/* ── STACK TAGS ── */}
+        <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+          {h.stack.map(tag => (
+            <span key={tag} style={{
+              fontSize: "0.62rem", fontWeight: 600, letterSpacing: "0.06em",
+              padding: "0.18rem 0.55rem", borderRadius: "9999px",
+              background: "hsl(217 33% 18% / 0.8)", border: "1px solid hsl(217 33% 26%)",
+              color: "hsl(218 11% 65%)",
+            }}>
+              {tag}
+            </span>
+          ))}
+        </div>
+
+        {/* ── CTA: Enter Portal (scan-beam effect) ── */}
         {h.status === "Live" && (
-          <div style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            fontSize: "0.875rem",
-            fontWeight: 600,
-            color: sc.card,
-            padding: "0.65rem 1.25rem",
-            borderRadius: "0.6rem",
-            border: `1px solid ${sc.border}`,
-            background: sc.bg,
-            width: "fit-content",
-            transition: "box-shadow 0.3s, transform 0.2s",
-          }}
+          <div
             className="hackathon-cta"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "0.5rem",
+              fontSize: "0.82rem", fontWeight: 700,
+              color: sc.card,
+              padding: "0.6rem 1.2rem",
+              borderRadius: "0.5rem",
+              border: `1px solid ${sc.border}`,
+              background: sc.bg,
+              width: "fit-content",
+              position: "relative",
+              overflow: "hidden",
+              transition: "all 0.3s ease",
+              letterSpacing: "0.04em",
+            }}
           >
+            <span className="scan-beam" />
             Enter Portal
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
           </div>
@@ -219,8 +311,8 @@ function ExplodingCard({ h, assembled, active }: CardProps) {
 function StatRow({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-      <span style={{ fontSize: "0.82rem", color: "hsl(218 11% 52%)", fontWeight: 500 }}>{label}</span>
-      <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "hsl(220 14% 90%)" }}>{value}</span>
+      <span style={{ fontSize: "0.78rem", color: "hsl(218 11% 48%)", fontWeight: 500 }}>{label}</span>
+      <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "hsl(220 14% 90%)" }}>{value}</span>
     </div>
   );
 }
@@ -229,20 +321,16 @@ function StatRow({ label, value, color }: { label: string; value: string; color:
    MAIN SECTION — PIN SCROLL
 ═══════════════════════════════════════════════════════════ */
 const N = hackathons.length;
-// Track height: N×100vh → N-1 "transitions" of 100vh each
 const TRACK_VH = N;
 
 export default function ActiveHackathons() {
   const trackRef = useRef<HTMLDivElement>(null);
   const railRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
+  const [hoveredDot, setHoveredDot] = useState<number | null>(null);
 
-  // Which cards have assembled
   const [assembled, setAssembled] = useState<boolean[]>([false, false, false]);
-  // Active card index (for scale/glow)
   const [activeIdx, setActiveIdx] = useState(0);
-  // Whether section is in sticky mode
-  const [inView, setInView] = useState(false);
 
   const assembledRef = useRef(assembled);
   assembledRef.current = assembled;
@@ -256,43 +344,32 @@ export default function ActiveHackathons() {
     const rect = track.getBoundingClientRect();
     const trackHeight = track.offsetHeight;
     const scrollable = trackHeight - window.innerHeight;
-    const scrolledIn = Math.max(0, -rect.top);      // px scrolled past top of track
-    const p = Math.min(1, scrolledIn / scrollable); // 0..1
+    const scrolledIn = Math.max(0, -rect.top);
+    const p = Math.min(1, scrolledIn / scrollable);
 
-    // Pin detection
-    const isInView = rect.top <= 0 && rect.bottom >= window.innerHeight;
-    setInView(isInView);
-
-    // Card width from the rail's first child
     const firstCard = rail.firstElementChild as HTMLElement | null;
     const cw = firstCard ? firstCard.offsetWidth : 400;
     const GAP = 32;
     const maxOffset = (N - 1) * (cw + GAP);
 
-    // Move rail (direct DOM — no re-render, buttery smooth)
-    const tx = -p * maxOffset;
-    rail.style.transform = `translateX(${tx}px)`;
-
-    // Progress bar
+    rail.style.transform = `translateX(${-p * maxOffset}px)`;
     if (pBar) pBar.style.width = `${p * 100}%`;
 
-    // Active index
     const raw = p * (N - 1);
     const idx = Math.round(raw);
     setActiveIdx(Math.min(N - 1, idx));
 
-    // Dynamic assembly: trigger if nearby in horizontal pin, and section is vertically in view
     const next = [...assembledRef.current];
     const isBelowScreen = rect.top > window.innerHeight - 150;
     const isAboveScreen = rect.bottom < 150;
 
     hackathons.forEach((_, i) => {
       if (isBelowScreen || isAboveScreen) {
-        next[i] = false; // Disassemble if completely scrolled past vertically
+        next[i] = false;
       } else {
         const targetP = i / (N - 1);
         const dist = Math.abs(p - targetP);
-        next[i] = dist < 0.85 / (N - 1); // Disassemble if horizontal distance is far
+        next[i] = dist < 0.85 / (N - 1);
       }
     });
 
@@ -311,197 +388,206 @@ export default function ActiveHackathons() {
     <>
       <style>{`
         @keyframes pulse { 0%,100%{ opacity:1 } 50%{ opacity:0.4 } }
-        .hackathon-cta:hover {
-          box-shadow: 0 0 30px -4px hsl(142 71% 45% / 0.4);
-          transform: translateY(-1px);
+
+        /* Living border glow for LIVE cards */
+        @keyframes borderBreath {
+          0%,100% { opacity: 1; }
+          50%      { opacity: 0.45; }
         }
-        .dot-btn { transition: all 0.3s; }
-        .dot-btn:hover { transform: scale(1.3); }
+        .live-border-glow { animation: borderBreath 2.2s ease-in-out infinite; }
+
+        /* Enter Portal hover */
+        .hackathon-cta { transition: all 0.3s ease !important; }
+        .hackathon-cta:hover {
+          box-shadow: 0 0 28px -4px hsl(142 71% 45% / 0.65) !important;
+          transform: translateY(-2px) !important;
+          background-color: hsl(142 71% 45%) !important;
+          color: #060f0a !important;
+        }
+        .hackathon-cta:hover .scan-beam {
+          animation: scanBeam 0.55s ease forwards;
+        }
+
+        /* Scan beam overlay */
+        .scan-beam {
+          position: absolute;
+          top: 0; left: -120%;
+          width: 60%; height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
+          transform: skewX(-18deg);
+        }
+        @keyframes scanBeam {
+          0%   { left: -120%; }
+          100% { left: 160%;  }
+        }
+
+        /* Dot-nav */
+        .dot-btn { transition: all 0.3s ease !important; }
+        .dot-btn:hover .dot-label {
+          opacity: 1 !important;
+          max-width: 160px !important;
+          margin-left: 0.55rem;
+        }
+        .dot-label {
+          max-width: 0;
+          opacity: 0;
+          overflow: hidden;
+          white-space: nowrap;
+          transition: all 0.3s ease;
+        }
       `}</style>
 
-      {/* ── SCROLL TRACK (pins the sticky) ── */}
-      <div
-        ref={trackRef}
-        id="hackathons"
-        style={{ height: `${TRACK_VH * 100}vh`, position: "relative" }}
-      >
+      {/* ── SCROLL TRACK ── */}
+      <div ref={trackRef} id="hackathons" style={{ height: `${TRACK_VH * 100}vh`, position: "relative" }}>
+
         {/* ── STICKY CONTAINER ── */}
-        <div
-          style={{
-            position: "sticky",
-            top: 0,
-            height: "100vh",
-            overflow: "hidden",
-            display: "flex",
-            alignItems: "center",
-            background: "transparent",
-          }}
-        >
+        <div style={{
+          position: "sticky", top: 0, height: "100vh",
+          overflow: "hidden", display: "flex", alignItems: "center", background: "transparent",
+        }}>
+
           {/* subtle grid */}
-          <div
-            aria-hidden
-            style={{
-              position: "absolute",
-              inset: 0,
-              backgroundImage: "linear-gradient(hsl(217 33% 17% / 0.25) 1px, transparent 1px),linear-gradient(90deg, hsl(217 33% 17% / 0.25) 1px, transparent 1px)",
-              backgroundSize: "60px 60px",
-              maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent)",
-              pointerEvents: "none",
-            }}
-          />
+          <div aria-hidden style={{
+            position: "absolute", inset: 0,
+            backgroundImage: "linear-gradient(hsl(217 33% 17% / 0.2) 1px, transparent 1px),linear-gradient(90deg, hsl(217 33% 17% / 0.2) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+            maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent)",
+            pointerEvents: "none",
+          }} />
 
           {/* ── INNER LAYOUT ── */}
           <div style={{ width: "100%", position: "relative", zIndex: 1 }}>
 
-            {/* ── LEFT PANEL (heading + step tracker) ── */}
+            {/* ── LEFT PANEL ── */}
             <div style={{
               position: "absolute",
               left: "clamp(1.5rem, 5vw, 4rem)",
               top: "50%",
               transform: "translateY(-50%)",
               zIndex: 20,
-              maxWidth: 280,
+              maxWidth: 290,
             }}>
-              <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "hsl(263 84% 68%)", marginBottom: "0.6rem" }}>
+              <p style={{ fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "hsl(263 84% 68%)", marginBottom: "0.6rem" }}>
                 ◆ Active Hackathons
               </p>
               <h2 style={{
                 fontSize: "clamp(1.9rem, 3.5vw, 2.6rem)",
-                fontWeight: 900,
-                color: "hsl(220 14% 97%)",
-                lineHeight: 1.1,
-                letterSpacing: "-0.03em",
-                marginBottom: "1rem",
+                fontWeight: 900, color: "hsl(220 14% 97%)",
+                lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: "1rem",
               }}>
                 Compete.<br />
                 <span style={{ background: "linear-gradient(135deg, hsl(263 84% 62%), hsl(310 80% 70%))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                   Conquer.
                 </span>
               </h2>
-              <p style={{ fontSize: "0.82rem", color: "hsl(218 11% 48%)", lineHeight: 1.6, marginBottom: "2rem" }}>
-                Scroll to navigate through hackathons.
+              <p style={{ fontSize: "0.8rem", color: "hsl(218 11% 44%)", lineHeight: 1.6, marginBottom: "2rem" }}>
+                Scroll to navigate between hackathons.
               </p>
 
-              {/* step indicators */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
-                {hackathons.map((h, i) => (
-                  <button
-                    key={h.id}
-                    className="dot-btn"
-                    onClick={() => {
-                      // Scroll to that card's scroll position
-                      const track = trackRef.current;
-                      if (!track) return;
-                      const scrollable = track.offsetHeight - window.innerHeight;
-                      const targetP = i / (N - 1);
-                      const targetY = track.offsetTop + targetP * scrollable;
-                      window.scrollTo({ top: targetY, behavior: "smooth" });
-                    }}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.75rem",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: 0,
-                      textAlign: "left",
-                    }}
-                  >
-                    <div style={{
-                      width: activeIdx === i ? 28 : 8,
-                      height: 8,
-                      borderRadius: 9999,
-                      background: activeIdx === i
-                        ? STATUS[h.status as keyof typeof STATUS].card
-                        : "hsl(217 33% 28%)",
-                      transition: "width 0.4s cubic-bezier(0.22,1,0.36,1), background 0.3s",
-                      flexShrink: 0,
-                    }} />
-                    <span style={{
-                      fontSize: "0.78rem",
-                      fontWeight: activeIdx === i ? 700 : 400,
-                      color: activeIdx === i ? "hsl(220 14% 90%)" : "hsl(218 11% 42%)",
-                      transition: "color 0.3s, font-weight 0.3s",
-                    }}>
-                      {h.name}
-                    </span>
-                  </button>
-                ))}
+              {/* ── FOCUS SWITCHER (dot nav) ── */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                {hackathons.map((h, i) => {
+                  const sc = STATUS[h.status as keyof typeof STATUS];
+                  const isActive = activeIdx === i;
+                  return (
+                    <button
+                      key={h.id}
+                      className="dot-btn"
+                      onMouseEnter={() => setHoveredDot(i)}
+                      onMouseLeave={() => setHoveredDot(null)}
+                      onClick={() => {
+                        const track = trackRef.current;
+                        if (!track) return;
+                        const scrollable = track.offsetHeight - window.innerHeight;
+                        const targetP = i / (N - 1);
+                        window.scrollTo({ top: track.offsetTop + targetP * scrollable, behavior: "smooth" });
+                      }}
+                      style={{
+                        display: "flex", alignItems: "center",
+                        background: "none", border: "none",
+                        cursor: "pointer", padding: 0, textAlign: "left",
+                      }}
+                    >
+                      {/* pill indicator */}
+                      <div style={{
+                        width: isActive ? 30 : 8,
+                        height: 8,
+                        borderRadius: 9999,
+                        background: isActive ? sc.card : "hsl(217 33% 26%)",
+                        flexShrink: 0,
+                        boxShadow: isActive ? `0 0 10px 1px ${sc.glow}` : "none",
+                        transition: "width 0.4s cubic-bezier(0.22,1,0.36,1), background 0.3s, box-shadow 0.3s",
+                      }} />
+
+                      {/* expand-on-hover name label */}
+                      <span
+                        className="dot-label"
+                        style={{
+                          fontSize: "0.75rem",
+                          fontWeight: isActive ? 700 : 500,
+                          color: isActive ? sc.card : (hoveredDot === i ? "hsl(220 14% 80%)" : "hsl(218 11% 40%)"),
+                        }}
+                      >
+                        {h.name}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
 
               {/* scroll hint */}
-              <div style={{ marginTop: "2.5rem", display: "flex", alignItems: "center", gap: "0.5rem", opacity: 0.45 }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                  {[0, 1, 2].map(i => (
-                    <div key={i} style={{ width: 18, height: 2, borderRadius: 9999, background: "hsl(218 11% 60%)", opacity: i === 1 ? 1 : 0.4 }} />
-                  ))}
-                </div>
-                <span style={{ fontSize: "0.7rem", color: "hsl(218 11% 55%)", letterSpacing: "0.05em" }}>SCROLL</span>
+              <div style={{ marginTop: "2.5rem", display: "flex", alignItems: "center", gap: "0.5rem", opacity: 0.4 }}>
+                <svg width="14" height="22" viewBox="0 0 14 22" fill="none" style={{ flexShrink: 0 }}>
+                  <rect x="1" y="1" width="12" height="20" rx="6" stroke="hsl(218 11% 55%)" strokeWidth="1.5" />
+                  <rect x="6" y="4" width="2" height="5" rx="1" fill="hsl(218 11% 55%)" style={{ animation: "scrollHint 1.6s ease-in-out infinite" }} />
+                </svg>
+                <span style={{ fontSize: "0.65rem", color: "hsl(218 11% 50%)", letterSpacing: "0.1em" }}>SCROLL</span>
               </div>
             </div>
 
-            {/* ── CARD RAIL (overflow hidden window) ── */}
-            <div
-              style={{
-                marginLeft: "clamp(280px, 36vw, 420px)",
-                padding: "3.5rem 0",     // Add vertical padding so outer glows aren't clipped
-                marginTop: "-3.5rem",    // Offset to maintain vertical centering
-                overflow: "hidden",
-                // Gradient mask. Fades ONLY on the extreme right, ensuring the first card is 100% visible initially.
-                maskImage: "linear-gradient(90deg, black 0%, black 92%, transparent 100%)",
-              }}
-            >
-              <div
-                ref={railRef}
-                style={{
-                  display: "flex",
-                  gap: "2rem",
-                  paddingRight: "clamp(2rem, 5vw, 6rem)", // padding so last card can scroll past edge
-                  willChange: "transform",
-                  // No CSS transition — scroll handler drives it directly
-                }}
-              >
+            {/* ── CARD RAIL ── */}
+            <div style={{
+              marginLeft: "clamp(280px, 36vw, 420px)",
+              padding: "4rem 0",
+              marginTop: "-4rem",
+              overflow: "hidden",
+              maskImage: "linear-gradient(90deg, black 0%, black 90%, transparent 100%)",
+            }}>
+              <div ref={railRef} style={{
+                display: "flex",
+                gap: "2rem",
+                paddingRight: "clamp(2rem, 5vw, 6rem)",
+                willChange: "transform",
+                perspective: "1000px",
+              }}>
                 {hackathons.map((h, i) => (
                   <div
                     key={h.id}
                     style={{
                       width: "clamp(300px, 38vw, 480px)",
-                      height: "clamp(260px, 42vh, 340px)",
+                      height: "clamp(280px, 46vh, 380px)",
                       flexShrink: 0,
                     }}
                   >
-                    <ExplodingCard
-                      h={h}
-                      assembled={assembled[i]}
-                      active={activeIdx === i}
-                    />
+                    <ExplodingCard h={h} assembled={assembled[i]} active={activeIdx === i} />
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* ── BOTTOM PROGRESS BAR ── */}
+            {/* ── PROGRESS BAR ── */}
             <div style={{
-              position: "absolute",
-              bottom: "-4rem",
+              position: "absolute", bottom: "-4rem",
               left: "clamp(1.5rem, 5vw, 4rem)",
               right: "clamp(1rem, 3vw, 3rem)",
-              height: 2,
-              background: "hsl(217 33% 20%)",
-              borderRadius: 9999,
-              overflow: "hidden",
+              height: 2, background: "hsl(217 33% 18%)",
+              borderRadius: 9999, overflow: "hidden",
             }}>
-              <div
-                ref={progressBarRef}
-                style={{
-                  height: "100%",
-                  width: "0%",
-                  borderRadius: 9999,
-                  background: "linear-gradient(90deg, hsl(263 84% 58%), hsl(310 80% 68%))",
-                  transition: "width 0.08s linear",
-                }}
-              />
+              <div ref={progressBarRef} style={{
+                height: "100%", width: "0%", borderRadius: 9999,
+                background: "linear-gradient(90deg, hsl(263 84% 58%), hsl(310 80% 68%))",
+                transition: "width 0.08s linear",
+              }} />
             </div>
 
           </div>

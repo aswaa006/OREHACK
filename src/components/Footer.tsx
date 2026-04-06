@@ -33,7 +33,8 @@ const Footer = () => {
                 <li key={link.id}>
                   <button
                     onClick={() => scrollToSection(link.id)}
-                    className="text-base text-foreground/80 hover:text-primary transition-colors duration-300"
+                    style={{ transition: "all 0.3s ease" }}
+                    className="text-base text-foreground/80 hover:text-[#c4b5fd]"
                   >
                     {link.label}
                   </button>
@@ -54,7 +55,8 @@ const Footer = () => {
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-base text-foreground/80 hover:text-primary transition-colors duration-300"
+                    style={{ transition: "all 0.3s ease" }}
+                    className="text-base text-foreground/80 hover:text-[#c4b5fd]"
                   >
                     {link.label}
                   </a>
@@ -83,7 +85,8 @@ const Footer = () => {
           </p>
           <a
             href="mailto:contact@oregent.com"
-            className="text-sm text-primary hover:text-primary/80 transition-colors duration-300"
+            style={{ transition: "all 0.3s ease" }}
+            className="text-sm text-primary hover:text-primary/80"
           >
             contact@oregent.com
           </a>

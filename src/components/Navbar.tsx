@@ -44,9 +44,8 @@ const Navbar = () => {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4 }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled ? "surface-elevated backdrop-blur-xl bg-card/80" : "bg-transparent"
-        }`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "surface-elevated backdrop-blur-xl bg-card/80" : "bg-transparent"
+          }`}
       >
         <div className="container mx-auto flex items-center justify-between py-4 px-6">
           <Link to="/" className="flex items-center gap-2">
@@ -59,25 +58,29 @@ const Navbar = () => {
           <div className="hidden md:flex items-center gap-8">
             <button
               onClick={() => scrollToSection("hackathons")}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-300"
+              style={{ transition: "all 0.3s ease" }}
+              className="text-sm text-muted-foreground hover:text-[#c4b5fd]"
             >
               Live Hackathons
             </button>
             <button
               onClick={() => scrollToSection("how-it-works")}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-300"
+              style={{ transition: "all 0.3s ease" }}
+              className="text-sm text-muted-foreground hover:text-[#c4b5fd]"
             >
               How It Works
             </button>
             <button
               onClick={() => scrollToSection("about")}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-300"
+              style={{ transition: "all 0.3s ease" }}
+              className="text-sm text-muted-foreground hover:text-[#c4b5fd]"
             >
               About Oregent
             </button>
             <button
               onClick={() => scrollToSection("contact")}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-300"
+              style={{ transition: "all 0.3s ease" }}
+              className="text-sm text-muted-foreground hover:text-[#c4b5fd]"
             >
               Contact
             </button>

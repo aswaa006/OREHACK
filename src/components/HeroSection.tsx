@@ -69,7 +69,8 @@ const HeroSection = () => {
           >
             <button
               onClick={scrollToHackathons}
-              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm tracking-wide hover:bg-accent transition-all duration-300 glow-primary hover:glow-primary-hover"
+              style={{ transition: "all 0.3s ease" }}
+              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm tracking-wide glow-primary hover:bg-[#9333ea] hover:text-white hover:shadow-[0_0_25px_rgba(147,51,234,0.5)] hover:-translate-y-1"
             >
               View Active Hackathons
               <svg
