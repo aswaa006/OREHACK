@@ -140,14 +140,22 @@ const Contact = () => {
   const [formState, setFormState] = useState({ name: "", email: "", message: "" });
   const [focused, setFocused] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [emailError, setEmailError] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (emailError) return;
     setSubmitted(true);
     setTimeout(() => {
       setFormState({ name: "", email: "", message: "" });
       setSubmitted(false);
     }, 3000);
+  };
+
+  const validateEmail = (val: string) => {
+    if (!val) { setEmailError(""); return; }
+    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+    setEmailError(ok ? "" : "Please enter a valid email address.");
   };
 
   return (
@@ -271,41 +279,80 @@ const Contact = () => {
                     initial={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
-                    {[
-                      { id: "name", label: "Name", type: "text", placeholder: "Your name" },
-                      { id: "email", label: "Email", type: "email", placeholder: "you@example.com" },
-                    ].map((field, i) => (
-                      <motion.div
-                        key={field.id}
-                        initial={{ opacity: 0, x: -30 }}
-                        animate={isInView ? { opacity: 1, x: 0 } : {}}
-                        transition={{ duration: 0.5, delay: 0.5 + i * 0.1 }}
-                        className="relative"
-                      >
-                        <label htmlFor={field.id} className="block text-sm font-medium text-foreground mb-2">
-                          {field.label}
-                        </label>
-                        <div className="relative">
-                          <input
-                            id={field.id}
-                            type={field.type}
-                            placeholder={field.placeholder}
-                            value={formState[field.id as keyof typeof formState]}
-                            onChange={(e) => setFormState({ ...formState, [field.id]: e.target.value })}
-                            onFocus={() => setFocused(field.id)}
-                            onBlur={() => setFocused(null)}
-                            required
-                            className="w-full px-4 py-3 bg-background/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 transition-all duration-300"
-                          />
-                          <motion.div
-                            className="absolute inset-0 rounded-xl border-2 border-primary/50 pointer-events-none"
-                            initial={{ opacity: 0, scale: 1.02 }}
-                            animate={focused === field.id ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 1.02 }}
-                            transition={{ duration: 0.2 }}
-                          />
-                        </div>
-                      </motion.div>
-                    ))}
+                    {/* Name field */}
+                    <motion.div
+                      initial={{ opacity: 0, x: -30 }}
+                      animate={isInView ? { opacity: 1, x: 0 } : {}}
+                      transition={{ duration: 0.5, delay: 0.5 }}
+                      className="relative"
+                    >
+                      <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">Name</label>
+                      <div className="relative">
+                        <input
+                          id="name"
+                          type="text"
+                          placeholder="Your name"
+                          value={formState.name}
+                          onChange={(e) => setFormState({ ...formState, name: e.target.value })}
+                          onFocus={() => setFocused("name")}
+                          onBlur={() => setFocused(null)}
+                          required
+                          className="w-full px-4 py-3 bg-background/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 transition-all duration-300"
+                        />
+                        <motion.div
+                          className="absolute inset-0 rounded-xl border-2 border-primary/50 pointer-events-none"
+                          initial={{ opacity: 0, scale: 1.02 }}
+                          animate={focused === "name" ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 1.02 }}
+                          transition={{ duration: 0.2 }}
+                        />
+                      </div>
+                    </motion.div>
+
+                    {/* Email field with live validation */}
+                    <motion.div
+                      initial={{ opacity: 0, x: -30 }}
+                      animate={isInView ? { opacity: 1, x: 0 } : {}}
+                      transition={{ duration: 0.5, delay: 0.6 }}
+                      className="relative"
+                    >
+                      <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">Email</label>
+                      <div className="relative">
+                        <input
+                          id="email"
+                          type="email"
+                          placeholder="you@example.com"
+                          value={formState.email}
+                          onChange={(e) => {
+                            setFormState({ ...formState, email: e.target.value });
+                            validateEmail(e.target.value);
+                          }}
+                          onFocus={() => setFocused("email")}
+                          onBlur={() => setFocused(null)}
+                          required
+                          className={`w-full px-4 py-3 bg-background/50 border rounded-xl text-foreground placeholder:text-muted-foreground/50 focus:outline-none transition-all duration-300 ${
+                            emailError
+                              ? "border-red-500/70 focus:border-red-500"
+                              : "border-border focus:border-primary/50"
+                          }`}
+                        />
+                        <motion.div
+                          className={`absolute inset-0 rounded-xl border-2 pointer-events-none ${emailError ? "border-red-500/40" : "border-primary/50"}`}
+                          initial={{ opacity: 0, scale: 1.02 }}
+                          animate={focused === "email" ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 1.02 }}
+                          transition={{ duration: 0.2 }}
+                        />
+                      </div>
+                      {emailError && (
+                        <motion.p
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="mt-1.5 text-xs text-red-400 flex items-center gap-1"
+                        >
+                          <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                          {emailError}
+                        </motion.p>
+                      )}
+                    </motion.div>
 
                     <motion.div
                       initial={{ opacity: 0, x: -30 }}

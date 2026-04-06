@@ -116,7 +116,8 @@ function ExplodingCard({ h, assembled, active }: CardProps) {
         borderRadius: "1.1rem",
         transform: active ? "scale(1) translateZ(0)" : "scale(0.94) translateZ(-30px)",
         opacity: active ? 1 : 0.65,
-        transition: "transform 0.5s cubic-bezier(0.22,1,0.36,1), opacity 0.5s ease",
+        filter: h.status === "Completed" ? "grayscale(60%) brightness(0.75)" : "none",
+        transition: "transform 0.5s cubic-bezier(0.22,1,0.36,1), opacity 0.5s ease, filter 0.5s ease",
       }}
     >
       {/* ── glassmorphic background ── */}
@@ -264,7 +265,7 @@ function ExplodingCard({ h, assembled, active }: CardProps) {
         </div>
 
         {/* ── STACK TAGS ── */}
-        <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", minHeight: "1.8rem" }}>
           {h.stack.map(tag => (
             <span key={tag} style={{
               fontSize: "0.62rem", fontWeight: 600, letterSpacing: "0.06em",
