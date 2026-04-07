@@ -199,14 +199,22 @@ html.lenis body {
   opacity: 0.04;
   animation: logo-bg-spin 20s linear infinite, logo-bg-breathe 8s ease-in-out infinite;
   will-change: transform, opacity;
-  /* smooth transition when switching animation-duration */
-  transition: filter 0.6s ease;
+  transition: filter 0.8s ease;
 }
 
 /* Activated when "Enter Portal" is clicked */
 .site-logo-bg--turbo {
   animation: logo-bg-spin-fast 1.2s linear infinite, logo-bg-breathe-turbo 1.2s ease-in-out infinite !important;
   filter: drop-shadow(0 0 18px hsl(142 71% 45% / 0.35));
+}
+
+/* Activated when user scrolls to the footer — logo stops spinning smoothly, becomes bright */
+.site-logo-bg--footer {
+  /* animation-play-state is set to 'paused' by JS; the transform is set to
+     the captured angle so the logo smoothly decelerates via the transition below. */
+  filter: none;
+  transition: filter 1.2s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 1.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ============================================================
@@ -1050,30 +1058,38 @@ html.lenis body {
 }
 
 @keyframes clWordOrbitSequence {
-  0%, 15% {
+
+  0%,
+  15% {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.7) rotate(-15deg);
   }
+
   35% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1) rotate(0deg);
   }
+
   75% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1) rotate(0deg);
   }
+
   81% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1.3) rotate(5deg);
   }
+
   84% {
     opacity: 0.8;
     transform: translate(-50%, -50%) scale(1.6) rotate(10deg);
   }
+
   87% {
     opacity: 0.3;
     transform: translate(-50%, -50%) scale(2.2) rotate(15deg);
   }
+
   100% {
     opacity: 0;
     transform: translate(-50%, -50%) scale(3.5) rotate(25deg);
@@ -1091,7 +1107,9 @@ html.lenis body {
 }
 
 @keyframes clWordPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.35;
   }
 
@@ -1179,7 +1197,9 @@ html.lenis body {
 }
 
 @keyframes clDotBlink {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.3;
     r: 1.5;
   }
@@ -1277,7 +1297,9 @@ html.lenis body {
 }
 
 @keyframes clStatusDotPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -1299,7 +1321,9 @@ html.lenis body {
 }
 
 @keyframes clCursorBlink {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
 

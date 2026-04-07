@@ -19,7 +19,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-background border-t border-border/50 pt-16 pb-0 overflow-hidden">
+    <footer className="border-t border-border/50 pt-16 pb-0 overflow-hidden text-foreground">
       <div className="container mx-auto px-6">
         {/* Top section: Navigation + Social */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">

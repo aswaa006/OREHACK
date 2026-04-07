@@ -5,9 +5,12 @@ import { useNavigate } from "react-router-dom";
    DATA
 ═══════════════════════════════════════════════════════════ */
 const hackathons = [
-  { id: "origin-2k26", name: "Origin 2K26", status: "Live", participants: 128, deadline: "March 15, 2026" },
-  { id: "buildcore-v3", name: "BuildCore v3", status: "Upcoming", participants: 0, deadline: "April 5, 2026" },
+  { id: "origin-2k26", name: "Origin 2K26", status: "Live", participants: 413, deadline: "10th April 10.00 am" },
+  { id: "buildcore-v3", name: "BuildCore v3", status: "Upcoming", participants: 0, deadline: "3rd May 11.15 am" },
   { id: "devstrike-24", name: "DevStrike '24", status: "Completed", participants: 256, deadline: "Ended" },
+  { id: "codeblitz-1", name: "CodeBlitz 1.0", status: "Upcoming", participants: 190, deadline: "9th May 4.40 pm" },
+  { id: "simats-open", name: "SIMATS Open Challenge", status: "Live", participants: 275, deadline: "17th May 8.20 pm" },
+  { id: "hackfest-2026", name: "HackFest 2026", status: "Upcoming", participants: 142, deadline: "26th May 2.55 pm" },
 ];
 
 const STATUS = {
@@ -132,9 +135,13 @@ function ExplodingCard({ h, assembled, active }: CardProps) {
       {/* ── CARD CONTENT ── */}
       <div
         onClick={() => {
-          if (h.status === "Live" && assembled) {
+          if (assembled) {
             window.dispatchEvent(new Event('logoTurbo'));
-            navigate(`/hackathon/${h.id}/login`);
+            if (h.id === "origin-2k26") {
+              navigate(`/hackathon/${h.id}/login`);
+            } else {
+              navigate("/admin/auth");
+            }
           }
         }}
         style={{
@@ -143,7 +150,7 @@ function ExplodingCard({ h, assembled, active }: CardProps) {
           height: "100%",
           padding: "2rem 2rem 1.75rem",
           borderRadius: "1rem",
-          cursor: h.status === "Live" ? "pointer" : "default",
+          cursor: assembled ? "pointer" : "default",
           opacity: assembled ? 1 : 0,
           transition: "opacity 0.35s ease 0.55s",
           display: "flex",
@@ -188,29 +195,27 @@ function ExplodingCard({ h, assembled, active }: CardProps) {
         </div>
 
         {/* CTA */}
-        {h.status === "Live" && (
-          <div style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            fontSize: "0.875rem",
-            fontWeight: 600,
-            color: sc.card,
-            padding: "0.65rem 1.25rem",
-            borderRadius: "0.6rem",
-            border: `1px solid ${sc.border}`,
-            background: sc.bg,
-            width: "fit-content",
-            transition: "box-shadow 0.3s, transform 0.2s",
-          }}
-            className="hackathon-cta"
-          >
-            Enter Portal
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </div>
-        )}
+        <div style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "0.5rem",
+          fontSize: "0.875rem",
+          fontWeight: 600,
+          color: sc.card,
+          padding: "0.65rem 1.25rem",
+          borderRadius: "0.6rem",
+          border: `1px solid ${sc.border}`,
+          background: sc.bg,
+          width: "fit-content",
+          transition: "box-shadow 0.3s, transform 0.2s",
+        }}
+          className="hackathon-cta"
+        >
+          Enter Portal
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </div>
       </div>
     </div>
   );
@@ -238,7 +243,7 @@ export default function ActiveHackathons() {
   const progressBarRef = useRef<HTMLDivElement>(null);
 
   // Which cards have assembled
-  const [assembled, setAssembled] = useState<boolean[]>([false, false, false]);
+  const [assembled, setAssembled] = useState<boolean[]>(() => hackathons.map(() => false));
   // Active card index (for scale/glow)
   const [activeIdx, setActiveIdx] = useState(0);
   // Whether section is in sticky mode
@@ -334,7 +339,7 @@ export default function ActiveHackathons() {
             overflow: "hidden",
             display: "flex",
             alignItems: "center",
-            background: "hsl(222 40% 7%)",
+            background: "transparent",
           }}
         >
           {/* subtle grid */}
