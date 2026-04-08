@@ -364,6 +364,7 @@ const DeveloperAdminDashboard = () => {
       startDate: "",
       durationHours: "36",
     });
+  };
 
   const handleLogout = async () => {
     try {
