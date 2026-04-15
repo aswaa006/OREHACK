@@ -172,11 +172,7 @@ function ExplodingCard({ h, assembled, active }: CardProps) {
         onClick={() => {
           if (assembled) {
             window.dispatchEvent(new Event('logoTurbo'));
-            if (h.id === "origin-2k26") {
-              navigate(`/hackathon/${h.id}/login`);
-            } else {
-              navigate("/admin/auth");
-            }
+            navigate(`/event/${h.id}`);
           }
         }}
         style={{
