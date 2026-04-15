@@ -18,6 +18,7 @@ import HackathonAdminUnderDevelopment from "./pages/HackathonAdminUnderDevelopme
 import DeveloperAdminDashboard from "./pages/DeveloperAdminDashboard";
 import CreateHackathon from "./pages/CreateHackathon";
 import OriginAdmin from "./pages/OriginAdmin";
+import OriginControlPanel from "./pages/OriginControlPanel";
 import { LoadingScreen } from "./components/LoadingScreen";
 // Phase 1 — Event flow
 import { EventProvider } from "./context/EventContext";
@@ -65,6 +66,7 @@ const AnimatedRoutes = () => {
         <Route path="/admin/hackathon/create" element={<CreateHackathon />} />
         <Route path="/admin/developer" element={<DeveloperAdminDashboard />} />
         <Route path="/orehackproject1924" element={<OriginAdmin />} />
+        <Route path="/orehackproject1924/panel" element={<OriginControlPanel />} />
 
         {/* ── Phase 1: Event flow ── */}
         <Route path="/event/:eventId" element={<EventLanding />} />
