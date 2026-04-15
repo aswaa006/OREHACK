@@ -1,477 +1,433 @@
-import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { supabase } from "@/lib/supabase";
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
-const ADMIN_USERNAME = "Execution@oregent.in";
-const ADMIN_PASSWORD = "Zerotouch192421";
+/* ─── Auth constants ─────────────────────────────────────── */
 const ADMIN_SESSION_KEY = "orehack_origin_admin_auth";
 
-type SubmissionRecord = {
-  teamID: string;
-  Team_Name: string;
-  Problem_Statement: string;
-  Repo_URL: string;
-  Progress: string;
-  Total_Scores: number | null;
-  Tech_Scores: number | null;
-  Innov_Scores: number | null;
-  Completeness_Scores: number | null;
-  password: string;
+/* ─── Hackathon dataset (mirrors ActiveHackathons.tsx) ───── */
+type HackathonStatus = "Live" | "Upcoming" | "Completed";
+
+interface HackathonCard {
+  id: string;
+  name: string;
+  status: HackathonStatus;
+  participants: number;
+  deadline: string;
+  poster?: string;
+}
+
+const INITIAL_EVENTS: HackathonCard[] = [
+  { id: "origin-2k26",    name: "Origin 2K26",            status: "Completed", participants: 413, deadline: "10th April 10:00 am", poster: "/place to strt.jpeg" },
+  { id: "buildcore-v3",   name: "BuildCore v3",            status: "Upcoming",  participants: 0,   deadline: "3rd May 11:15 am" },
+  { id: "devstrike-24",   name: "DevStrike '24",           status: "Completed", participants: 256, deadline: "Ended" },
+  { id: "codeblitz-1",    name: "CodeBlitz 1.0",           status: "Upcoming",  participants: 190, deadline: "9th May 4:40 pm" },
+  { id: "simats-open",    name: "SIMATS Open Challenge",   status: "Live",      participants: 275, deadline: "17th May 8:20 pm" },
+  { id: "hackfest-2026",  name: "HackFest 2026",           status: "Upcoming",  participants: 142, deadline: "26th May 2:55 pm" },
+];
+
+/* ─── Status badge colours ───────────────────────────────── */
+const STATUS_STYLE: Record<HackathonStatus, { bg: string; text: string; label: string }> = {
+  Live:      { bg: "rgba(34,197,94,0.18)",  text: "#4ade80", label: "LIVE"      },
+  Upcoming:  { bg: "rgba(99,102,241,0.18)", text: "#818cf8", label: "UPCOMING"  },
+  Completed: { bg: "rgba(251,191,36,0.15)", text: "#fbbf24", label: "COMPLETED" },
 };
 
-const emptyForm: SubmissionRecord = {
-  teamID: "",
-  Team_Name: "",
-  Problem_Statement: "",
-  Repo_URL: "",
-  Progress: "queued",
-  Total_Scores: null,
-  Tech_Scores: null,
-  Innov_Scores: null,
-  Completeness_Scores: null,
-  password: "",
+/* ─── Control-panel CTA ──────────────────────────────────── */
+const ControlPanelBtn = ({ onClick }: { onClick: () => void }) => (
+  <button
+    onClick={onClick}
+    style={{
+      width: "100%",
+      marginTop: "auto",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "0.4rem",
+      padding: "0.55rem 1rem",
+      border: "1px solid rgba(139,92,246,0.5)",
+      borderRadius: "0.5rem",
+      background: "rgba(139,92,246,0.08)",
+      color: "#a78bfa",
+      fontSize: "0.78rem",
+      fontWeight: 600,
+      cursor: "pointer",
+      transition: "all 0.25s ease",
+    }}
+    onMouseEnter={(e) => {
+      (e.currentTarget as HTMLButtonElement).style.background = "rgba(139,92,246,0.22)";
+      (e.currentTarget as HTMLButtonElement).style.color = "#c4b5fd";
+    }}
+    onMouseLeave={(e) => {
+      (e.currentTarget as HTMLButtonElement).style.background = "rgba(139,92,246,0.08)";
+      (e.currentTarget as HTMLButtonElement).style.color = "#a78bfa";
+    }}
+  >
+    Enter Control Panel
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 12h14M12 5l7 7-7 7" />
+    </svg>
+  </button>
+);
+
+/* ─── Hackathon card ─────────────────────────────────────── */
+const EventCard = ({
+  event,
+  onRemove,
+}: {
+  event: HackathonCard;
+  onRemove: () => void;
+}) => {
+  const nav = useNavigate();
+  const sc = STATUS_STYLE[event.status];
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.94 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+      style={{
+        position: "relative",
+        borderRadius: "0.85rem",
+        border: "1px solid rgba(255,255,255,0.08)",
+        background: "rgba(15,18,30,0.85)",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        padding: "1rem",
+        gap: "0.6rem",
+        minHeight: "190px",
+      }}
+    >
+      {/* Poster background */}
+      {event.poster && (
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: `url('${event.poster}')`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            opacity: 0.35,
+          }}
+        />
+      )}
+      {/* Dark overlay */}
+      <div aria-hidden style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(8,10,20,0.55) 0%, rgba(8,10,20,0.85) 100%)" }} />
+
+      {/* Card content */}
+      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", height: "100%", gap: "0.55rem" }}>
+        {/* Top row: name + X */}
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "0.5rem" }}>
+          <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "#f1f5f9", lineHeight: 1.3, flex: 1 }}>{event.name}</span>
+          <button
+            onClick={onRemove}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.35)", padding: "0 0 0 4px", lineHeight: 1, fontSize: "1rem", flexShrink: 0 }}
+            aria-label="Remove event"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Status badge */}
+        <div>
+          <span style={{ display: "inline-block", padding: "0.18rem 0.6rem", borderRadius: "9999px", background: sc.bg, color: sc.text, fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.1em" }}>
+            {sc.label}
+          </span>
+        </div>
+
+        {/* Stats */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)" }}>Participants:</span>
+          <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>{event.participants.toLocaleString()}</span>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)" }}>Deadline:</span>
+          <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>{event.deadline}</span>
+        </div>
+
+        {/* CTA */}
+        <ControlPanelBtn onClick={() => nav(`/orehackproject1924/panel`)} />
+      </div>
+    </motion.div>
+  );
 };
 
-const asString = (value: unknown) => (typeof value === "string" ? value : "");
-const asNumberOrNull = (value: unknown) => {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  return null;
-};
+/* ─── Login Screen ───────────────────────────────────────── */
+const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
+  const [user, setUser] = useState("");
+  const [pass, setPass] = useState("");
+  const [err,  setErr]  = useState("");
 
-const toSubmissionRecord = (row: Record<string, unknown>): SubmissionRecord => ({
-  teamID: asString(row.teamID),
-  Team_Name: asString(row.Team_Name),
-  Problem_Statement: asString(row.Problem_Statement),
-  Repo_URL: asString(row.Repo_URL),
-  Progress: asString(row.Progress) || "queued",
-  Total_Scores: asNumberOrNull(row.Total_Scores),
-  Tech_Scores: asNumberOrNull(row.Tech_Scores),
-  Innov_Scores: asNumberOrNull(row.Innov_Scores),
-  Completeness_Scores: asNumberOrNull(row.Completeness_Scores),
-  password: asString(row.password),
-});
-
-const OriginAdmin = () => {
-  const [submissions, setSubmissions] = useState<SubmissionRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [username, setUsername] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [authError, setAuthError] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return sessionStorage.getItem(ADMIN_SESSION_KEY) === "true";
-  });
-  const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<SubmissionRecord>(emptyForm);
-  const [newForm, setNewForm] = useState<SubmissionRecord>(emptyForm);
-  const [saving, setSaving] = useState(false);
-  const [marksSort, setMarksSort] = useState<"none" | "asc" | "desc">("none");
-  const [problemSort, setProblemSort] = useState<"none" | "asc" | "desc">("none");
-
-  const handleLogin = (e: React.FormEvent) => {
+  const submit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (username.trim() === ADMIN_USERNAME && loginPassword === ADMIN_PASSWORD) {
-      setIsAuthenticated(true);
-      setAuthError("");
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem(ADMIN_SESSION_KEY, "true");
-      }
-      return;
+    if (user.trim() === "Execution@oregent.in" && pass === "Zerotouch192421") {
+      sessionStorage.setItem(ADMIN_SESSION_KEY, "true");
+      onLogin();
+    } else {
+      setErr("Invalid credentials.");
     }
-
-    setAuthError("Invalid admin username or password.");
   };
 
-  const handleLogout = () => {
+  const iStyle: React.CSSProperties = {
+    width: "100%",
+    background: "rgba(255,255,255,0.05)",
+    border: "1px solid rgba(255,255,255,0.12)",
+    borderRadius: "0.6rem",
+    padding: "0.65rem 1rem",
+    color: "#f1f5f9",
+    fontSize: "0.875rem",
+    outline: "none",
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#080b14", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
+      <form onSubmit={submit} autoComplete="off" style={{ width: "100%", maxWidth: 420, background: "rgba(15,18,30,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "1.2rem", padding: "2.5rem" }}>
+        <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#a78bfa", marginBottom: "0.5rem" }}>Oregent Admin</p>
+        <h1 style={{ fontSize: "1.8rem", fontWeight: 900, color: "#f1f5f9", marginBottom: "0.4rem" }}>Admin Dashboard</h1>
+        <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.4)", marginBottom: "1.5rem" }}>Sign in to access the admin panel.</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          <input value={user} onChange={e => setUser(e.target.value)} placeholder="Username" autoComplete="off" style={iStyle} />
+          <input type="password" value={pass} onChange={e => setPass(e.target.value)} placeholder="Password" autoComplete="new-password" style={iStyle} />
+          {err && <p style={{ fontSize: "0.78rem", color: "#f87171" }}>{err}</p>}
+          <button type="submit" style={{ background: "#7c3aed", border: "none", borderRadius: "0.6rem", padding: "0.7rem", color: "#fff", fontWeight: 700, fontSize: "0.875rem", cursor: "pointer" }}>Sign In</button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+/* ─── Main ───────────────────────────────────────────────── */
+const OriginAdmin = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    () => typeof window !== "undefined" && sessionStorage.getItem(ADMIN_SESSION_KEY) === "true"
+  );
+  const [events, setEvents] = useState<HackathonCard[]>(INITIAL_EVENTS);
+
+  /* Add-event form state */
+  const [newName,         setNewName]         = useState("");
+  const [newStatus,       setNewStatus]       = useState<HackathonStatus>("Upcoming");
+  const [newParticipants, setNewParticipants] = useState("0");
+  const [newDeadline,     setNewDeadline]     = useState("");
+  const [newPoster,       setNewPoster]       = useState<string | undefined>(undefined);
+  const [posterFileName,  setPosterFileName]  = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const logout = () => {
     setIsAuthenticated(false);
-    setUsername("");
-    setLoginPassword("");
-    if (typeof window !== "undefined") {
-      sessionStorage.removeItem(ADMIN_SESSION_KEY);
-    }
+    sessionStorage.removeItem(ADMIN_SESSION_KEY);
   };
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setLoading(false);
-      return;
-    }
-
-    let mounted = true;
-
-    const loadSubmissions = async () => {
-      if (mounted) {
-        setLoading(true);
-        setError("");
-      }
-
-      const { data, error: fetchError } = await supabase
-        .from("submissions")
-        .select("teamID, Team_Name, Problem_Statement, Repo_URL, Progress, Total_Scores, Tech_Scores, Innov_Scores, Completeness_Scores, password")
-        .limit(500);
-
-      if (!mounted) return;
-
-      if (fetchError) {
-        setError(fetchError.message || "Failed to load submissions.");
-        setLoading(false);
-        return;
-      }
-
-      setSubmissions((data || []).map((row) => toSubmissionRecord(row as Record<string, unknown>)));
-      setLoading(false);
-    };
-
-    loadSubmissions();
-
-    const channel = supabase
-      .channel("origin-admin-submissions-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "submissions" }, loadSubmissions)
-      .subscribe();
-
-    return () => {
-      mounted = false;
-      supabase.removeChannel(channel);
-    };
-  }, [isAuthenticated]);
-
-  const stats = useMemo(() => {
-    const total = submissions.length;
-    const completed = submissions.filter((row) => row.Progress.toLowerCase() === "completed").length;
-    const queued = submissions.filter((row) => row.Progress.toLowerCase() === "queued").length;
-    return { total, completed, queued };
-  }, [submissions]);
-
-  const sortedSubmissions = useMemo(() => {
-    const rows = [...submissions];
-
-    const compareScore = (left: SubmissionRecord, right: SubmissionRecord) => {
-      if (marksSort === "none") return 0;
-      return marksSort === "desc"
-        ? (right.Total_Scores ?? -Infinity) - (left.Total_Scores ?? -Infinity)
-        : (left.Total_Scores ?? Infinity) - (right.Total_Scores ?? Infinity);
-    };
-
-    const compareProblem = (left: SubmissionRecord, right: SubmissionRecord) => {
-      if (problemSort === "none") return 0;
-      const leftProblem = left.Problem_Statement.trim().toLowerCase();
-      const rightProblem = right.Problem_Statement.trim().toLowerCase();
-      return problemSort === "asc"
-        ? leftProblem.localeCompare(rightProblem)
-        : rightProblem.localeCompare(leftProblem);
-    };
-
-    rows.sort((left, right) => {
-      if (problemSort !== "none" && marksSort !== "none") {
-        const problemCompare = compareProblem(left, right);
-        if (problemCompare !== 0) return problemCompare;
-        return compareScore(left, right);
-      }
-
-      if (problemSort !== "none") {
-        return compareProblem(left, right);
-      }
-
-      if (marksSort !== "none") {
-        return compareScore(left, right);
-      }
-
-      return left.teamID.localeCompare(right.teamID);
-    });
-
-    return rows;
-  }, [submissions, marksSort, problemSort]);
-
-  const onEditChange = (field: keyof SubmissionRecord, value: string) => {
-    setEditForm((prev) => ({
-      ...prev,
-      [field]: field.includes("Scores") ? (value === "" ? null : Number(value)) : value,
-    }));
+  const handleAddEvent = () => {
+    if (!newName.trim()) return;
+    const id = newName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    setEvents(prev => [...prev, {
+      id,
+      name: newName.trim(),
+      status: newStatus,
+      participants: Number(newParticipants) || 0,
+      deadline: newDeadline.trim() || "TBD",
+      poster: newPoster,
+    }]);
+    setNewName(""); setNewStatus("Upcoming"); setNewParticipants("0");
+    setNewDeadline(""); setNewPoster(undefined); setPosterFileName("");
   };
 
-  const onNewChange = (field: keyof SubmissionRecord, value: string) => {
-    setNewForm((prev) => ({
-      ...prev,
-      [field]: field.includes("Scores") ? (value === "" ? null : Number(value)) : value,
-    }));
-  };
-
-  const startEdit = (row: SubmissionRecord) => {
-    setEditingTeamId(row.teamID);
-    setEditForm({ ...row });
-  };
-
-  const cancelEdit = () => {
-    setEditingTeamId(null);
-    setEditForm(emptyForm);
-  };
-
-  const saveEdit = async () => {
-    if (!editingTeamId) return;
-    if (!editForm.teamID.trim()) {
-      setError("Team ID cannot be empty.");
-      return;
-    }
-
-    setSaving(true);
-    setError("");
-
-    const { error: updateError } = await supabase
-      .from("submissions")
-      .update({
-        teamID: editForm.teamID.trim(),
-        Team_Name: editForm.Team_Name.trim(),
-        Problem_Statement: editForm.Problem_Statement.trim(),
-        Repo_URL: editForm.Repo_URL.trim(),
-        Progress: editForm.Progress.trim().toLowerCase() === "completed" ? "completed" : "queued",
-        Total_Scores: editForm.Total_Scores,
-        Tech_Scores: editForm.Tech_Scores,
-        Innov_Scores: editForm.Innov_Scores,
-        Completeness_Scores: editForm.Completeness_Scores,
-        password: editForm.password,
-      })
-      .eq("teamID", editingTeamId);
-
-    setSaving(false);
-
-    if (updateError) {
-      setError(updateError.message || "Failed to update row.");
-      return;
-    }
-
-    setEditingTeamId(null);
-  };
-
-  const addRow = async () => {
-    if (!newForm.teamID.trim()) {
-      setError("Team ID is required for adding a row.");
-      return;
-    }
-
-    setSaving(true);
-    setError("");
-
-    const { error: insertError } = await supabase
-      .from("submissions")
-      .insert({
-        teamID: newForm.teamID.trim(),
-        Team_Name: newForm.Team_Name.trim(),
-        Problem_Statement: newForm.Problem_Statement.trim(),
-        Repo_URL: newForm.Repo_URL.trim(),
-        Progress: newForm.Progress.trim().toLowerCase() === "completed" ? "completed" : "queued",
-        Total_Scores: newForm.Total_Scores,
-        Tech_Scores: newForm.Tech_Scores,
-        Innov_Scores: newForm.Innov_Scores,
-        Completeness_Scores: newForm.Completeness_Scores,
-        password: newForm.password,
-      });
-
-    setSaving(false);
-
-    if (insertError) {
-      setError(insertError.message || "Failed to add row.");
-      return;
-    }
-
-    setNewForm(emptyForm);
+  const handlePosterFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPosterFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = (ev) => setNewPoster(ev.target?.result as string);
+    reader.readAsDataURL(file);
   };
 
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-6">
-        <form onSubmit={handleLogin} autoComplete="off" className="w-full max-w-md rounded-2xl border border-border/70 bg-card/50 p-8">
-          <p className="text-xs uppercase tracking-[0.2em] text-primary">Origin Admin</p>
-          <h1 className="mt-2 text-3xl font-black">Admin Authentication</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Sign in to access the admin panel.</p>
-
-          <div className="mt-6 space-y-3">
-            <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Username"
-              autoComplete="off"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-            />
-            <input
-              type="password"
-              value={loginPassword}
-              onChange={(e) => setLoginPassword(e.target.value)}
-              placeholder="Password"
-              autoComplete="new-password"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-            />
-            {authError && <p className="text-xs text-destructive">{authError}</p>}
-            <button type="submit" className="w-full rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground">
-              Sign In
-            </button>
-          </div>
-        </form>
-      </div>
-    );
+    return <LoginScreen onLogin={() => setIsAuthenticated(true)} />;
   }
 
+  /* ── shared input style ── */
+  const iStyle: React.CSSProperties = {
+    background: "rgba(255,255,255,0.04)",
+    border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: "0.55rem",
+    padding: "0.6rem 0.9rem",
+    color: "#f1f5f9",
+    fontSize: "0.82rem",
+    outline: "none",
+    width: "100%",
+  };
+
   return (
-    <div className="min-h-screen bg-background text-foreground px-5 py-10 md:px-8">
-      <div className="mx-auto w-full max-w-[1400px] space-y-8">
-        <motion.header
-          initial={{ opacity: 0, y: 18 }}
+    <div style={{ minHeight: "100vh", background: "#080b14", color: "#f1f5f9", fontFamily: "'Inter', system-ui, sans-serif", padding: "2.5rem 2rem" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", flexDirection: "column", gap: "2rem" }}>
+
+        {/* ── Header ── */}
+        <motion.div
+          initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="rounded-2xl border border-border/70 bg-card/50 p-6 backdrop-blur-sm"
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "space-between",
+            background: "rgba(15,18,30,0.7)",
+            border: "1px solid rgba(255,255,255,0.07)",
+            borderRadius: "1rem",
+            padding: "1.6rem 2rem",
+            backdropFilter: "blur(16px)",
+          }}
         >
-          <p className="text-xs uppercase tracking-[0.2em] text-primary">Origin Admin</p>
-          <h1 className="mt-2 text-3xl font-black md:text-5xl">Full Access Control Panel</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Edit, add, and manage every submissions field directly.</p>
-          <div className="mt-4">
-            <button onClick={handleLogout} className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-card">
-              Logout
-            </button>
+          <div>
+            <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#a78bfa", marginBottom: "0.35rem" }}>Oregent Admin</p>
+            <h1 style={{ fontSize: "2rem", fontWeight: 900, letterSpacing: "-0.02em", margin: "0 0 0.35rem" }}>Admin Dashboard</h1>
+            <p style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.38)", margin: 0 }}>Select a hackathon to manage its details and submissions.</p>
           </div>
-        </motion.header>
+          <button
+            onClick={logout}
+            style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "0.5rem", padding: "0.4rem 1.1rem", color: "rgba(255,255,255,0.7)", fontSize: "0.8rem", cursor: "pointer", transition: "all 0.2s ease", whiteSpace: "nowrap", marginTop: "0.25rem" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.3)"; (e.currentTarget as HTMLButtonElement).style.color = "#fff"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)"; (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.7)"; }}
+          >
+            Logout
+          </button>
+        </motion.div>
 
-        {error && <p className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
+        {/* ── Managed Events section ── */}
+        <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <p style={{ fontSize: "0.95rem", fontWeight: 700, marginBottom: "0.2rem" }}>Managed Events</p>
+          <p style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.35)", marginBottom: "1.1rem" }}>Events displayed on the main landing page.</p>
 
-        <section className="grid gap-4 md:grid-cols-3">
-          {[
-            { label: "Total Rows", value: stats.total, tone: "text-cyan-300" },
-            { label: "Completed", value: stats.completed, tone: "text-emerald-300" },
-            { label: "Queued", value: stats.queued, tone: "text-amber-300" },
-          ].map((card) => (
-            <div key={card.label} className="rounded-xl border border-border/70 bg-card/40 p-5">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">{card.label}</p>
-              <p className={`mt-2 text-3xl font-extrabold ${card.tone}`}>{card.value}</p>
-            </div>
-          ))}
-        </section>
-
-        <section className="rounded-2xl border border-border/70 bg-card/40 p-4">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm font-semibold text-foreground">Add New Row</p>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs uppercase tracking-wider text-muted-foreground">Sort by</span>
-              <select
-                value={marksSort}
-                onChange={(e) => setMarksSort(e.target.value as typeof marksSort)}
-                className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
-              >
-                <option value="desc">Marks: High to Low</option>
-                <option value="asc">Marks: Low to High</option>
-                <option value="none">Marks: None</option>
-              </select>
-              <select
-                value={problemSort}
-                onChange={(e) => setProblemSort(e.target.value as typeof problemSort)}
-                className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
-              >
-                <option value="asc">Problem Statement: A to Z</option>
-                <option value="desc">Problem Statement: Z to A</option>
-                <option value="none">Problem Statement: None</option>
-              </select>
-            </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem" }}>
+            <AnimatePresence>
+              {events.map(ev => (
+                <EventCard
+                  key={ev.id}
+                  event={ev}
+                  onRemove={() => setEvents(prev => prev.filter(e => e.id !== ev.id))}
+                />
+              ))}
+            </AnimatePresence>
           </div>
-          <div className="grid gap-3 md:grid-cols-4">
-            <input value={newForm.teamID} onChange={(e) => onNewChange("teamID", e.target.value)} placeholder="Team ID" className="rounded-lg border border-border bg-background px-3 py-2 text-sm" />
-            <input value={newForm.Team_Name} onChange={(e) => onNewChange("Team_Name", e.target.value)} placeholder="Team Name" className="rounded-lg border border-border bg-background px-3 py-2 text-sm" />
-            <input value={newForm.password} onChange={(e) => onNewChange("password", e.target.value)} placeholder="Password" className="rounded-lg border border-border bg-background px-3 py-2 text-sm" />
-            <select value={newForm.Progress} onChange={(e) => onNewChange("Progress", e.target.value)} className="rounded-lg border border-border bg-background px-3 py-2 text-sm">
-              <option value="queued">queued</option>
-              <option value="completed">completed</option>
+        </motion.section>
+
+        {/* ── Add Next Event ─────────────────────────────── */}
+        <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <p style={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: "0.85rem" }}>Add Next Event</p>
+
+          {/* Form row */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "2fr 1fr 0.7fr 1.5fr 1.2fr",
+            gap: "0.65rem",
+            alignItems: "center",
+            background: "rgba(15,18,30,0.6)",
+            border: "1px solid rgba(255,255,255,0.07)",
+            borderRadius: "0.85rem",
+            padding: "1rem 1.1rem",
+          }}>
+            {/* Event Name */}
+            <input
+              value={newName}
+              onChange={e => setNewName(e.target.value)}
+              placeholder="Event Name"
+              style={iStyle}
+            />
+
+            {/* Status */}
+            <select
+              value={newStatus}
+              onChange={e => setNewStatus(e.target.value as HackathonStatus)}
+              style={{ ...iStyle, appearance: "none", cursor: "pointer" }}
+            >
+              <option value="Upcoming">Upcoming</option>
+              <option value="Live">Live</option>
+              <option value="Completed">Completed</option>
             </select>
-            <input value={newForm.Repo_URL} onChange={(e) => onNewChange("Repo_URL", e.target.value)} placeholder="Repo URL" className="rounded-lg border border-border bg-background px-3 py-2 text-sm md:col-span-2" />
-            <input value={newForm.Total_Scores ?? ""} onChange={(e) => onNewChange("Total_Scores", e.target.value)} placeholder="Total Score" className="rounded-lg border border-border bg-background px-3 py-2 text-sm" />
-            <button onClick={addRow} disabled={saving} className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">Add Row</button>
+
+            {/* Participants */}
+            <input
+              type="number"
+              value={newParticipants}
+              onChange={e => setNewParticipants(e.target.value)}
+              placeholder="0"
+              style={{ ...iStyle, textAlign: "center" }}
+            />
+
+            {/* Deadline */}
+            <input
+              value={newDeadline}
+              onChange={e => setNewDeadline(e.target.value)}
+              placeholder="Deadline (e.g. 10th May)"
+              style={iStyle}
+            />
+
+            {/* Upload Banner */}
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "0.5rem",
+                background: "rgba(255,255,255,0.04)",
+                border: "1px dashed rgba(255,255,255,0.18)",
+                borderRadius: "0.55rem",
+                padding: "0.6rem 0.9rem",
+                cursor: "pointer",
+                transition: "border-color 0.2s ease",
+                minWidth: 0,
+              }}
+              onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(167,139,250,0.55)"}
+              onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.18)"}
+            >
+              <div style={{ minWidth: 0 }}>
+                <p style={{ fontSize: "0.78rem", color: posterFileName ? "#c4b5fd" : "rgba(255,255,255,0.5)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {posterFileName || "Upload Banner"}
+                </p>
+                <p style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.25)", margin: "1px 0 0" }}>Recommend 16:9 ratio</p>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handlePosterFile} />
+            </div>
           </div>
-        </section>
 
-        <section className="overflow-hidden rounded-2xl border border-border/70 bg-card/40">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1600px]">
-              <thead>
-                <tr className="border-b border-border/70 bg-card/60 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                  <th className="px-4 py-3">Team ID</th>
-                  <th className="px-4 py-3">Team Name</th>
-                  <th className="px-4 py-3">Hackathon</th>
-                  <th className="px-4 py-3">Repo URL</th>
-                  <th className="px-4 py-3">Progress</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Total Score</th>
-                  <th className="px-4 py-3">Password</th>
-                  <th className="px-4 py-3">Problem Statement</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading && (
-                  <tr>
-                    <td colSpan={10} className="px-4 py-8 text-center text-sm text-muted-foreground">Loading submissions...</td>
-                  </tr>
-                )}
+          {/* Add Event Button */}
+          <button
+            onClick={handleAddEvent}
+            disabled={!newName.trim()}
+            style={{
+              marginTop: "0.75rem",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              background: "linear-gradient(135deg, #059669, #10b981)",
+              border: "none",
+              borderRadius: "0.6rem",
+              padding: "0.65rem 1.5rem",
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: "0.85rem",
+              cursor: "pointer",
+              opacity: newName.trim() ? 1 : 0.45,
+              transition: "all 0.2s ease",
+              boxShadow: "0 4px 18px rgba(16,185,129,0.28)",
+            }}
+            onMouseEnter={e => { if (newName.trim()) (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 24px rgba(16,185,129,0.45)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 18px rgba(16,185,129,0.28)"; }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            + Add Event
+          </button>
+        </motion.section>
 
-                {!loading && sortedSubmissions.map((row) => {
-                  const submitted = row.Repo_URL.trim().length > 0;
-                  const statusLabel = submitted ? "Completed" : "In Progress";
-                  const statusClass = submitted ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-300";
-                  const isEditing = editingTeamId === row.teamID;
-
-                  return (
-                    <tr key={row.teamID} className="border-b border-border/60 text-sm hover:bg-card/60">
-                      <td className="px-4 py-3">
-                        {isEditing ? <input value={editForm.teamID} onChange={(e) => onEditChange("teamID", e.target.value)} className="w-full rounded border border-border bg-background px-2 py-1" /> : row.teamID}
-                      </td>
-                      <td className="px-4 py-3">
-                        {isEditing ? <input value={editForm.Team_Name} onChange={(e) => onEditChange("Team_Name", e.target.value)} className="w-full rounded border border-border bg-background px-2 py-1" /> : row.Team_Name}
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">ORIGIN SIMATS</td>
-                      <td className="px-4 py-3">
-                        {isEditing ? <input value={editForm.Repo_URL} onChange={(e) => onEditChange("Repo_URL", e.target.value)} className="w-full rounded border border-border bg-background px-2 py-1" /> : (row.Repo_URL || "-")}
-                      </td>
-                      <td className="px-4 py-3">
-                        {isEditing ? (
-                          <select value={editForm.Progress} onChange={(e) => onEditChange("Progress", e.target.value)} className="w-full rounded border border-border bg-background px-2 py-1">
-                            <option value="queued">queued</option>
-                            <option value="completed">completed</option>
-                          </select>
-                        ) : (
-                          row.Progress || "queued"
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusClass}`}>{statusLabel}</span>
-                      </td>
-                      <td className="px-4 py-3 text-right font-semibold text-foreground">
-                        {isEditing ? <input value={editForm.Total_Scores ?? ""} onChange={(e) => onEditChange("Total_Scores", e.target.value)} className="w-24 rounded border border-border bg-background px-2 py-1 text-right" /> : (row.Total_Scores !== null ? row.Total_Scores.toFixed(1) : "-")}
-                      </td>
-                      <td className="px-4 py-3">
-                        {isEditing ? <input value={editForm.password} onChange={(e) => onEditChange("password", e.target.value)} className="w-full rounded border border-border bg-background px-2 py-1" /> : row.password}
-                      </td>
-                      <td className="px-4 py-3">
-                        {isEditing ? <input value={editForm.Problem_Statement} onChange={(e) => onEditChange("Problem_Statement", e.target.value)} className="w-full rounded border border-border bg-background px-2 py-1" /> : row.Problem_Statement}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {isEditing ? (
-                          <div className="flex justify-end gap-2">
-                            <button onClick={saveEdit} disabled={saving} className="rounded bg-emerald-600 px-2 py-1 text-xs font-semibold text-white disabled:opacity-50">Save</button>
-                            <button onClick={cancelEdit} className="rounded bg-muted px-2 py-1 text-xs font-semibold text-foreground">Cancel</button>
-                          </div>
-                        ) : (
-                          <button onClick={() => startEdit(row)} className="rounded bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground">Edit</button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-
-                {!loading && sortedSubmissions.length === 0 && (
-                  <tr>
-                    <td colSpan={10} className="px-4 py-8 text-center text-sm text-muted-foreground">No submissions found.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
       </div>
     </div>
   );
