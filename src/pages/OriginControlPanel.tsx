@@ -9,9 +9,10 @@ const STAGES = [
   {
     number: 1,
     title: "Pre-Event Setup",
-    subtitle: "Registration & Configuration",
-    description: "Configure hackathon parameters, set up registration pipelines, define problem domains and team structure.",
-    status: "coming-soon" as const,
+    subtitle: "Timer & Configuration",
+    description: "Control the public countdown timer, set the event start time, enable or disable the clock, and configure pre-event parameters.",
+    status: "active" as const,
+    route: "/orehackproject1924/panel/stage-1",
     icon: (
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="3" />
