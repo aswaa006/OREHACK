@@ -21,7 +21,7 @@ interface EventContextValue {
   logout: () => void;
 }
 
-const DEFAULT_EVENT_START = new Date("2026-04-14T14:55:00").getTime();
+const DEFAULT_EVENT_START = new Date("2026-04-15T19:33:00+05:30").getTime();
 
 const defaultState: EventState = {
   eventId: "origin-2k25",
