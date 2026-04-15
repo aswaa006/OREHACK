@@ -18,7 +18,7 @@ const steps = [
     num: "02",
     total: "04",
     title: "SUBMIT\nREPOSITORY",
-    desc: "Submit your public GitHub repository link along with an optional problem statement. Our system clones and snapshots your code at submission time.",
+    desc: "Submit your public GitHub repository link along with given  problem statement. Our system dives in and explores your project context at submission time.",
     tags: ["GitHub URL", "Timestamp Lock", "Problem Statement"],
     infoLabel: "PHASE",
     infoValue: "Submission",

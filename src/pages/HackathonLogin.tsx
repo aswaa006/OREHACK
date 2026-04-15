@@ -14,6 +14,7 @@ const HackathonLogin = () => {
   const [shakeTick, setShakeTick] = useState(0);
   const [authState, setAuthState] = useState<"idle" | "checking" | "granted">("idle");
 
+  const isOrigin = hackathonId === "origin-2k26";
   const hackathonName = hackathonId?.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) || "Hackathon";
   const teamLabel = teamName.trim() || teamId.trim() || "XYZ";
 
@@ -79,14 +80,11 @@ const HackathonLogin = () => {
 
     const resolvedTeamId =
       (submission.teamID as string | undefined) || normalizedTeamId;
-
     const resolvedTeamName = dbTeamName || normalizedTeamName;
 
     await supabase
       .from("submissions")
-      .update({
-        Team_Name: resolvedTeamName,
-      })
+      .update({ Team_Name: resolvedTeamName })
       .eq("teamID", resolvedTeamId);
 
     await new Promise((r) => setTimeout(r, 700));
@@ -94,11 +92,7 @@ const HackathonLogin = () => {
     await new Promise((r) => setTimeout(r, 1900));
     localStorage.setItem(
       "orehack_team_session",
-      JSON.stringify({
-        hackathonId,
-        teamId: resolvedTeamId,
-        teamName: resolvedTeamName,
-      }),
+      JSON.stringify({ hackathonId, teamId: resolvedTeamId, teamName: resolvedTeamName }),
     );
     setLoading(false);
     navigate(`/hackathon/${hackathonId}/submit`, {
@@ -106,6 +100,200 @@ const HackathonLogin = () => {
     });
   };
 
+  /* ══════════════════════════════════════════════════════
+     ORIGIN 2K26 — Black / Grey Gradient Theme
+  ══════════════════════════════════════════════════════ */
+  if (isOrigin) {
+    return (
+      <div
+        className="relative min-h-screen overflow-hidden text-white"
+        style={{ background: "linear-gradient(160deg, #0a0a0a 0%, #141414 40%, #1a1a1a 70%, #0d0d0d 100%)" }}
+      >
+        {/* Subtle grid */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)",
+            backgroundSize: "52px 52px",
+          }}
+        />
+        {/* Radial grey glows */}
+        {[0, 1].map((i) => (
+          <motion.div
+            key={i}
+            className="pointer-events-none absolute rounded-full blur-[120px]"
+            style={{
+              width: i === 0 ? 500 : 380,
+              height: i === 0 ? 500 : 380,
+              left: i === 0 ? "-10%" : "60%",
+              top: i === 0 ? "-12%" : "55%",
+              background: i === 0
+                ? "radial-gradient(circle, rgba(180,180,180,0.06) 0%, transparent 70%)"
+                : "radial-gradient(circle, rgba(120,120,120,0.04) 0%, transparent 70%)",
+            }}
+            animate={{ scale: [1, 1.08, 1], opacity: [0.6, 1, 0.6] }}
+            transition={{ duration: 8 + i * 3, repeat: Infinity, ease: "easeInOut" }}
+          />
+        ))}
+
+        {/* Access granted overlay */}
+        <AnimatePresence>
+          {authState === "granted" && (
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.35 }} className="absolute inset-0 z-30"
+            >
+              <div className="absolute inset-0" style={{ background: "linear-gradient(160deg,#0a0a0a,#141414)" }} />
+              {[0, 1, 2].map((ring) => (
+                <motion.div
+                  key={ring}
+                  className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border"
+                  style={{ width: "40vmax", height: "40vmax", borderColor: `rgba(200,200,200,${0.1 - ring * 0.025})` }}
+                  initial={{ scale: 0.7, opacity: 0 }}
+                  animate={{ scale: [0.7, 1.05], opacity: [0.05, 0.3, 0.05] }}
+                  transition={{ duration: 1.3 + ring * 0.2, ease: "easeOut" }}
+                />
+              ))}
+              <div className="relative flex h-full items-center justify-center px-6 text-center">
+                <motion.div initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.12 }} className="max-w-2xl">
+                  <p className="text-xs uppercase tracking-[0.34em]" style={{ color: "rgba(255,255,255,0.4)" }}>Access Granted</p>
+                  <h2 className="mt-4 text-4xl font-semibold leading-tight text-white sm:text-5xl">
+                    Welcome Team <span className="text-white">{teamLabel}</span>
+                  </h2>
+                  <div className="mt-5 space-y-2 text-left text-sm sm:text-base" style={{ color: "rgba(255,255,255,0.5)" }}>
+                    {["Identity verified and workspace unlocked.", "Upload channel is now open for your repository.", "Next: share your GitHub link and submit for evaluation."].map((line, idx) => (
+                      <motion.p key={line} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 + idx * 0.14, duration: 0.45 }}>{line}</motion.p>
+                    ))}
+                  </div>
+                  <motion.div className="mx-auto mt-8 h-[1px] w-60 overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+                    <motion.div className="h-full bg-white" initial={{ x: "-100%" }} animate={{ x: "0%" }} transition={{ duration: 1.0, ease: "easeInOut" }} />
+                  </motion.div>
+                </motion.div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <main className="relative z-10 flex min-h-screen items-center justify-center px-6 py-10">
+          <motion.section
+            initial={{ opacity: 0, y: 26, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="w-full max-w-lg"
+          >
+            <motion.div
+              key={shakeTick}
+              animate={{ x: error ? [0, -10, 10, -6, 6, 0] : 0 }}
+              transition={{ duration: 0.42 }}
+              className="relative overflow-hidden rounded-3xl"
+              style={{ border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 28px 90px rgba(0,0,0,0.9)" }}
+            >
+              {/* ── Card header: place to strt.jpeg background ── */}
+              <div
+                className="relative flex flex-col items-center justify-center px-8 text-center"
+                style={{
+                  backgroundImage: "linear-gradient(to bottom, rgba(0,0,0,0.45), rgba(10,10,10,0.88)), url('/place to strt.jpeg')",
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  minHeight: "200px",
+                }}
+              >
+                {/* Bottom fade to card body */}
+                <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-10" style={{ background: "linear-gradient(to bottom, transparent, rgba(14,14,14,1))" }} />
+              </div>
+
+              {/* ── Card body: dark grey ── */}
+              <div
+                className="px-8 pb-8 pt-2"
+                style={{ background: "linear-gradient(to bottom, #0e0e0e, #111111)" }}
+              >
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0 }} animate={{ opacity: [0.1, 0.18, 0.1] }} transition={{ duration: 0.45 }}
+                    className="pointer-events-none absolute inset-0 rounded-3xl"
+                    style={{ background: "rgba(255,60,60,0.06)" }}
+                  />
+                )}
+
+                <form onSubmit={handleLogin} className="space-y-4">
+                  {[
+                    { label: "Team ID", value: teamId, setter: setTeamId, placeholder: "Enter your team ID", type: "text", delay: 0.1 },
+                    { label: "Team Name", value: teamName, setter: setTeamName, placeholder: "Enter your team name", type: "text", delay: 0.16 },
+                    { label: "Password", value: password, setter: setPassword, placeholder: "Enter password", type: "password", delay: 0.22 },
+                  ].map(({ label, value, setter, placeholder, type, delay }) => (
+                    <motion.div key={label} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay, duration: 0.4 }}>
+                      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: "rgba(255,255,255,0.32)" }}>{label}</label>
+                      <input
+                        type={type}
+                        value={value}
+                        onChange={(e) => setter(e.target.value)}
+                        placeholder={placeholder}
+                        className="w-full rounded-xl px-4 py-3 text-sm text-white outline-none transition-all duration-300"
+                        style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", caretColor: "white" }}
+                        onFocus={(e) => {
+                          e.currentTarget.style.border = "1px solid rgba(255,255,255,0.28)";
+                          e.currentTarget.style.background = "rgba(255,255,255,0.07)";
+                          e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,255,255,0.04)";
+                        }}
+                        onBlur={(e) => {
+                          e.currentTarget.style.border = "1px solid rgba(255,255,255,0.08)";
+                          e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                          e.currentTarget.style.boxShadow = "none";
+                        }}
+                      />
+                    </motion.div>
+                  ))}
+
+                  {error && (
+                    <p className="text-xs" style={{ color: "rgba(255,100,100,0.8)" }}>{error}</p>
+                  )}
+
+                  <motion.button
+                    initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.4 }}
+                    whileHover={{ y: -1, scale: 1.01 }} whileTap={{ scale: 0.99 }}
+                    type="submit" disabled={loading}
+                    className="relative mt-2 w-full overflow-hidden rounded-xl py-3.5 text-sm font-semibold text-black transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"
+                    style={{
+                      background: "linear-gradient(135deg, #e8e8e8 0%, #ffffff 50%, #d0d0d0 100%)",
+                      boxShadow: "0 4px 24px rgba(255,255,255,0.12), inset 0 1px 0 rgba(255,255,255,0.6)",
+                    }}
+                  >
+                    <span className="relative z-10 tracking-wide">
+                      {authState === "granted" ? "Preparing Upload Space..." : loading ? "Authenticating..." : "Enter Portal"}
+                    </span>
+                    <motion.span
+                      className="pointer-events-none absolute inset-0"
+                      style={{ background: "linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.35) 50%, transparent 80%)" }}
+                      animate={{ x: ["-140%", "140%"] }}
+                      transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                  </motion.button>
+
+                  {/* Subtitle below Enter Portal */}
+                  <motion.p
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4, duration: 0.4 }}
+                    className="pt-1 text-center text-xs tracking-wide"
+                    style={{ color: "rgba(255,255,255,0.28)" }}
+                  >
+                    Sign in to continue to project upload
+                  </motion.p>
+                </form>
+              </div>
+            </motion.div>
+
+            <p className="mt-6 text-center text-xs tracking-[0.25em] font-medium" style={{ color: "rgba(255,255,255,0.16)" }}>
+              OREHACK — ORIGIN 2K26
+            </p>
+          </motion.section>
+        </main>
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════════
+     DEFAULT — Purple Theme (all other hackathons)
+  ══════════════════════════════════════════════════════ */
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0b0f1a] text-foreground">
       <div className="pointer-events-none absolute inset-0 [background:radial-gradient(circle_at_16%_18%,rgba(168,85,247,0.24),transparent_34%),radial-gradient(circle_at_84%_14%,rgba(217,70,239,0.2),transparent_40%),radial-gradient(circle_at_38%_82%,rgba(139,92,246,0.19),transparent_38%),linear-gradient(180deg,#0b0f1a_0%,#151029_100%)]" />
@@ -149,19 +337,10 @@ const HackathonLogin = () => {
       <AnimatePresence>
         {authState === "granted" && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.35 }}
-            className="absolute inset-0 z-30"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.35 }} className="absolute inset-0 z-30"
           >
-            <motion.div
-              initial={{ scale: 1.08 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 1.1, ease: "easeOut" }}
-              className="absolute inset-0 bg-[#0b0f1a]"
-            />
-
+            <motion.div initial={{ scale: 1.08 }} animate={{ scale: 1 }} transition={{ duration: 1.1, ease: "easeOut" }} className="absolute inset-0 bg-[#0b0f1a]" />
             {[0, 1, 2].map((ring) => (
               <motion.div
                 key={ring}
@@ -172,48 +351,19 @@ const HackathonLogin = () => {
                 transition={{ duration: 1.2 + ring * 0.22, ease: "easeOut" }}
               />
             ))}
-
             <div className="relative flex h-full items-center justify-center px-6 text-center">
-              <motion.div
-                initial={{ opacity: 0, y: 22 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.12 }}
-                className="max-w-2xl"
-              >
+              <motion.div initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.12 }} className="max-w-2xl">
                 <p className="text-xs uppercase tracking-[0.34em] text-fuchsia-200/70">Access Granted</p>
                 <h2 className="mt-4 text-4xl font-semibold leading-tight text-white sm:text-5xl">
                   Welcome Team <span className="text-fuchsia-300">{teamLabel}</span>
                 </h2>
-
                 <div className="mt-5 space-y-2 text-left text-sm text-fuchsia-100/80 sm:text-base">
-                  {[
-                    "Identity verified and workspace unlocked.",
-                    "Upload channel is now open for your repository.",
-                    "Next: share your GitHub link and submit for evaluation.",
-                  ].map((line, idx) => (
-                    <motion.p
-                      key={line}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.22 + idx * 0.14, duration: 0.45 }}
-                    >
-                      {line}
-                    </motion.p>
+                  {["Identity verified and workspace unlocked.", "Upload channel is now open for your repository.", "Next: share your GitHub link and submit for evaluation."].map((line, idx) => (
+                    <motion.p key={line} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 + idx * 0.14, duration: 0.45 }}>{line}</motion.p>
                   ))}
                 </div>
-
-                <motion.div
-                  className="mx-auto mt-8 h-1 w-60 overflow-hidden rounded-full bg-fuchsia-500/20"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <motion.div
-                    className="h-full rounded-full bg-gradient-to-r from-fuchsia-500 via-violet-400 to-indigo-400"
-                    initial={{ x: "-100%" }}
-                    animate={{ x: "0%" }}
-                    transition={{ duration: 0.95, ease: "easeInOut" }}
-                  />
+                <motion.div className="mx-auto mt-8 h-1 w-60 overflow-hidden rounded-full bg-fuchsia-500/20" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+                  <motion.div className="h-full rounded-full bg-gradient-to-r from-fuchsia-500 via-violet-400 to-indigo-400" initial={{ x: "-100%" }} animate={{ x: "0%" }} transition={{ duration: 0.95, ease: "easeInOut" }} />
                 </motion.div>
               </motion.div>
             </div>
@@ -265,77 +415,27 @@ const HackathonLogin = () => {
               </motion.div>
 
               <form onSubmit={handleLogin} className="space-y-4">
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.24, duration: 0.45 }}
-                >
-                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.18em] text-fuchsia-100/70">
-                    Team ID
-                  </label>
-                  <input
-                    type="text"
-                    value={teamId}
-                    onChange={(e) => setTeamId(e.target.value)}
-                    className="w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-sm text-white placeholder:text-fuchsia-100/45 outline-none transition-all duration-300 focus:border-fuchsia-300/60 focus:bg-white/[0.1] focus:shadow-[0_0_0_4px_rgba(217,70,239,0.14)]"
-                    placeholder="Enter your team ID"
-                  />
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24, duration: 0.45 }}>
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.18em] text-fuchsia-100/70">Team ID</label>
+                  <input type="text" value={teamId} onChange={(e) => setTeamId(e.target.value)} className="w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-sm text-white placeholder:text-fuchsia-100/45 outline-none transition-all duration-300 focus:border-fuchsia-300/60 focus:bg-white/[0.1] focus:shadow-[0_0_0_4px_rgba(217,70,239,0.14)]" placeholder="Enter your team ID" />
                 </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.28, duration: 0.45 }}
-                >
-                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.18em] text-fuchsia-100/70">
-                    Team Name
-                  </label>
-                  <input
-                    type="text"
-                    value={teamName}
-                    onChange={(e) => setTeamName(e.target.value)}
-                    className="w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-sm text-white placeholder:text-fuchsia-100/45 outline-none transition-all duration-300 focus:border-fuchsia-300/60 focus:bg-white/[0.1] focus:shadow-[0_0_0_4px_rgba(217,70,239,0.14)]"
-                    placeholder="Enter your team name"
-                  />
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28, duration: 0.45 }}>
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.18em] text-fuchsia-100/70">Team Name</label>
+                  <input type="text" value={teamName} onChange={(e) => setTeamName(e.target.value)} className="w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-sm text-white placeholder:text-fuchsia-100/45 outline-none transition-all duration-300 focus:border-fuchsia-300/60 focus:bg-white/[0.1] focus:shadow-[0_0_0_4px_rgba(217,70,239,0.14)]" placeholder="Enter your team name" />
                 </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.45 }}
-                >
-                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.18em] text-fuchsia-100/70">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-sm text-white placeholder:text-fuchsia-100/45 outline-none transition-all duration-300 focus:border-fuchsia-300/60 focus:bg-white/[0.1] focus:shadow-[0_0_0_4px_rgba(217,70,239,0.14)]"
-                    placeholder="Enter password"
-                  />
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.45 }}>
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.18em] text-fuchsia-100/70">Password</label>
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-sm text-white placeholder:text-fuchsia-100/45 outline-none transition-all duration-300 focus:border-fuchsia-300/60 focus:bg-white/[0.1] focus:shadow-[0_0_0_4px_rgba(217,70,239,0.14)]" placeholder="Enter password" />
                 </motion.div>
-
                 {error && <p className="text-xs text-rose-300">{error}</p>}
-
                 <motion.button
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.36, duration: 0.45 }}
-                  whileHover={{ y: -1, scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  type="submit"
-                  disabled={loading}
+                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.36, duration: 0.45 }}
+                  whileHover={{ y: -1, scale: 1.01 }} whileTap={{ scale: 0.99 }}
+                  type="submit" disabled={loading}
                   className="relative w-full overflow-hidden rounded-xl border border-fuchsia-300/40 bg-gradient-to-r from-violet-600 via-fuchsia-500 to-indigo-600 py-3 text-sm font-semibold text-white transition-all duration-300 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <span className="relative z-10">
-                    {authState === "granted" ? "Preparing Upload Space..." : loading ? "Authenticating..." : "Enter Portal"}
-                  </span>
-                  <motion.span
-                    className="pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,transparent_20%,rgba(255,255,255,0.4)_50%,transparent_80%)]"
-                    animate={{ x: ["-140%", "140%"] }}
-                    transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-                  />
+                  <span className="relative z-10">{authState === "granted" ? "Preparing Upload Space..." : loading ? "Authenticating..." : "Enter Portal"}</span>
+                  <motion.span className="pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,transparent_20%,rgba(255,255,255,0.4)_50%,transparent_80%)]" animate={{ x: ["-140%", "140%"] }} transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }} />
                 </motion.button>
               </form>
             </div>

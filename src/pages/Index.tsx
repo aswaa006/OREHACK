@@ -3,6 +3,7 @@ import HeroSection from "@/components/HeroSection";
 import ActiveHackathons from "@/components/ActiveHackathons";
 import HowItWorks from "@/components/HowItWorks";
 import AboutOregent from "@/components/AboutOregent";
+import TeamOregent from "@/components/TeamOregent";
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 import GlobalBackground from "@/components/GlobalBackground";
@@ -16,6 +17,7 @@ const Index = () => {
       <ActiveHackathons />
       <HowItWorks />
       <AboutOregent />
+      <TeamOregent />
       <Contact />
       <Footer />
     </div>

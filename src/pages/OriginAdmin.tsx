@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 
-const ADMIN_USERNAME = "oregent";
-const ADMIN_PASSWORD = "oregentpass";
+const ADMIN_USERNAME = "Execution@oregent.in";
+const ADMIN_PASSWORD = "Zerotouch192421";
 const ADMIN_SESSION_KEY = "orehack_origin_admin_auth";
 
 type SubmissionRecord = {
@@ -60,7 +60,7 @@ const OriginAdmin = () => {
   const [authError, setAuthError] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     if (typeof window === "undefined") return false;
-    return localStorage.getItem(ADMIN_SESSION_KEY) === "true";
+    return sessionStorage.getItem(ADMIN_SESSION_KEY) === "true";
   });
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<SubmissionRecord>(emptyForm);
@@ -76,7 +76,7 @@ const OriginAdmin = () => {
       setIsAuthenticated(true);
       setAuthError("");
       if (typeof window !== "undefined") {
-        localStorage.setItem(ADMIN_SESSION_KEY, "true");
+        sessionStorage.setItem(ADMIN_SESSION_KEY, "true");
       }
       return;
     }
@@ -89,7 +89,7 @@ const OriginAdmin = () => {
     setUsername("");
     setLoginPassword("");
     if (typeof window !== "undefined") {
-      localStorage.removeItem(ADMIN_SESSION_KEY);
+      sessionStorage.removeItem(ADMIN_SESSION_KEY);
     }
   };
 
@@ -281,7 +281,7 @@ const OriginAdmin = () => {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-6">
-        <form onSubmit={handleLogin} className="w-full max-w-md rounded-2xl border border-border/70 bg-card/50 p-8">
+        <form onSubmit={handleLogin} autoComplete="off" className="w-full max-w-md rounded-2xl border border-border/70 bg-card/50 p-8">
           <p className="text-xs uppercase tracking-[0.2em] text-primary">Origin Admin</p>
           <h1 className="mt-2 text-3xl font-black">Admin Authentication</h1>
           <p className="mt-2 text-sm text-muted-foreground">Sign in to access the admin panel.</p>
@@ -291,6 +291,7 @@ const OriginAdmin = () => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Username"
+              autoComplete="off"
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
             />
             <input
@@ -298,6 +299,7 @@ const OriginAdmin = () => {
               value={loginPassword}
               onChange={(e) => setLoginPassword(e.target.value)}
               placeholder="Password"
+              autoComplete="new-password"
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
             />
             {authError && <p className="text-xs text-destructive">{authError}</p>}

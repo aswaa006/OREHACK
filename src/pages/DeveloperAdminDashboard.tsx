@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Area,
@@ -16,7 +16,18 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Activity, BarChart3, Calendar, CheckCircle, Clock, FileText, PlusCircle, Rocket, TrendingUp, Zap } from "lucide-react";
+import {
+  Activity,
+  BarChart3,
+  Calendar,
+  CheckCircle,
+  Clock,
+  FileText,
+  PlusCircle,
+  Rocket,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 const tabs = ["System", "Hackathons", "Evaluation", "Logs"] as const;
@@ -128,10 +139,13 @@ const ChartTooltip = ({
 };
 
 const DeveloperAdminDashboard = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("System");
-  const [hackathons, setHackathons] = useState<HackathonItem[]>(defaultHackathons);
+  const [hackathons, setHackathons] =
+    useState<HackathonItem[]>(defaultHackathons);
   const [userCount, setUserCount] = useState(0);
   const [syncError, setSyncError] = useState("");
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [newHackathon, setNewHackathon] = useState({
     name: "",
     slug: "",
@@ -139,6 +153,54 @@ const DeveloperAdminDashboard = () => {
     startDate: "",
     durationHours: "36",
   });
+
+  // Check authentication on component mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        // Check Supabase session
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session) {
+          // Check encrypted localStorage session
+          const encryptedSession = localStorage.getItem("admin_session");
+          if (!encryptedSession) {
+            navigate("/admin/auth");
+            return;
+          }
+
+          try {
+            const sessionData = JSON.parse(atob(encryptedSession));
+            // Check if session is still valid (24 hours)
+            if (Date.now() - sessionData.timestamp > 24 * 60 * 60 * 1000) {
+              localStorage.removeItem("admin_session");
+              navigate("/admin/auth");
+              return;
+            }
+            
+            // Additional verification with hash
+            if (!sessionData.hash || sessionData.hash.length !== 16) {
+              localStorage.removeItem("admin_session");
+              navigate("/admin/auth");
+              return;
+            }
+          } catch (e) {
+            localStorage.removeItem("admin_session");
+            navigate("/admin/auth");
+            return;
+          }
+        }
+        
+        setIsAuthChecking(false);
+      } catch (error) {
+        navigate("/admin/auth");
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   const loadDashboardData = useCallback(async () => {
     setSyncError("");
@@ -152,25 +214,31 @@ const DeveloperAdminDashboard = () => {
     ]);
 
     if (hackathonsRes.error) {
-      setSyncError(hackathonsRes.error.message || "Failed to sync dashboard data.");
+      setSyncError(
+        hackathonsRes.error.message || "Failed to sync dashboard data.",
+      );
       setHackathons(defaultHackathons);
       return;
     }
 
-    const mappedHackathons: HackathonItem[] = (hackathonsRes.data || []).map((hackathon) => {
-      return {
-        name: hackathon.name || "Untitled Hackathon",
-        slug: hackathon.slug || slugify(hackathon.name || "hackathon"),
-        theme: hackathon.theme || "General",
-        startDate: hackathon.start_date || "",
-        durationHours: Number(hackathon.duration_hours || 24),
-        submissions: 0,
-        evaluated: 0,
-        status: hackathon.status === "scheduled" ? "scheduled" : "live",
-      };
-    });
+    const mappedHackathons: HackathonItem[] = (hackathonsRes.data || []).map(
+      (hackathon) => {
+        return {
+          name: hackathon.name || "Untitled Hackathon",
+          slug: hackathon.slug || slugify(hackathon.name || "hackathon"),
+          theme: hackathon.theme || "General",
+          startDate: hackathon.start_date || "",
+          durationHours: Number(hackathon.duration_hours || 24),
+          submissions: 0,
+          evaluated: 0,
+          status: hackathon.status === "scheduled" ? "scheduled" : "live",
+        };
+      },
+    );
 
-    setHackathons(mappedHackathons.length ? mappedHackathons : defaultHackathons);
+    setHackathons(
+      mappedHackathons.length ? mappedHackathons : defaultHackathons,
+    );
     setUserCount(usersRes.count || 0);
   }, []);
 
@@ -179,9 +247,21 @@ const DeveloperAdminDashboard = () => {
 
     const channel = supabase
       .channel("developer-admin-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "hackathons" }, loadDashboardData)
-      .on("postgres_changes", { event: "*", schema: "public", table: "submissions" }, loadDashboardData)
-      .on("postgres_changes", { event: "*", schema: "public", table: "users" }, loadDashboardData)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "hackathons" },
+        loadDashboardData,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "submissions" },
+        loadDashboardData,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "users" },
+        loadDashboardData,
+      )
       .subscribe();
 
     return () => {
@@ -190,11 +270,12 @@ const DeveloperAdminDashboard = () => {
   }, [loadDashboardData]);
 
   const hackathonStatsData = useMemo(
-    () => hackathons.slice(0, 6).map((hackathon) => ({
-      name: hackathon.name,
-      submissions: hackathon.submissions,
-      evaluated: hackathon.evaluated,
-    })),
+    () =>
+      hackathons.slice(0, 6).map((hackathon) => ({
+        name: hackathon.name,
+        submissions: hackathon.submissions,
+        evaluated: hackathon.evaluated,
+      })),
     [hackathons],
   );
 
@@ -225,7 +306,9 @@ const DeveloperAdminDashboard = () => {
       label: "Total Submissions",
       value: String(totalSubmissions),
       delta: `${totalEvaluated} already evaluated`,
-      progress: totalSubmissions ? Math.min(100, Math.round((totalEvaluated / totalSubmissions) * 100)) : 0,
+      progress: totalSubmissions
+        ? Math.min(100, Math.round((totalEvaluated / totalSubmissions) * 100))
+        : 0,
       icon: FileText,
       tone: "from-violet-500/25 via-violet-500/10 to-transparent",
       iconTone: "from-violet-500 to-fuchsia-600",
@@ -281,9 +364,30 @@ const DeveloperAdminDashboard = () => {
       startDate: "",
       durationHours: "36",
     });
-
-    await loadDashboardData();
   };
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      localStorage.removeItem("admin_session");
+      navigate("/admin/auth");
+    } catch (error) {
+      // Force logout even if signOut fails
+      localStorage.removeItem("admin_session");
+      navigate("/admin/auth");
+    }
+  };
+
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Verifying authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
@@ -291,29 +395,53 @@ const DeveloperAdminDashboard = () => {
         <div className="absolute inset-0 grid-bg opacity-30" />
         <motion.div
           className="absolute -top-20 -left-20 h-[26rem] w-[26rem] rounded-full bg-gradient-to-br from-cyan-500/20 via-primary/15 to-transparent blur-3xl"
-          animate={{ x: [0, 24, -16, 0], y: [0, 16, -8, 0], opacity: [0.22, 0.34, 0.22] }}
+          animate={{
+            x: [0, 24, -16, 0],
+            y: [0, 16, -8, 0],
+            opacity: [0.22, 0.34, 0.22],
+          }}
           transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
           className="absolute bottom-0 right-0 h-[24rem] w-[24rem] rounded-full bg-gradient-to-tl from-emerald-500/20 via-cyan-500/15 to-transparent blur-3xl"
-          animate={{ x: [0, -20, 10, 0], y: [0, -18, 8, 0], opacity: [0.18, 0.28, 0.18] }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 1.8 }}
+          animate={{
+            x: [0, -20, 10, 0],
+            y: [0, -18, 8, 0],
+            opacity: [0.18, 0.28, 0.18],
+          }}
+          transition={{
+            duration: 18,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1.8,
+          }}
         />
       </div>
 
       <div className="relative z-10">
         <header className="border-b border-border/50 bg-background/40 backdrop-blur-md">
           <div className="container mx-auto flex items-center justify-between px-6 py-5">
-            <motion.div initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.35 }}>
+            <motion.div
+              initial={{ opacity: 0, x: -14 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.35 }}
+            >
               <h1 className="text-xl font-bold text-foreground">
                 Developer Admin
-                <span className="ml-2 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs text-primary">Oregent</span>
+                <span className="ml-2 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs text-primary">
+                  Oregent
+                </span>
               </h1>
-              <p className="mt-1 text-xs text-muted-foreground">Full System Control</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Full System Control
+              </p>
             </motion.div>
-            <Link to="/" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-              ← Exit
-            </Link>
+            <button
+              onClick={handleLogout}
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Logout
+            </button>
           </div>
         </header>
 
@@ -327,16 +455,25 @@ const DeveloperAdminDashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
                 className={`relative rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                  activeTab === tab ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                  activeTab === tab
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {activeTab === tab && <motion.span layoutId="active-dev-tab" className="absolute inset-0 rounded-lg bg-primary/15" />}
+                {activeTab === tab && (
+                  <motion.span
+                    layoutId="active-dev-tab"
+                    className="absolute inset-0 rounded-lg bg-primary/15"
+                  />
+                )}
                 <span className="relative">{tab}</span>
               </motion.button>
             ))}
           </div>
 
-          {syncError && <p className="mb-4 text-sm text-destructive">{syncError}</p>}
+          {syncError && (
+            <p className="mb-4 text-sm text-destructive">{syncError}</p>
+          )}
 
           <AnimatePresence mode="wait">
             <motion.section
@@ -361,19 +498,31 @@ const DeveloperAdminDashboard = () => {
                         className={`surface-elevated rounded-2xl border border-border/70 bg-gradient-to-br ${card.tone} p-5 shadow-lg shadow-black/15`}
                       >
                         <div className="mb-4 flex items-start justify-between">
-                          <p className="text-xs font-medium text-foreground/80">{card.label}</p>
-                          <div className={`rounded-lg bg-gradient-to-br p-2.5 text-white ${card.iconTone}`}>
+                          <p className="text-xs font-medium text-foreground/80">
+                            {card.label}
+                          </p>
+                          <div
+                            className={`rounded-lg bg-gradient-to-br p-2.5 text-white ${card.iconTone}`}
+                          >
                             <card.icon className="h-4 w-4" />
                           </div>
                         </div>
-                        <p className="text-3xl font-semibold text-foreground">{card.value}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">{card.delta}</p>
+                        <p className="text-3xl font-semibold text-foreground">
+                          {card.value}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {card.delta}
+                        </p>
                         <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted/70">
                           <motion.div
                             className="h-full rounded-full bg-gradient-to-r from-primary to-cyan-400"
                             initial={{ width: 0 }}
                             animate={{ width: `${card.progress}%` }}
-                            transition={{ duration: 0.95, delay: idx * 0.08 + 0.2, ease: "easeOut" }}
+                            transition={{
+                              duration: 0.95,
+                              delay: idx * 0.08 + 0.2,
+                              ease: "easeOut",
+                            }}
                           />
                         </div>
                       </motion.div>
@@ -392,26 +541,78 @@ const DeveloperAdminDashboard = () => {
                           <TrendingUp className="h-4 w-4 text-primary" />
                           Evaluation Trend
                         </h3>
-                        <span className="rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs text-primary">Last 24h</span>
+                        <span className="rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs text-primary">
+                          Last 24h
+                        </span>
                       </div>
 
                       <div className="h-72">
                         <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={evaluationTrendData} margin={{ top: 8, right: 10, left: -10, bottom: 0 }}>
+                          <AreaChart
+                            data={evaluationTrendData}
+                            margin={{ top: 8, right: 10, left: -10, bottom: 0 }}
+                          >
                             <defs>
-                              <linearGradient id="countArea" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.35} />
-                                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                              <linearGradient
+                                id="countArea"
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                              >
+                                <stop
+                                  offset="0%"
+                                  stopColor="hsl(var(--primary))"
+                                  stopOpacity={0.35}
+                                />
+                                <stop
+                                  offset="100%"
+                                  stopColor="hsl(var(--primary))"
+                                  stopOpacity={0.02}
+                                />
                               </linearGradient>
-                              <linearGradient id="countLine" x1="0" y1="0" x2="1" y2="0">
+                              <linearGradient
+                                id="countLine"
+                                x1="0"
+                                y1="0"
+                                x2="1"
+                                y2="0"
+                              >
                                 <stop offset="0%" stopColor="#60a5fa" />
-                                <stop offset="100%" stopColor="hsl(var(--primary))" />
+                                <stop
+                                  offset="100%"
+                                  stopColor="hsl(var(--primary))"
+                                />
                               </linearGradient>
                             </defs>
-                            <CartesianGrid stroke="hsl(var(--primary) / 0.15)" strokeDasharray="3 3" />
-                            <XAxis dataKey="time" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} axisLine={false} tickLine={false} />
-                            <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} axisLine={false} tickLine={false} />
-                            <Tooltip content={<ChartTooltip />} cursor={{ stroke: "hsl(var(--primary) / 0.45)", strokeWidth: 1 }} />
+                            <CartesianGrid
+                              stroke="hsl(var(--primary) / 0.15)"
+                              strokeDasharray="3 3"
+                            />
+                            <XAxis
+                              dataKey="time"
+                              tick={{
+                                fill: "hsl(var(--muted-foreground))",
+                                fontSize: 12,
+                              }}
+                              axisLine={false}
+                              tickLine={false}
+                            />
+                            <YAxis
+                              tick={{
+                                fill: "hsl(var(--muted-foreground))",
+                                fontSize: 12,
+                              }}
+                              axisLine={false}
+                              tickLine={false}
+                            />
+                            <Tooltip
+                              content={<ChartTooltip />}
+                              cursor={{
+                                stroke: "hsl(var(--primary) / 0.45)",
+                                strokeWidth: 1,
+                              }}
+                            />
                             <Area
                               type="monotone"
                               dataKey="count"
@@ -469,7 +670,9 @@ const DeveloperAdminDashboard = () => {
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
-                      <p className="text-center text-xs text-muted-foreground">3 / 3 nodes online and processing requests.</p>
+                      <p className="text-center text-xs text-muted-foreground">
+                        3 / 3 nodes online and processing requests.
+                      </p>
                     </motion.div>
                   </div>
 
@@ -480,18 +683,55 @@ const DeveloperAdminDashboard = () => {
                     className="surface-elevated rounded-2xl border border-border/70 p-6"
                   >
                     <div className="mb-5 flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-foreground">Submissions by Hackathon</h3>
-                      <span className="text-xs text-muted-foreground">Compared with evaluated count</span>
+                      <h3 className="text-sm font-semibold text-foreground">
+                        Submissions by Hackathon
+                      </h3>
+                      <span className="text-xs text-muted-foreground">
+                        Compared with evaluated count
+                      </span>
                     </div>
                     <div className="h-72">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={hackathonStatsData} margin={{ top: 6, right: 8, left: -12, bottom: 0 }}>
-                          <CartesianGrid stroke="hsl(var(--primary) / 0.12)" strokeDasharray="3 3" />
-                          <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} axisLine={false} tickLine={false} />
-                          <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} axisLine={false} tickLine={false} />
+                        <BarChart
+                          data={hackathonStatsData}
+                          margin={{ top: 6, right: 8, left: -12, bottom: 0 }}
+                        >
+                          <CartesianGrid
+                            stroke="hsl(var(--primary) / 0.12)"
+                            strokeDasharray="3 3"
+                          />
+                          <XAxis
+                            dataKey="name"
+                            tick={{
+                              fill: "hsl(var(--muted-foreground))",
+                              fontSize: 12,
+                            }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <YAxis
+                            tick={{
+                              fill: "hsl(var(--muted-foreground))",
+                              fontSize: 12,
+                            }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
                           <Tooltip content={<ChartTooltip />} />
-                          <Bar dataKey="submissions" name="Submissions" radius={[8, 8, 0, 0]} fill="hsl(var(--primary))" animationDuration={900} />
-                          <Bar dataKey="evaluated" name="Evaluated" radius={[8, 8, 0, 0]} fill="#60a5fa" animationDuration={1200} />
+                          <Bar
+                            dataKey="submissions"
+                            name="Submissions"
+                            radius={[8, 8, 0, 0]}
+                            fill="hsl(var(--primary))"
+                            animationDuration={900}
+                          />
+                          <Bar
+                            dataKey="evaluated"
+                            name="Evaluated"
+                            radius={[8, 8, 0, 0]}
+                            fill="#60a5fa"
+                            animationDuration={1200}
+                          />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -515,19 +755,34 @@ const DeveloperAdminDashboard = () => {
                     <div className="space-y-3">
                       <input
                         value={newHackathon.name}
-                        onChange={(event) => setNewHackathon((prev) => ({ ...prev, name: event.target.value }))}
+                        onChange={(event) =>
+                          setNewHackathon((prev) => ({
+                            ...prev,
+                            name: event.target.value,
+                          }))
+                        }
                         placeholder="Hackathon Name"
                         className="w-full rounded-lg border border-border/70 bg-card/70 px-3 py-2 text-sm outline-none transition-colors focus:border-primary/50"
                       />
                       <input
                         value={newHackathon.slug}
-                        onChange={(event) => setNewHackathon((prev) => ({ ...prev, slug: event.target.value }))}
+                        onChange={(event) =>
+                          setNewHackathon((prev) => ({
+                            ...prev,
+                            slug: event.target.value,
+                          }))
+                        }
                         placeholder="Slug (optional)"
                         className="w-full rounded-lg border border-border/70 bg-card/70 px-3 py-2 text-sm outline-none transition-colors focus:border-primary/50"
                       />
                       <input
                         value={newHackathon.theme}
-                        onChange={(event) => setNewHackathon((prev) => ({ ...prev, theme: event.target.value }))}
+                        onChange={(event) =>
+                          setNewHackathon((prev) => ({
+                            ...prev,
+                            theme: event.target.value,
+                          }))
+                        }
                         placeholder="Theme"
                         className="w-full rounded-lg border border-border/70 bg-card/70 px-3 py-2 text-sm outline-none transition-colors focus:border-primary/50"
                       />
@@ -536,7 +791,12 @@ const DeveloperAdminDashboard = () => {
                           type="datetime-local"
                           title="Hackathon start date and time"
                           value={newHackathon.startDate}
-                          onChange={(event) => setNewHackathon((prev) => ({ ...prev, startDate: event.target.value }))}
+                          onChange={(event) =>
+                            setNewHackathon((prev) => ({
+                              ...prev,
+                              startDate: event.target.value,
+                            }))
+                          }
                           className="w-full rounded-lg border border-border/70 bg-card/70 px-3 py-2 text-sm outline-none transition-colors focus:border-primary/50"
                         />
                         <input
@@ -545,7 +805,12 @@ const DeveloperAdminDashboard = () => {
                           title="Hackathon duration in hours"
                           placeholder="Duration"
                           value={newHackathon.durationHours}
-                          onChange={(event) => setNewHackathon((prev) => ({ ...prev, durationHours: event.target.value }))}
+                          onChange={(event) =>
+                            setNewHackathon((prev) => ({
+                              ...prev,
+                              durationHours: event.target.value,
+                            }))
+                          }
                           className="w-full rounded-lg border border-border/70 bg-card/70 px-3 py-2 text-sm outline-none transition-colors focus:border-primary/50"
                         />
                       </div>
@@ -565,7 +830,11 @@ const DeveloperAdminDashboard = () => {
 
                   <div className="space-y-4 xl:col-span-2">
                     {hackathons.map((hackathon, idx) => {
-                      const progress = hackathon.submissions ? Math.round((hackathon.evaluated / hackathon.submissions) * 100) : 0;
+                      const progress = hackathon.submissions
+                        ? Math.round(
+                            (hackathon.evaluated / hackathon.submissions) * 100,
+                          )
+                        : 0;
                       return (
                         <motion.div
                           key={hackathon.slug}
@@ -577,12 +846,18 @@ const DeveloperAdminDashboard = () => {
                         >
                           <div className="mb-3 flex items-center justify-between gap-3">
                             <div>
-                              <h3 className="text-sm font-semibold text-foreground">{hackathon.name}</h3>
-                              <p className="text-xs text-muted-foreground">{hackathon.theme}</p>
+                              <h3 className="text-sm font-semibold text-foreground">
+                                {hackathon.name}
+                              </h3>
+                              <p className="text-xs text-muted-foreground">
+                                {hackathon.theme}
+                              </p>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-400">
-                                {hackathon.status === "live" ? "Live" : "Scheduled"}
+                                {hackathon.status === "live"
+                                  ? "Live"
+                                  : "Scheduled"}
                               </span>
                               <Link
                                 to={`/hackathon/${hackathon.slug}/login`}
@@ -602,7 +877,11 @@ const DeveloperAdminDashboard = () => {
                               className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-primary"
                               initial={{ width: 0 }}
                               animate={{ width: `${progress}%` }}
-                              transition={{ duration: 0.75, delay: idx * 0.08 + 0.15, ease: "easeOut" }}
+                              transition={{
+                                duration: 0.75,
+                                delay: idx * 0.08 + 0.15,
+                                ease: "easeOut",
+                              }}
                             />
                           </div>
                         </motion.div>
@@ -626,18 +905,64 @@ const DeveloperAdminDashboard = () => {
                     </h3>
                     <div className="h-72">
                       <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={hackathonStatsData.map((h) => ({ ...h, efficiency: Math.round((h.evaluated / h.submissions) * 100) }))}>
+                        <AreaChart
+                          data={hackathonStatsData.map((h) => ({
+                            ...h,
+                            efficiency: Math.round(
+                              (h.evaluated / h.submissions) * 100,
+                            ),
+                          }))}
+                        >
                           <defs>
-                            <linearGradient id="effGradient" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.4} />
-                              <stop offset="100%" stopColor="#22d3ee" stopOpacity={0.05} />
+                            <linearGradient
+                              id="effGradient"
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="0%"
+                                stopColor="#22d3ee"
+                                stopOpacity={0.4}
+                              />
+                              <stop
+                                offset="100%"
+                                stopColor="#22d3ee"
+                                stopOpacity={0.05}
+                              />
                             </linearGradient>
                           </defs>
-                          <CartesianGrid stroke="hsl(var(--primary) / 0.12)" strokeDasharray="3 3" />
-                          <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} axisLine={false} tickLine={false} />
-                          <YAxis tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} axisLine={false} tickLine={false} />
+                          <CartesianGrid
+                            stroke="hsl(var(--primary) / 0.12)"
+                            strokeDasharray="3 3"
+                          />
+                          <XAxis
+                            dataKey="name"
+                            tick={{
+                              fill: "hsl(var(--muted-foreground))",
+                              fontSize: 12,
+                            }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
+                          <YAxis
+                            tick={{
+                              fill: "hsl(var(--muted-foreground))",
+                              fontSize: 12,
+                            }}
+                            axisLine={false}
+                            tickLine={false}
+                          />
                           <Tooltip content={<ChartTooltip />} />
-                          <Area dataKey="efficiency" name="Efficiency %" stroke="#22d3ee" fill="url(#effGradient)" strokeWidth={2.5} animationDuration={900} />
+                          <Area
+                            dataKey="efficiency"
+                            name="Efficiency %"
+                            stroke="#22d3ee"
+                            fill="url(#effGradient)"
+                            strokeWidth={2.5}
+                            animationDuration={900}
+                          />
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
@@ -649,7 +974,18 @@ const DeveloperAdminDashboard = () => {
                     transition={{ delay: 0.2 }}
                     className="surface-elevated space-y-4 rounded-2xl border border-border/70 p-6"
                   >
-                    {[{ label: "Evaluations / hour", value: "124", icon: BarChart3 }, { label: "Success rate", value: "99.8%", icon: CheckCircle }].map((item, idx) => (
+                    {[
+                      {
+                        label: "Evaluations / hour",
+                        value: "124",
+                        icon: BarChart3,
+                      },
+                      {
+                        label: "Success rate",
+                        value: "99.8%",
+                        icon: CheckCircle,
+                      },
+                    ].map((item, idx) => (
                       <motion.div
                         key={item.label}
                         initial={{ opacity: 0, y: 8 }}
@@ -658,10 +994,14 @@ const DeveloperAdminDashboard = () => {
                         className="rounded-xl border border-border/70 bg-card/70 p-4"
                       >
                         <div className="mb-2 flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground">{item.label}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {item.label}
+                          </span>
                           <item.icon className="h-4 w-4 text-primary" />
                         </div>
-                        <p className="text-2xl font-semibold text-foreground">{item.value}</p>
+                        <p className="text-2xl font-semibold text-foreground">
+                          {item.value}
+                        </p>
                       </motion.div>
                     ))}
                     <button className="w-full rounded-lg border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20">
@@ -672,15 +1012,46 @@ const DeveloperAdminDashboard = () => {
               )}
 
               {activeTab === "Logs" && (
-                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="surface-elevated rounded-2xl border border-border/70 p-6">
-                  <h3 className="mb-4 text-sm font-semibold text-foreground">System Logs</h3>
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="surface-elevated rounded-2xl border border-border/70 p-6"
+                >
+                  <h3 className="mb-4 text-sm font-semibold text-foreground">
+                    System Logs
+                  </h3>
                   <div className="space-y-2 text-xs">
                     {[
-                      { time: "14:23:01", action: "Evaluation completed", details: "NeuralForge -> 94.2", type: "success" },
-                      { time: "14:22:58", action: "Repository parsed", details: "github.com/neuralforge/proj", type: "info" },
-                      { time: "14:22:45", action: "Submission received", details: "NeuralForge", type: "info" },
-                      { time: "14:20:12", action: "Engine health check", details: "OK", type: "success" },
-                      { time: "14:15:00", action: "Hackathon status", details: "LIVE", type: "success" },
+                      {
+                        time: "14:23:01",
+                        action: "Evaluation completed",
+                        details: "NeuralForge -> 94.2",
+                        type: "success",
+                      },
+                      {
+                        time: "14:22:58",
+                        action: "Repository parsed",
+                        details: "github.com/neuralforge/proj",
+                        type: "info",
+                      },
+                      {
+                        time: "14:22:45",
+                        action: "Submission received",
+                        details: "NeuralForge",
+                        type: "info",
+                      },
+                      {
+                        time: "14:20:12",
+                        action: "Engine health check",
+                        details: "OK",
+                        type: "success",
+                      },
+                      {
+                        time: "14:15:00",
+                        action: "Hackathon status",
+                        details: "LIVE",
+                        type: "success",
+                      },
                     ].map((log, idx) => (
                       <motion.div
                         key={log.time}
@@ -689,10 +1060,16 @@ const DeveloperAdminDashboard = () => {
                         transition={{ delay: idx * 0.05 }}
                         className="flex items-center gap-3 rounded-lg border border-border/60 bg-card/60 p-3"
                       >
-                        <span className={`h-2 w-2 rounded-full ${log.type === "success" ? "bg-emerald-400" : "bg-cyan-400"}`} />
-                        <span className="font-mono text-muted-foreground">[{log.time}]</span>
+                        <span
+                          className={`h-2 w-2 rounded-full ${log.type === "success" ? "bg-emerald-400" : "bg-cyan-400"}`}
+                        />
+                        <span className="font-mono text-muted-foreground">
+                          [{log.time}]
+                        </span>
                         <span className="text-foreground">{log.action}</span>
-                        <span className="text-muted-foreground">{log.details}</span>
+                        <span className="text-muted-foreground">
+                          {log.details}
+                        </span>
                       </motion.div>
                     ))}
                   </div>
