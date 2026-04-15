@@ -68,6 +68,7 @@ const OriginAdmin = () => {
   const [saving, setSaving] = useState(false);
   const [marksSort, setMarksSort] = useState<"none" | "asc" | "desc">("none");
   const [problemSort, setProblemSort] = useState<"none" | "asc" | "desc">("none");
+  const [viewingProblem, setViewingProblem] = useState<string | null>(null);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -387,19 +388,19 @@ const OriginAdmin = () => {
 
         <section className="overflow-hidden rounded-2xl border border-border/70 bg-card/40">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1600px]">
+            <table className="w-full min-w-[1600px] table-fixed">
               <thead>
                 <tr className="border-b border-border/70 bg-card/60 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                  <th className="px-4 py-3">Team ID</th>
-                  <th className="px-4 py-3">Team Name</th>
-                  <th className="px-4 py-3">Hackathon</th>
-                  <th className="px-4 py-3">Repo URL</th>
-                  <th className="px-4 py-3">Progress</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Total Score</th>
-                  <th className="px-4 py-3">Password</th>
-                  <th className="px-4 py-3">Problem Statement</th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <th className="px-4 py-3 w-[120px]">Team ID</th>
+                  <th className="px-4 py-3 w-[200px]">Team Name</th>
+                  <th className="px-4 py-3 w-[140px]">Hackathon</th>
+                  <th className="px-4 py-3 w-[220px]">Repo URL</th>
+                  <th className="px-4 py-3 w-[100px]">Progress</th>
+                  <th className="px-4 py-3 w-[120px]">Status</th>
+                  <th className="px-4 py-3 w-[100px] text-right">Total Score</th>
+                  <th className="px-4 py-3 w-[140px]">Password</th>
+                  <th className="px-4 py-3 min-w-[300px]">Problem Statement</th>
+                  <th className="px-4 py-3 w-[100px] text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -421,11 +422,15 @@ const OriginAdmin = () => {
                         {isEditing ? <input value={editForm.teamID} onChange={(e) => onEditChange("teamID", e.target.value)} className="w-full rounded border border-border bg-background px-2 py-1" /> : row.teamID}
                       </td>
                       <td className="px-4 py-3">
-                        {isEditing ? <input value={editForm.Team_Name} onChange={(e) => onEditChange("Team_Name", e.target.value)} className="w-full rounded border border-border bg-background px-2 py-1" /> : row.Team_Name}
+                        <div className="w-[180px] truncate" title={row.Team_Name}>
+                          {isEditing ? <input value={editForm.Team_Name} onChange={(e) => onEditChange("Team_Name", e.target.value)} className="w-full rounded border border-border bg-background px-2 py-1" /> : row.Team_Name}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">ORIGIN SIMATS</td>
                       <td className="px-4 py-3">
-                        {isEditing ? <input value={editForm.Repo_URL} onChange={(e) => onEditChange("Repo_URL", e.target.value)} className="w-full rounded border border-border bg-background px-2 py-1" /> : (row.Repo_URL || "-")}
+                        <div className="w-[200px] truncate" title={row.Repo_URL}>
+                          {isEditing ? <input value={editForm.Repo_URL} onChange={(e) => onEditChange("Repo_URL", e.target.value)} className="w-full rounded border border-border bg-background px-2 py-1" /> : (row.Repo_URL || "-")}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         {isEditing ? (
@@ -444,10 +449,37 @@ const OriginAdmin = () => {
                         {isEditing ? <input value={editForm.Total_Scores ?? ""} onChange={(e) => onEditChange("Total_Scores", e.target.value)} className="w-24 rounded border border-border bg-background px-2 py-1 text-right" /> : (row.Total_Scores !== null ? row.Total_Scores.toFixed(1) : "-")}
                       </td>
                       <td className="px-4 py-3">
-                        {isEditing ? <input value={editForm.password} onChange={(e) => onEditChange("password", e.target.value)} className="w-full rounded border border-border bg-background px-2 py-1" /> : row.password}
+                        <div className="w-[120px] truncate font-mono text-[10px]" title={row.password}>
+                          {isEditing ? <input value={editForm.password} onChange={(e) => onEditChange("password", e.target.value)} className="w-full rounded border border-border bg-background px-2 py-1" /> : row.password}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
-                        {isEditing ? <input value={editForm.Problem_Statement} onChange={(e) => onEditChange("Problem_Statement", e.target.value)} className="w-full rounded border border-border bg-background px-2 py-1" /> : row.Problem_Statement}
+                        {isEditing ? (
+                          <textarea
+                            value={editForm.Problem_Statement}
+                            onChange={(e) => onEditChange("Problem_Statement", e.target.value)}
+                            className="w-full rounded border border-border bg-background px-2 py-1 text-xs min-h-[60px]"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-between gap-3 group/problem">
+                            <span className="truncate max-w-[280px] text-xs text-muted-foreground block italic">
+                              {row.Problem_Statement || "No statement provided"}
+                            </span>
+                            <button
+                              onClick={() => setViewingProblem(row.Problem_Statement)}
+                              className="shrink-0 p-1.5 rounded-md hover:bg-primary/20 hover:text-primary text-muted-foreground transition-all flex items-center gap-1.5 bg-white/5 opacity-0 group-hover/problem:opacity-100"
+                              title="Expand Problem Statement"
+                            >
+                              <span className="text-[10px] font-bold uppercase tracking-wider">View</span>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="15 3 21 3 21 9"></polyline>
+                                <polyline points="9 21 3 21 3 15"></polyline>
+                                <line x1="21" y1="3" x2="14" y2="10"></line>
+                                <line x1="3" y1="21" x2="10" y2="14"></line>
+                              </svg>
+                            </button>
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-right">
                         {isEditing ? (
@@ -473,6 +505,56 @@ const OriginAdmin = () => {
           </div>
         </section>
       </div>
+
+      {/* Problem Statement Dialog */}
+      {viewingProblem !== null && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={() => setViewingProblem(null)}
+            className="absolute inset-0 bg-background/80 backdrop-blur-md"
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="relative w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-3xl border border-border/80 bg-card shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] flex flex-col"
+          >
+            <div className="flex items-center justify-between border-b border-border/40 p-6">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-bold">Problem Concept</p>
+                <h3 className="mt-1 text-xl font-black">Detailed Statement</h3>
+              </div>
+              <button
+                onClick={() => setViewingProblem(null)}
+                className="rounded-full bg-white/5 p-2 text-muted-foreground hover:bg-white/10 hover:text-white transition-colors"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+              <div className="prose prose-invert max-w-none">
+                <p className="text-base leading-relaxed text-muted-foreground whitespace-pre-wrap font-medium">
+                  {viewingProblem || "No statement content available."}
+                </p>
+              </div>
+            </div>
+
+            <div className="border-t border-border/40 p-5 bg-card/30 flex justify-end">
+              <button
+                onClick={() => setViewingProblem(null)}
+                className="rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-primary/20"
+              >
+                Close View
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };
