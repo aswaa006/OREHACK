@@ -62,7 +62,7 @@ const HeroSection = () => {
             through structured intelligence.
           </motion.p>
 
-            <div className="flex items-center gap-4 pt-2">
+            <div className="flex items-center gap-4 pt-10">
               <button
                 onClick={scrollToHackathons}
                 className="group relative inline-flex items-center gap-3 px-7 py-3.5 rounded-xl font-semibold text-sm tracking-wide overflow-hidden"
