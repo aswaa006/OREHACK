@@ -61,7 +61,7 @@ const Rules: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const { setRulesAccepted } = useEvent();
-  const { isAuthenticated, hasAcceptedRules } = useEventState();
+  const { isAuthenticated, hasAcceptedRules, rulesEnabled } = useEventState();
 
   const [agreed, setAgreed] = useState(false);
 
@@ -71,6 +71,11 @@ const Rules: React.FC = () => {
   /* ── Route guards ── */
   if (!isAuthenticated)  return <Navigate to={`/event/${baseEvent}/login`}        replace />;
   if (hasAcceptedRules)  return <Navigate to={`/event/${baseEvent}/waiting-room`} replace />;
+  // Admin disabled the rules step — skip straight through
+  if (!rulesEnabled) {
+    setRulesAccepted();
+    return <Navigate to={`/event/${baseEvent}/waiting-room`} replace />;
+  }
 
   const handleContinue = useCallback(() => {
     if (!agreed) return;

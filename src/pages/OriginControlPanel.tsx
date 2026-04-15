@@ -28,9 +28,10 @@ const STAGES = [
   {
     number: 2,
     title: "Live Monitoring",
-    subtitle: "Real-time Event Oversight",
-    description: "Monitor active submissions, track participant progress in real-time and manage live scoring pipelines.",
-    status: "coming-soon" as const,
+    subtitle: "Flow Control & Release",
+    description: "Toggle the Rules page and Waiting Room on/off. Release the problem statements to all participants with a single Start button.",
+    status: "active" as const,
+    route: "/orehackproject1924/panel/stage-2",
     icon: (
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />

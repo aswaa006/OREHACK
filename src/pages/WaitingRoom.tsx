@@ -237,13 +237,15 @@ const WaitingRoom: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const { state, setStage1Active } = useEvent();
-  const { isAuthenticated, hasAcceptedRules, stage1Active, teamName } = useEventState();
+  const { isAuthenticated, hasAcceptedRules, stage1Active, teamName, waitingRoomEnabled } = useEventState();
 
   const baseEvent = eventId ?? "origin-2k25";
 
   /* Route guards */
   if (!isAuthenticated)   return <Navigate to={`/event/${baseEvent}/login`} replace />;
-  if (!hasAcceptedRules)  return <Navigate to={`/event/${baseEvent}/rules`} replace />;
+  if (!hasAcceptedRules)  return <Navigate to={`/event/${baseEvent}/rules`}  replace />;
+  // Admin skipped the waiting room — go straight to stage-2
+  if (!waitingRoomEnabled) return <Navigate to={`/event/${baseEvent}/stage-2`} replace />;
 
   /* Auto-transition when stage1Active flips true */
   useEffect(() => {
@@ -296,8 +298,7 @@ const WaitingRoom: React.FC = () => {
           OreHack by Oregent © 2025 — Waiting for organizer signal…
         </motion.footer>
 
-        {/* Dev panel — remove before production */}
-        <DevPanel onActivate={simulateStage1} />
+        {/* Dev panel removed — control moved to Stage 2 Admin */}
       </div>
     </PageTransition>
   );

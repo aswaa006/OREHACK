@@ -21,6 +21,7 @@ import OriginAdmin from "./pages/OriginAdmin";
 import OriginControlPanel from "./pages/OriginControlPanel";
 import OriginStage4 from "./pages/OriginStage4";
 import OriginStage1 from "./pages/OriginStage1";
+import OriginStage2 from "./pages/OriginStage2";
 import { LoadingScreen } from "./components/LoadingScreen";
 // Phase 1 — Event flow
 import { EventProvider } from "./context/EventContext";
@@ -70,6 +71,7 @@ const AnimatedRoutes = () => {
         <Route path="/orehackproject1924" element={<OriginAdmin />} />
         <Route path="/orehackproject1924/panel" element={<OriginControlPanel />} />
         <Route path="/orehackproject1924/panel/stage-1" element={<OriginStage1 />} />
+        <Route path="/orehackproject1924/panel/stage-2" element={<OriginStage2 />} />
         <Route path="/orehackproject1924/panel/stage-4" element={<OriginStage4 />} />
 
         {/* ── Phase 1: Event flow ── */}
