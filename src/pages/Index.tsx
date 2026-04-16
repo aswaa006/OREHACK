@@ -7,11 +7,19 @@ import TeamOregent from "@/components/TeamOregent";
 import Contact from "@/components/Contact";
 
 import GlobalBackground from "@/components/GlobalBackground";
+import TargetCursor from "@/components/TargetCursor";
 
 const Index = () => {
   return (
     <div className="min-h-screen text-foreground relative z-0">
       <GlobalBackground />
+      <TargetCursor
+        targetSelector=".cursor-target"
+        spinDuration={2}
+        hideDefaultCursor={false}
+        hoverDuration={0.2}
+        parallaxOn={true}
+      />
       <Navbar />
 
       {/* Hero stays pinned behind while the next section scrolls over it */}

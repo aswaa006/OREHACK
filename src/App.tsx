@@ -35,11 +35,8 @@ import OriginStage3 from "./pages/OriginStage3";
 
 const queryClient = new QueryClient();
 
-/**
- * The permanent background watermark, always present behind the site content.
- */
-function LogoBackgroundWatermark({ imgRef }: { imgRef: React.RefObject<HTMLImageElement> }) {
-  if (typeof document === 'undefined') return null;
+function LogoBackgroundWatermark({ imgRef, hidden }: { imgRef: React.RefObject<HTMLImageElement>, hidden?: boolean }) {
+  if (typeof document === 'undefined' || hidden) return null;
   return createPortal(
     <img
       ref={imgRef}
@@ -51,6 +48,78 @@ function LogoBackgroundWatermark({ imgRef }: { imgRef: React.RefObject<HTMLImage
     document.body
   );
 }
+
+const WatermarkManager = ({ logoRef }: { logoRef: React.RefObject<HTMLImageElement> }) => {
+  const location = useLocation();
+  const isLandingPage = location.pathname === "/";
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const el = logoRef.current;
+      const footer = document.querySelector('footer');
+      if (!el || isLandingPage) return;
+
+      let targetOpacity = 0.04;
+      let isFullOpacity = false;
+
+      if (footer) {
+        const rect = footer.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        const distanceToBottom = rect.bottom - windowHeight;
+        const rampDistance = 800;
+
+        if (distanceToBottom <= rampDistance && distanceToBottom > 0) {
+          const t = 1 - (distanceToBottom / rampDistance);
+          const clampedT = Math.max(0, Math.min(1, t));
+          targetOpacity = 0.04 + (0.76 * clampedT);
+        } else if (distanceToBottom <= 0) {
+          targetOpacity = 0.8;
+        }
+        isFullOpacity = distanceToBottom <= 10;
+      }
+
+      el.style.opacity = targetOpacity.toString();
+
+      if (isFullOpacity && !el.classList.contains('site-logo-bg--footer')) {
+        const computedStyle = window.getComputedStyle(el);
+        const matrix = computedStyle.transform;
+        let angle = 0;
+        if (matrix && matrix !== 'none') {
+          const values = matrix.split('(')[1]?.split(')')[0]?.split(',');
+          if (values && values.length >= 2) {
+            angle = Math.round(Math.atan2(parseFloat(values[1]), parseFloat(values[0])) * (180 / Math.PI));
+          }
+        }
+        el.classList.add('site-logo-bg--footer');
+        el.style.animationPlayState = 'paused';
+        el.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+      } else if (!isFullOpacity && el.classList.contains('site-logo-bg--footer')) {
+        el.classList.remove('site-logo-bg--footer');
+        el.style.animationPlayState = 'running';
+        el.style.transform = '';
+      }
+    };
+
+    const onTurbo = () => {
+      if (!logoRef.current || isLandingPage) return;
+      logoRef.current.classList.add('site-logo-bg--turbo');
+      setTimeout(() => {
+        logoRef.current?.classList.remove('site-logo-bg--turbo');
+      }, 4000);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('logoTurbo', onTurbo);
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('logoTurbo', onTurbo);
+    };
+  }, [location.pathname, isLandingPage, logoRef]);
+
+  return <LogoBackgroundWatermark imgRef={logoRef} hidden={isLandingPage} />;
+};
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -97,74 +166,10 @@ const AnimatedRoutes = () => {
 };
 
 const App = () => {
-  // `isRevealed` becomes true when the loading screen blast animation reaches the point
-  // where the site content should start fading/scaling in.
   const [isRevealed, setIsRevealed] = useState(false);
-
-  // Ref for the background watermark — lets us toggle fast-spin without re-render
   const logoRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const el = logoRef.current;
-      const footer = document.querySelector('footer');
-      if (!el) return;
-
-      let targetOpacity = 0.04;
-      let isFullOpacity = false;
-
-      if (footer) {
-        const rect = footer.getBoundingClientRect();
-        const windowHeight = window.innerHeight;
-        // rect.bottom is the absolute bottom edge of the footer relative to viewport.
-        // When it reaches windowHeight, the page is perfectly scrolled to the end.
-        const distanceToBottom = rect.bottom - windowHeight;
-
-        // Start ramping up opacity over the last 800px of scrolling
-        const rampDistance = 800;
-
-        if (distanceToBottom <= rampDistance && distanceToBottom > 0) {
-          const t = 1 - (distanceToBottom / rampDistance);
-          const clampedT = Math.max(0, Math.min(1, t));
-          targetOpacity = 0.04 + (0.76 * clampedT);
-        } else if (distanceToBottom <= 0) {
-          targetOpacity = 0.8;
-        }
-
-        // Stop spinning exactly when we hit the absolute bottom
-        isFullOpacity = distanceToBottom <= 10;
-      }
-
-      el.style.opacity = targetOpacity.toString();
-
-      if (isFullOpacity && !el.classList.contains('site-logo-bg--footer')) {
-        // Capture the current rotation from the running animation
-        const computedStyle = window.getComputedStyle(el);
-        const matrix = computedStyle.transform;
-        let angle = 0;
-        if (matrix && matrix !== 'none') {
-          const values = matrix.split('(')[1]?.split(')')[0]?.split(',');
-          if (values && values.length >= 2) {
-            angle = Math.round(Math.atan2(parseFloat(values[1]), parseFloat(values[0])) * (180 / Math.PI));
-          }
-        }
-
-        // Pause the CSS animation and transition smoothly from current angle
-        el.style.animationPlayState = 'paused';
-        el.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
-        el.classList.add('site-logo-bg--footer');
-      } else if (!isFullOpacity && el.classList.contains('site-logo-bg--footer')) {
-        // Resume spinning from current position
-        el.classList.remove('site-logo-bg--footer');
-        el.style.transform = '';
-        el.style.animationPlayState = '';
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    // Trigger once on mount to set initial opacity
-    handleScroll();
-
     const lenis = new Lenis({
       duration: 1.6,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -175,7 +180,6 @@ const App = () => {
       syncTouchLerp: 0.06,
     });
 
-    // Tie lenis updates into standard requestAnimationFrame
     const raf = (time: number) => {
       lenis.raf(time);
       requestAnimationFrame(raf);
@@ -183,65 +187,25 @@ const App = () => {
     requestAnimationFrame(raf);
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
       lenis.destroy();
-    };
-  }, [isRevealed]);
-
-  // Listen for the "Enter Portal" turbo event fired from ActiveHackathons
-  useEffect(() => {
-    let resetTimer: ReturnType<typeof setTimeout>;
-    const onTurbo = () => {
-      if (!logoRef.current) return;
-      logoRef.current.classList.add('site-logo-bg--turbo');
-      clearTimeout(resetTimer);
-      // Revert to slow spin after 4 s (enough time to navigate away)
-      resetTimer = setTimeout(() => {
-        logoRef.current?.classList.remove('site-logo-bg--turbo');
-      }, 4000);
-    };
-    window.addEventListener('logoTurbo', onTurbo);
-    return () => {
-      window.removeEventListener('logoTurbo', onTurbo);
-      clearTimeout(resetTimer);
-    };
-  }, []);
-
-  // Listen for the "Enter Portal" turbo event fired from ActiveHackathons
-  useEffect(() => {
-    let resetTimer: ReturnType<typeof setTimeout>;
-    const onTurbo = () => {
-      if (!logoRef.current) return;
-      logoRef.current.classList.add('site-logo-bg--turbo');
-      clearTimeout(resetTimer);
-      // Revert to slow spin after 4 s (enough time to navigate away)
-      resetTimer = setTimeout(() => {
-        logoRef.current?.classList.remove('site-logo-bg--turbo');
-      }, 4000);
-    };
-    window.addEventListener('logoTurbo', onTurbo);
-    return () => {
-      window.removeEventListener('logoTurbo', onTurbo);
-      clearTimeout(resetTimer);
     };
   }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {/* The permanent low-opacity watermark */}
-        <LogoBackgroundWatermark imgRef={logoRef} />
-        {/* The cinematic loading screen (unmounts after it finishes) */}
-        <LoadingScreen onReveal={() => {
-          console.log('Loading screen reveal triggered');
-          setIsRevealed(true);
-        }} />
-
-        <SmoothCursor />
-        <Toaster />
-        <Sonner />
         <BrowserRouter>
-          {/* EventProvider must be inside BrowserRouter so children can use useNavigate */}
+          <WatermarkManager logoRef={logoRef} />
+          
+          <LoadingScreen onReveal={() => {
+            console.log('Loading screen reveal triggered');
+            setIsRevealed(true);
+          }} />
+
+          <SmoothCursor />
+          <Toaster />
+          <Sonner />
+
           <EventProvider>
             <div 
               className={isRevealed ? 'site-ready' : ''} 
