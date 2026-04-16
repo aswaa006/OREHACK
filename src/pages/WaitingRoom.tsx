@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useEvent } from "@/context/EventContext";
 import { useEventState } from "@/hooks/useEventState";
 import PageTransition from "@/components/PageTransition";
+import CountdownTimer from "@/components/CountdownTimer";
 import "@/styles/animations.css";
 
 /* ── Floating CSS particles ── */
@@ -71,21 +72,25 @@ const TopBar: React.FC<{ teamName: string }> = ({ teamName }) => (
 );
 
 /* ── Central status card ── */
-const StatusCard: React.FC = () => (
+const StatusCard: React.FC<{ currentTime: number; targetTime: number; onComplete: () => void }> = ({ currentTime, targetTime, onComplete }) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.93 }}
     animate={{ opacity: 1, scale: 1 }}
     transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
     style={{ position: "relative", zIndex: 2, textAlign: "center", maxWidth: 540, width: "100%", padding: "0 1.5rem" }}
   >
-    {/* Loader */}
+    {/* Loader or Countdown */}
     <motion.div
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: 0.35, duration: 0.55 }}
-      style={{ marginBottom: "2.5rem" }}
+      style={{ marginBottom: "2.5rem", minHeight: 104, display: "flex", alignItems: "center", justifyContent: "center" }}
     >
-      <Loader />
+      {currentTime < targetTime ? (
+        <CountdownTimer currentTime={currentTime} targetTime={targetTime} onComplete={onComplete} />
+      ) : (
+        <Loader />
+      )}
     </motion.div>
 
     {/* Status badge */}
@@ -257,6 +262,13 @@ const WaitingRoom: React.FC = () => {
     }
   }, [stage1Active, navigate, baseEvent]);
 
+  /* Time-based auto-start to prevent component unmount race conditions */
+  useEffect(() => {
+    if (state.currentTime >= state.eventStartTime && !stage1Active) {
+      setStage1Active(true);
+    }
+  }, [state.currentTime, state.eventStartTime, stage1Active, setStage1Active]);
+
   const simulateStage1 = useCallback(() => {
     setStage1Active(true);
   }, [setStage1Active]);
@@ -279,7 +291,7 @@ const WaitingRoom: React.FC = () => {
         {/* Center stage */}
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", paddingTop: "4.5rem" }}>
           <AmbientRings />
-          <StatusCard />
+          <StatusCard currentTime={state.currentTime} targetTime={state.eventStartTime} onComplete={simulateStage1} />
         </div>
 
         {/* Footer */}
