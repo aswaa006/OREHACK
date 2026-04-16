@@ -247,8 +247,19 @@ const ControlRoom: React.FC = () => {
     error,
     selectProblem,
     hasSelected,
+    allocationComplete,
     refresh,
   } = useControlState(teamId ?? "", stage1Active);
+
+  // When the full allocation cycle finishes, save problems & navigate to overview
+  React.useEffect(() => {
+    if (allocationComplete && problems.length > 0) {
+      try {
+        sessionStorage.setItem("orehack_problems_snapshot", JSON.stringify(problems));
+      } catch { /* ignore */ }
+      navigate(`/event/${baseEvent}/overview`, { replace: true });
+    }
+  }, [allocationComplete, problems, navigate, baseEvent]);
 
   const activeProblem = useMemo(() => problems.find(p => p.id === currentProblemId), [problems, currentProblemId]);
 

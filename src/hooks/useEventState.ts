@@ -14,6 +14,7 @@ export interface EventStateHook {
   timerEnabled: boolean;
   rulesEnabled: boolean;
   waitingRoomEnabled: boolean;
+  submissionEnabled: boolean;
 }
 
 /**
@@ -35,5 +36,6 @@ export function useEventState(): EventStateHook {
     timerEnabled:       state.timerEnabled,
     rulesEnabled:       state.rulesEnabled,
     waitingRoomEnabled: state.waitingRoomEnabled,
+    submissionEnabled:  state.submissionEnabled,
   };
 }
