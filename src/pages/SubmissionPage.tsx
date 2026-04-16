@@ -3,6 +3,7 @@ import { useParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import "../components/Stepper.css";
 import { supabase } from "@/lib/supabase";
+import { useEvent } from "@/context/EventContext";
 
 type Phase = "form" | "processing" | "done";
 
@@ -20,8 +21,13 @@ const submissionNotes = [
 ];
 
 const SubmissionPage = () => {
-  const { hackathonId } = useParams();
+  const { hackathonId, eventId } = useParams();
   const location = useLocation();
+  // EventContext — populated when coming via /event/:eventId flow
+  const { state: eventState } = useEvent();
+
+  const effectiveHackathonId = hackathonId || eventId || "origin-2k25";
+
   const storedSessionRaw = typeof window !== "undefined" ? localStorage.getItem("orehack_team_session") : null;
   let storedSession: { hackathonId?: string; teamId?: string; teamName?: string } | null = null;
   if (storedSessionRaw) {
@@ -32,9 +38,13 @@ const SubmissionPage = () => {
     }
   }
   const navigationState = (location.state as { teamId?: string; teamName?: string } | null) || null;
-  const effectiveSession = navigationState || (storedSession?.hackathonId === hackathonId ? storedSession : null);
-  const teamId = effectiveSession?.teamId || "Unknown";
-  const [teamName, setTeamName] = useState(effectiveSession?.teamName || "");
+  const effectiveSession = navigationState || (storedSession?.hackathonId === effectiveHackathonId ? storedSession : null);
+
+  // Prefer explicit session, then EventContext (for /event/ flow), then fallback
+  const teamId   = effectiveSession?.teamId   || (eventState.isAuthenticated ? eventState.teamId   : "Unknown");
+  const [teamName, setTeamName] = useState(
+    effectiveSession?.teamName || (eventState.isAuthenticated ? eventState.teamName : "")
+  );
   const [repoUrl, setRepoUrl] = useState("");
   const [problemStatement, setProblemStatement] = useState("");
   const [phase, setPhase] = useState<Phase>("form");
@@ -42,7 +52,7 @@ const SubmissionPage = () => {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const hackathonName = hackathonId?.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) || "Hackathon";
+  const hackathonName = effectiveHackathonId?.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) || "Hackathon";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -18,6 +18,10 @@ import HackathonAdminUnderDevelopment from "./pages/HackathonAdminUnderDevelopme
 import DeveloperAdminDashboard from "./pages/DeveloperAdminDashboard";
 import CreateHackathon from "./pages/CreateHackathon";
 import OriginAdmin from "./pages/OriginAdmin";
+import OriginControlPanel from "./pages/OriginControlPanel";
+import OriginStage4 from "./pages/OriginStage4";
+import OriginStage1 from "./pages/OriginStage1";
+import OriginStage2 from "./pages/OriginStage2";
 import { LoadingScreen } from "./components/LoadingScreen";
 // Phase 1 — Event flow
 import { EventProvider } from "./context/EventContext";
@@ -25,7 +29,11 @@ import EventLanding from "./pages/EventLanding";
 import Login from "./pages/Login";
 import Rules from "./pages/Rules";
 import WaitingRoom from "./pages/WaitingRoom";
+<<<<<<< suvedhan-new
 import ControlRoom from "./pages/ControlRoom";
+=======
+import ProblemStatements from "./pages/ProblemStatements";
+>>>>>>> sanmuga-new
 
 const queryClient = new QueryClient();
 
@@ -66,14 +74,25 @@ const AnimatedRoutes = () => {
         <Route path="/admin/hackathon/create" element={<CreateHackathon />} />
         <Route path="/admin/developer" element={<DeveloperAdminDashboard />} />
         <Route path="/orehackproject1924" element={<OriginAdmin />} />
+        <Route path="/orehackproject1924/panel" element={<OriginControlPanel />} />
+        <Route path="/orehackproject1924/panel/stage-1" element={<OriginStage1 />} />
+        <Route path="/orehackproject1924/panel/stage-2" element={<OriginStage2 />} />
+        <Route path="/orehackproject1924/panel/stage-4" element={<OriginStage4 />} />
 
         {/* ── Phase 1: Event flow ── */}
         <Route path="/event/:eventId" element={<EventLanding />} />
         <Route path="/event/:eventId/login" element={<Login />} />
         <Route path="/event/:eventId/rules" element={<Rules />} />
         <Route path="/event/:eventId/waiting-room" element={<WaitingRoom />} />
+<<<<<<< suvedhan-new
         {/* Stage 2 — Control Room */}
         <Route path="/event/:eventId/stage-2" element={<ControlRoom />} />
+=======
+        {/* Stage 2: Problem statement listing (placeholder — under development) */}
+        <Route path="/event/:eventId/stage-2" element={<ProblemStatements />} />
+        {/* Submission desk: team name, problem statement, GitHub URL → Supabase */}
+        <Route path="/event/:eventId/submit" element={<SubmissionPage />} />
+>>>>>>> sanmuga-new
 
         <Route path="*" element={<NotFound />} />
       </Routes>
