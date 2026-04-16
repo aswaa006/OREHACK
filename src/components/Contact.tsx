@@ -188,7 +188,7 @@ const Contact = () => {
     <section
       id="contact"
       ref={ref}
-      className="relative py-32 overflow-hidden"
+      className="relative pt-32 pb-0 overflow-hidden"
     >
       {/* Animated background */}
       <div className="absolute inset-0 grid-bg opacity-20" />
@@ -355,11 +355,10 @@ const Contact = () => {
                           onFocus={() => setFocused("email")}
                           onBlur={() => setFocused(null)}
                           required
-                          className={`w-full px-4 py-3 bg-background/50 border rounded-xl text-foreground placeholder:text-muted-foreground/50 focus:outline-none transition-all duration-300 ${
-                            emailError
+                          className={`w-full px-4 py-3 bg-background/50 border rounded-xl text-foreground placeholder:text-muted-foreground/50 focus:outline-none transition-all duration-300 ${emailError
                               ? "border-red-500/70 focus:border-red-500"
                               : "border-border focus:border-primary/50"
-                          }`}
+                            }`}
                         />
                         <motion.div
                           className={`absolute inset-0 rounded-xl border-2 pointer-events-none ${emailError ? "border-red-500/40" : "border-primary/50"}`}
@@ -374,7 +373,7 @@ const Contact = () => {
                           animate={{ opacity: 1, y: 0 }}
                           className="mt-1.5 text-xs text-red-400 flex items-center gap-1"
                         >
-                          <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                          <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" /></svg>
                           {emailError}
                         </motion.p>
                       )}
@@ -600,6 +599,117 @@ const Contact = () => {
               </div>
             </motion.div>
           </motion.div>
+        </div>
+      </div>
+
+      {/* ── Footer (embedded to avoid spacing gap) ─────────────────── */}
+      <div className="relative z-10 border-t border-border/50 mt-20 pt-16 pb-0 overflow-hidden text-foreground">
+        <div className="container mx-auto px-6">
+          {/* Top section: Navigation + Social */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
+            {/* Navigation */}
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-6">
+                Navigation
+              </h4>
+              <ul className="space-y-3">
+                {[
+                  { label: "Hackathons", id: "hackathons" },
+                  { label: "How It Works", id: "how-it-works" },
+                  { label: "About", id: "about" },
+                  { label: "Contact", id: "contact" },
+                ].map((link) => (
+                  <li key={link.id}>
+                    <button
+                      onClick={() => {
+                        const el = document.getElementById(link.id);
+                        if (el) el.scrollIntoView({ behavior: "smooth" });
+                      }}
+                      style={{ transition: "all 0.3s ease" }}
+                      className="text-base text-foreground/80 hover:text-[#c4b5fd]"
+                    >
+                      {link.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Social */}
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-6">
+                Social
+              </h4>
+              <ul className="space-y-3">
+                {[
+                  { label: "LinkedIn", href: "https://www.linkedin.com/company/oregent" },
+                  { label: "Instagram", href: "https://www.instagram.com/oregent" },
+                  { label: "YouTube", href: "https://youtube.com/@oregent" },
+                  { label: "WhatsApp", href: "https://wa.me/oregent" },
+                ].map((link) => (
+                  <li key={link.label}>
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ transition: "all 0.3s ease" }}
+                      className="text-base text-foreground/80 hover:text-[#c4b5fd]"
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Branding column */}
+            <div className="flex flex-col justify-between">
+              <div>
+                <span className="text-xl font-bold tracking-tight text-foreground">
+                  Ore<span className="text-gradient-primary">hack</span>
+                </span>
+                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                  A Controlled Technical Evaluation System — engineered by Oregent.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Divider + copyright bar */}
+          <div className="border-t border-border/50 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} Oregent. All rights reserved.
+            </p>
+            <a
+              href="mailto:srisayee.oregent@gmail.com"
+              className="text-sm text-primary hover:text-primary/80 transition-colors duration-300"
+            >
+              contact@oregent.com
+            </a>
+          </div>
+        </div>
+
+        {/* Giant brand text */}
+        <div className="relative mt-12 flex items-end justify-center overflow-hidden select-none pointer-events-none pb-0 mb-0 w-full">
+          <h2
+            className="font-black tracking-tighter text-center"
+            style={{
+              fontSize: "21.5vw",
+              lineHeight: 0.8,
+              background: "linear-gradient(180deg, hsl(263 84% 58%) 0%, hsl(263 84% 38%) 50%, transparent 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              margin: 0,
+              padding: 0,
+              whiteSpace: "nowrap",
+              transform: "translate(-0.5vw, 15%)",
+              width: "100%",
+              display: "block",
+            }}
+          >
+            OREHACK
+          </h2>
         </div>
       </div>
     </section>

@@ -5,7 +5,7 @@ import HowItWorks from "@/components/HowItWorks";
 import AboutOregent from "@/components/AboutOregent";
 import TeamOregent from "@/components/TeamOregent";
 import Contact from "@/components/Contact";
-import Footer from "@/components/Footer";
+
 import GlobalBackground from "@/components/GlobalBackground";
 
 const Index = () => {
@@ -19,7 +19,6 @@ const Index = () => {
       <AboutOregent />
       <TeamOregent />
       <Contact />
-      <Footer />
     </div>
   );
 };
