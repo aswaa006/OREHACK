@@ -29,7 +29,7 @@ import EventLanding from "./pages/EventLanding";
 import Login from "./pages/Login";
 import Rules from "./pages/Rules";
 import WaitingRoom from "./pages/WaitingRoom";
-import ProblemStatements from "./pages/ProblemStatements";
+import ControlRoom from "./pages/ControlRoom";
 
 const queryClient = new QueryClient();
 
@@ -80,10 +80,8 @@ const AnimatedRoutes = () => {
         <Route path="/event/:eventId/login" element={<Login />} />
         <Route path="/event/:eventId/rules" element={<Rules />} />
         <Route path="/event/:eventId/waiting-room" element={<WaitingRoom />} />
-        {/* Stage 2: Problem statement listing (placeholder — under development) */}
-        <Route path="/event/:eventId/stage-2" element={<ProblemStatements />} />
-        {/* Submission desk: team name, problem statement, GitHub URL → Supabase */}
-        <Route path="/event/:eventId/submit" element={<SubmissionPage />} />
+        {/* Stage 2 — Control Room (Problem Statement Allocation) */}
+        <Route path="/event/:eventId/stage-2" element={<ControlRoom />} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>
