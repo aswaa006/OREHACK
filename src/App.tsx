@@ -30,6 +30,8 @@ import Login from "./pages/Login";
 import Rules from "./pages/Rules";
 import WaitingRoom from "./pages/WaitingRoom";
 import ControlRoom from "./pages/ControlRoom";
+import ProblemStatementsOverview from "./pages/ProblemStatementsOverview";
+import OriginStage3 from "./pages/OriginStage3";
 
 const queryClient = new QueryClient();
 
@@ -73,6 +75,7 @@ const AnimatedRoutes = () => {
         <Route path="/orehackproject1924/panel" element={<OriginControlPanel />} />
         <Route path="/orehackproject1924/panel/stage-1" element={<OriginStage1 />} />
         <Route path="/orehackproject1924/panel/stage-2" element={<OriginStage2 />} />
+        <Route path="/orehackproject1924/panel/stage-3" element={<OriginStage3 />} />
         <Route path="/orehackproject1924/panel/stage-4" element={<OriginStage4 />} />
 
         {/* ── Phase 1: Event flow ── */}
@@ -82,6 +85,10 @@ const AnimatedRoutes = () => {
         <Route path="/event/:eventId/waiting-room" element={<WaitingRoom />} />
         {/* Stage 2 — Control Room (Problem Statement Allocation) */}
         <Route path="/event/:eventId/stage-2" element={<ControlRoom />} />
+        {/* Problem Statements Overview (after allocation completes) */}
+        <Route path="/event/:eventId/overview" element={<ProblemStatementsOverview />} />
+        {/* Submission desk */}
+        <Route path="/event/:eventId/submit" element={<SubmissionPage />} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>

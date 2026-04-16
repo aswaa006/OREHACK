@@ -14,6 +14,7 @@ export interface EventState {
   timerEnabled: boolean;
   rulesEnabled: boolean;
   waitingRoomEnabled: boolean;
+  submissionEnabled: boolean;
 }
 
 interface EventContextValue {
@@ -25,6 +26,7 @@ interface EventContextValue {
   setTimerEnabled: (v: boolean) => void;
   setRulesEnabled: (v: boolean) => void;
   setWaitingRoomEnabled: (v: boolean) => void;
+  setSubmissionEnabled: (v: boolean) => void;
   logout: () => void;
 }
 
@@ -42,12 +44,12 @@ function loadTimerConfig(): { eventStartTime: number; timerEnabled: boolean } {
   return { eventStartTime: DEFAULT_EVENT_START, timerEnabled: true };
 }
 
-function loadFlowConfig(): { rulesEnabled: boolean; waitingRoomEnabled: boolean; stage1Active: boolean } {
+function loadFlowConfig(): { rulesEnabled: boolean; waitingRoomEnabled: boolean; stage1Active: boolean; submissionEnabled: boolean } {
   try {
     const raw = localStorage.getItem(FLOW_STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch { /* ignore */ }
-  return { rulesEnabled: true, waitingRoomEnabled: true, stage1Active: false };
+  return { rulesEnabled: true, waitingRoomEnabled: true, stage1Active: false, submissionEnabled: false };
 }
 
 const defaultState: EventState = {
@@ -64,6 +66,7 @@ const defaultState: EventState = {
   timerEnabled: true,
   rulesEnabled: true,
   waitingRoomEnabled: true,
+  submissionEnabled: false,
 };
 
 const EventContext = createContext<EventContextValue>({
@@ -75,6 +78,7 @@ const EventContext = createContext<EventContextValue>({
   setTimerEnabled: () => {},
   setRulesEnabled: () => {},
   setWaitingRoomEnabled: () => {},
+  setSubmissionEnabled: () => {},
   logout: () => {},
 });
 
@@ -104,6 +108,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       timerEnabled:   enabled,
       rulesEnabled:        flowCfg.rulesEnabled,
       waitingRoomEnabled:  flowCfg.waitingRoomEnabled,
+      submissionEnabled:   flowCfg.submissionEnabled ?? false,
       // stage1Active from flow config wins if session doesn't have it
       stage1Active: (session as EventState).stage1Active ?? flowCfg.stage1Active,
       currentTime:  now,
@@ -206,6 +211,17 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   }, []);
 
+  const setSubmissionEnabled = useCallback((v: boolean) => {
+    setState((prev) => {
+      const next = { ...prev, submissionEnabled: v };
+      try {
+        const flowCfg = loadFlowConfig();
+        localStorage.setItem(FLOW_STORAGE_KEY, JSON.stringify({ ...flowCfg, submissionEnabled: v }));
+      } catch { /* ignore */ }
+      return next;
+    });
+  }, []);
+
   const logout = useCallback(() => {
     sessionStorage.removeItem("orehack_event_session");
     setState((prev) => ({
@@ -228,6 +244,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setTimerEnabled,
       setRulesEnabled,
       setWaitingRoomEnabled,
+      setSubmissionEnabled,
       logout,
     }}>
       {children}

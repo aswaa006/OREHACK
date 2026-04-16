@@ -45,6 +45,8 @@ export interface UseControlStateReturn {
   selectProblem: (teamId: string, problemId: string) => Promise<{ success: boolean; error?: string }>;
   /** True if the current team has already locked in a selection */
   hasSelected: boolean;
+  /** True when the entire allocation cycle has completed */
+  allocationComplete: boolean;
   /** Manually refresh all data (e.g. after page regain focus) */
   refresh: () => void;
 }
@@ -60,6 +62,7 @@ export function useControlState(teamId: string, isActive: boolean): UseControlSt
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasSelected, setHasSelected] = useState(false);
+  const [allocationComplete, setAllocationComplete] = useState(false);
 
   // Prevent stale-closure issues in subscriptions and simulation
   const teamIdRef = useRef(teamId);
@@ -115,62 +118,57 @@ export function useControlState(teamId: string, isActive: boolean): UseControlSt
       await new Promise(r => setTimeout(r, 6000));
       if (!mounted) return;
 
-      let keepLooping = true;
-      while (keepLooping && mounted) {
-        let showedAny = false;
+      // Single pass — each problem is shown exactly once
+      for (let i = 0; i < problemsRef.current.length; i++) {
+        const currentProbs = problemsRef.current;
+        const p = currentProbs[i];
+        
+        // Skip if this problem is already fully booked
+        if (!p || p.slots_taken >= p.slots) continue; 
 
-        for (let i = 0; i < problemsRef.current.length; i++) {
-          const currentProbs = problemsRef.current;
-          const p = currentProbs[i];
-          
-          // Skip if this problem is already fully booked
-          if (!p || p.slots_taken >= p.slots) continue; 
+        // 1. SELECT phase (10 seconds)
+        setPhase("SELECT");
+        setCurrentProblemId(p.id);
+        setPhaseEndTime(new Date(Date.now() + 10000).toISOString());
+        
+        await new Promise(r => setTimeout(r, 10000));
+        if (!mounted) return;
 
-          showedAny = true;
-
-          // 1. SELECT phase (60 seconds / 1 minute)
-          setPhase("SELECT");
-          setCurrentProblemId(p.id);
-          setPhaseEndTime(new Date(Date.now() + 60000).toISOString());
-          
-          await new Promise(r => setTimeout(r, 60000));
-          if (!mounted) return;
-
-          // 2. RESULT phase (10 seconds)
-          setPhase("RESULT");
-          
-          // Simulate other teams randomly picking this problem
-          // We must read from problemsRef again in case we selected it during the 30s ourselves!
-          const updatedP = problemsRef.current[i];
-          const availableSlots = updatedP.slots - updatedP.slots_taken;
-          if (availableSlots > 0) {
-            // Pick 0 to 2 random mock teams to fill slots
-            const numFakes = Math.min(availableSlots, Math.floor(Math.random() * 3));
-            if (numFakes > 0) {
-              const fakeSelections = Array.from({ length: numFakes }, (_, j) => ({
-                problem_id: updatedP.id,
-                team_id: `mock-team-${Date.now()}-${j}`,
-                team_name: `Team Mock-${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${j}`,
-                created_at: new Date().toISOString()
-              }));
-              
-              setSelections(prev => [...fakeSelections, ...prev]);
-              setProblems(prev => prev.map(prob => 
-                prob.id === updatedP.id ? { ...prob, slots_taken: prob.slots_taken + numFakes } : prob
-              ));
-            }
+        // 2. RESULT phase (5 seconds)
+        setPhase("RESULT");
+        
+        // Simulate other teams randomly picking this problem
+        const updatedP = problemsRef.current[i];
+        const availableSlots = updatedP.slots - updatedP.slots_taken;
+        if (availableSlots > 0) {
+          const numFakes = Math.min(availableSlots, Math.floor(Math.random() * 3));
+          if (numFakes > 0) {
+            const fakeSelections = Array.from({ length: numFakes }, (_, j) => ({
+              problem_id: updatedP.id,
+              team_id: `mock-team-${Date.now()}-${j}`,
+              team_name: `Team Mock-${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${j}`,
+              created_at: new Date().toISOString()
+            }));
+            
+            setSelections(prev => [...fakeSelections, ...prev]);
+            setProblems(prev => prev.map(prob => 
+              prob.id === updatedP.id ? { ...prob, slots_taken: prob.slots_taken + numFakes } : prob
+            ));
           }
-
-          setPhaseEndTime(new Date(Date.now() + 10000).toISOString());
-          
-          await new Promise(r => setTimeout(r, 10000));
-          if (!mounted) return;
         }
 
-        if (!showedAny) {
-          // All problems full, cycle stops
-          keepLooping = false;
-        }
+        setPhaseEndTime(new Date(Date.now() + 5000).toISOString());
+        
+        await new Promise(r => setTimeout(r, 5000));
+        if (!mounted) return;
+      }
+
+      // Allocation cycle is complete — signal to navigate
+      if (mounted) {
+        setPhase("VIEW");
+        setCurrentProblemId(null);
+        setPhaseEndTime(null);
+        setAllocationComplete(true);
       }
     };
 
@@ -296,6 +294,7 @@ export function useControlState(teamId: string, isActive: boolean): UseControlSt
     error,
     selectProblem,
     hasSelected,
+    allocationComplete,
     refresh: fetchAll,
   };
 }
