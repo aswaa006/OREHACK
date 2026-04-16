@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { AnimatePresence } from "framer-motion";
 import Lenis from "lenis";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { SmoothCursor } from "@/components/ui/smooth-cursor";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -17,7 +18,18 @@ import HackathonAdminUnderDevelopment from "./pages/HackathonAdminUnderDevelopme
 import DeveloperAdminDashboard from "./pages/DeveloperAdminDashboard";
 import CreateHackathon from "./pages/CreateHackathon";
 import OriginAdmin from "./pages/OriginAdmin";
+import OriginControlPanel from "./pages/OriginControlPanel";
+import OriginStage4 from "./pages/OriginStage4";
+import OriginStage1 from "./pages/OriginStage1";
+import OriginStage2 from "./pages/OriginStage2";
 import { LoadingScreen } from "./components/LoadingScreen";
+// Phase 1 — Event flow
+import { EventProvider } from "./context/EventContext";
+import EventLanding from "./pages/EventLanding";
+import Login from "./pages/Login";
+import Rules from "./pages/Rules";
+import WaitingRoom from "./pages/WaitingRoom";
+import ProblemStatements from "./pages/ProblemStatements";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +49,47 @@ function LogoBackgroundWatermark({ imgRef }: { imgRef: React.RefObject<HTMLImage
     document.body
   );
 }
+
+const AnimatedRoutes = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        {/* ── Existing routes ── */}
+        <Route path="/" element={<Index />} />
+        <Route path="/hackathon/:hackathonId/login" element={<HackathonLogin />} />
+        <Route path="/hackathon/:hackathonId/submit" element={<SubmissionPage />} />
+        <Route path="/hackathon/:hackathonId/leaderboard" element={<Leaderboard />} />
+        <Route path="/admin/auth" element={<AdminAuth />} />
+        <Route path="/admin/hackathon" element={<HackathonAdminUnderDevelopment />} />
+        <Route path="/admin/hackathon/create" element={<CreateHackathon />} />
+        <Route path="/admin/developer" element={<DeveloperAdminDashboard />} />
+        <Route path="/orehackproject1924" element={<OriginAdmin />} />
+        <Route path="/orehackproject1924/panel" element={<OriginControlPanel />} />
+        <Route path="/orehackproject1924/panel/stage-1" element={<OriginStage1 />} />
+        <Route path="/orehackproject1924/panel/stage-2" element={<OriginStage2 />} />
+        <Route path="/orehackproject1924/panel/stage-4" element={<OriginStage4 />} />
+
+        {/* ── Phase 1: Event flow ── */}
+        <Route path="/event/:eventId" element={<EventLanding />} />
+        <Route path="/event/:eventId/login" element={<Login />} />
+        <Route path="/event/:eventId/rules" element={<Rules />} />
+        <Route path="/event/:eventId/waiting-room" element={<WaitingRoom />} />
+        {/* Stage 2: Problem statement listing (placeholder — under development) */}
+        <Route path="/event/:eventId/stage-2" element={<ProblemStatements />} />
+        {/* Submission desk: team name, problem statement, GitHub URL → Supabase */}
+        <Route path="/event/:eventId/submit" element={<SubmissionPage />} />
+
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </AnimatePresence>
+  );
+};
 
 const App = () => {
   // `isRevealed` becomes true when the loading screen blast animation reaches the point
@@ -183,27 +236,19 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <div 
-            className={isRevealed ? 'site-ready' : ''} 
-            style={{ 
-              opacity: isRevealed ? 1 : 0,
-              transition: 'opacity 0.5s ease-in',
-              minHeight: '100vh'
-            }}
-          >
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/hackathon/:hackathonId/login" element={<HackathonLogin />} />
-              <Route path="/hackathon/:hackathonId/submit" element={<SubmissionPage />} />
-              <Route path="/hackathon/:hackathonId/leaderboard" element={<Leaderboard />} />
-              <Route path="/admin/auth" element={<AdminAuth />} />
-              <Route path="/admin/hackathon" element={<HackathonAdminUnderDevelopment />} />
-              <Route path="/admin/hackathon/create" element={<CreateHackathon />} />
-              <Route path="/admin/developer" element={<DeveloperAdminDashboard />} />
-              <Route path="/orehackproject1924" element={<OriginAdmin />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
+          {/* EventProvider must be inside BrowserRouter so children can use useNavigate */}
+          <EventProvider>
+            <div 
+              className={isRevealed ? 'site-ready' : ''} 
+              style={{ 
+                opacity: isRevealed ? 1 : 0,
+                transition: 'opacity 0.5s ease-in',
+                minHeight: '100vh'
+              }}
+            >
+                <AnimatedRoutes />
+            </div>
+          </EventProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
