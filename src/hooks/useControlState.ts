@@ -51,7 +51,7 @@ export interface UseControlStateReturn {
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
-export function useControlState(teamId: string): UseControlStateReturn {
+export function useControlState(teamId: string, isActive: boolean): UseControlStateReturn {
   const [phase, setPhase] = useState<Phase>("VIEW");
   const [currentProblemId, setCurrentProblemId] = useState<string | null>(null);
   const [phaseEndTime, setPhaseEndTime] = useState<string | null>(null);
@@ -109,7 +109,9 @@ export function useControlState(teamId: string): UseControlStateReturn {
     let mounted = true;
 
     const runSimulation = async () => {
-      // Intial delay for VIEW phase
+      if (!isActive) return;
+      
+      // Initial delay for VIEW phase
       await new Promise(r => setTimeout(r, 6000));
       if (!mounted) return;
 
@@ -126,12 +128,12 @@ export function useControlState(teamId: string): UseControlStateReturn {
 
           showedAny = true;
 
-          // 1. SELECT phase (30 seconds)
+          // 1. SELECT phase (60 seconds / 1 minute)
           setPhase("SELECT");
           setCurrentProblemId(p.id);
-          setPhaseEndTime(new Date(Date.now() + 30000).toISOString());
+          setPhaseEndTime(new Date(Date.now() + 60000).toISOString());
           
-          await new Promise(r => setTimeout(r, 30000));
+          await new Promise(r => setTimeout(r, 60000));
           if (!mounted) return;
 
           // 2. RESULT phase (10 seconds)
@@ -175,7 +177,7 @@ export function useControlState(teamId: string): UseControlStateReturn {
     runSimulation();
 
     return () => { mounted = false; };
-  }, [problems.length]);
+  }, [problems.length, isActive]);
 
   // ── Realtime subscriptions ────────────────────────────────────────────────
   useEffect(() => {

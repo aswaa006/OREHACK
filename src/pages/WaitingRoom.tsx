@@ -262,13 +262,6 @@ const WaitingRoom: React.FC = () => {
     }
   }, [stage1Active, navigate, baseEvent]);
 
-  /* Time-based auto-start to prevent component unmount race conditions */
-  useEffect(() => {
-    if (state.currentTime >= state.eventStartTime && !stage1Active) {
-      setStage1Active(true);
-    }
-  }, [state.currentTime, state.eventStartTime, stage1Active, setStage1Active]);
-
   const simulateStage1 = useCallback(() => {
     setStage1Active(true);
   }, [setStage1Active]);
@@ -291,7 +284,7 @@ const WaitingRoom: React.FC = () => {
         {/* Center stage */}
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", paddingTop: "4.5rem" }}>
           <AmbientRings />
-          <StatusCard currentTime={state.currentTime} targetTime={state.eventStartTime} onComplete={simulateStage1} />
+          <StatusCard currentTime={state.currentTime} targetTime={state.eventStartTime} />
         </div>
 
         {/* Footer */}

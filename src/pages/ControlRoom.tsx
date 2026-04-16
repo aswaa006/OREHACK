@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useMemo } from "react";
-import { useParams, Navigate } from "react-router-dom";
+import { useParams, Navigate, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useEventState } from "@/hooks/useEventState";
 import { useControlState } from "@/hooks/useControlState";
@@ -225,8 +225,16 @@ const ErrorBanner: React.FC<{ message: string; onRetry: () => void }> = ({ messa
 // ─── Main page ────────────────────────────────────────────────────────────────
 const ControlRoom: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
-  const { isAuthenticated, hasAcceptedRules, teamId, teamName } = useEventState();
+  const { isAuthenticated, hasAcceptedRules, teamId, teamName, stage1Active, waitingRoomEnabled } = useEventState();
   const baseEvent = eventId ?? "origin-2k25";
+  const navigate = useNavigate();
+
+  // Redirect back to waiting room if event is stopped
+  React.useEffect(() => {
+    if (!stage1Active && waitingRoomEnabled) {
+      navigate(`/event/${baseEvent}/waiting-room`, { replace: true });
+    }
+  }, [stage1Active, waitingRoomEnabled, navigate, baseEvent]);
 
   // ⚠️ All hooks must be called BEFORE any early return (Rules of Hooks).
   const {
@@ -240,7 +248,7 @@ const ControlRoom: React.FC = () => {
     selectProblem,
     hasSelected,
     refresh,
-  } = useControlState(teamId ?? "");
+  } = useControlState(teamId ?? "", stage1Active);
 
   const activeProblem = useMemo(() => problems.find(p => p.id === currentProblemId), [problems, currentProblemId]);
 
@@ -349,11 +357,13 @@ const ControlRoom: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Phase banner */}
-          <PhaseBanner phase={phase} />
-
-          {/* Timer bar — only when a phaseEndTime is set */}
-          <TimerBar phaseEndTime={phaseEndTime} phase={phase} />
+          {/* Phase banner & Timer bar — only shown when event is actively running */}
+          {stage1Active && (
+            <>
+              <PhaseBanner phase={phase} />
+              <TimerBar phaseEndTime={phaseEndTime} phase={phase} />
+            </>
+          )}
 
           {/* Error banner */}
           {error && <ErrorBanner message={error} onRetry={refresh} />}
@@ -368,7 +378,16 @@ const ControlRoom: React.FC = () => {
           )}
 
           {/* Problem presentation */}
-          {loading ? (
+          {!stage1Active ? (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ textAlign: "center", padding: "6rem 2rem", background: "rgba(15,12,28,0.5)", borderRadius: 24, border: "1px solid rgba(255,255,255,0.04)" }}>
+              <div style={{ fontSize: "3rem", marginBottom: "1.5rem" }}>📡</div>
+              <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "white", marginBottom: "0.75rem" }}>Event Standby</h2>
+              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.95rem", maxWidth: 440, margin: "0 auto", lineHeight: 1.6 }}>
+                The problem statement release cycle is currently paused. 
+                Please wait for the organizers to signal the start of the next phase.
+              </p>
+            </motion.div>
+          ) : loading ? (
             <motion.div layout style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: "1.25rem" }}>
               <CardSkeleton n={4} />
             </motion.div>

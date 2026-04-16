@@ -28,9 +28,6 @@ interface EventContextValue {
   logout: () => void;
 }
 
-<<<<<<< suvedhan-new
-const DEFAULT_EVENT_START = new Date("2026-04-15T19:33:00+05:30").getTime();
-=======
 const DEFAULT_EVENT_START = new Date("2026-04-15T19:56:00").getTime();
 
 // Admin timer + flow config — persists in localStorage across refreshes
@@ -52,7 +49,6 @@ function loadFlowConfig(): { rulesEnabled: boolean; waitingRoomEnabled: boolean;
   } catch { /* ignore */ }
   return { rulesEnabled: true, waitingRoomEnabled: true, stage1Active: false };
 }
->>>>>>> sanmuga-new
 
 const defaultState: EventState = {
   eventId: "origin-2k25",
