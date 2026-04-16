@@ -13,12 +13,49 @@ const Index = () => {
     <div className="min-h-screen text-foreground relative z-0">
       <GlobalBackground />
       <Navbar />
-      <HeroSection />
-      <ActiveHackathons />
-      <HowItWorks />
-      <AboutOregent />
-      <TeamOregent />
-      <Contact />
+
+      {/* Hero stays pinned behind while the next section scrolls over it */}
+      <div style={{ position: "relative", zIndex: 1 }}>
+        <div
+          style={{
+            position: "sticky",
+            top: 0,
+            zIndex: 1,
+          }}
+        >
+          <HeroSection />
+        </div>
+
+        {/* This wrapper scrolls UP and overlays the hero */}
+        <div
+          style={{
+            position: "relative",
+            zIndex: 2,
+            background: "hsl(222 47% 5%)",
+          }}
+        >
+          {/* Rounded top edge overlay */}
+          <div
+            style={{
+              position: "sticky",
+              top: 0,
+              height: "2rem",
+              marginBottom: "-2rem",
+              zIndex: 10,
+              background: "hsl(222 47% 5%)",
+              borderTopLeftRadius: "2rem",
+              borderTopRightRadius: "2rem",
+              boxShadow: "0 -20px 60px rgba(0,0,0,0.5)",
+              pointerEvents: "none",
+            }}
+          />
+          <ActiveHackathons />
+          <HowItWorks />
+          <AboutOregent />
+          <TeamOregent />
+          <Contact />
+        </div>
+      </div>
     </div>
   );
 };

@@ -388,12 +388,12 @@ export default function ActiveHackathons() {
       `}</style>
 
       {/* ── SCROLL TRACK ── */}
-      <div ref={trackRef} id="hackathons" style={{ height: `${TRACK_VH * 100}vh`, position: "relative" }}>
+      <div ref={trackRef} id="hackathons" style={{ height: `${TRACK_VH * 100}vh`, position: "relative", background: "hsl(222 47% 5%)" }}>
 
         {/* ── STICKY CONTAINER ── */}
         <div style={{
           position: "sticky", top: 0, height: "100vh",
-          overflow: "hidden", display: "flex", alignItems: "center", background: "transparent",
+          overflow: "hidden", display: "flex", alignItems: "center", background: "hsl(222 47% 5%)",
         }}>
 
           {/* subtle grid */}
