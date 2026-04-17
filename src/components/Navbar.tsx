@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ScrollProgressProvider,
@@ -8,15 +8,15 @@ import {
 import Shuffle from "./Shuffle";
 
 const NAV_SECTIONS = [
-  { id: "hackathons", label: "Live Hackathons" },
   { id: "how-it-works", label: "How It Works" },
-  { id: "about", label: "About Oregent" },
-  { id: "contact", label: "Contact" },
+  { id: "about",        label: "About" },
+  { id: "contact",      label: "Contact" },
 ];
 
 const Navbar = () => {
   const [activeSection, setActiveSection] = useState<string>("");
   const navigate = useNavigate();
+  const location = useLocation();
   const [adminSequence, setAdminSequence] = useState<string[]>([]);
   const CONTACT_ADMIN_TARGET = "12345678";
   const ORIGIN_ADMIN_TARGET = "192421";
@@ -24,12 +24,12 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Active section detection
-      const offsets = NAV_SECTIONS.map(({ id }) => {
+      const offsets = NAV_SECTIONS.filter((s) => !("route" in s)).map(({ id }) => {
         const el = document.getElementById(id);
         if (!el) return { id, top: Infinity };
         return { id, top: Math.abs(el.getBoundingClientRect().top - 80) };
       });
+      if (offsets.length === 0) return;
       const closest = offsets.reduce((a, b) => (a.top < b.top ? a : b));
       setActiveSection(closest.id);
     };
@@ -63,67 +63,90 @@ const Navbar = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [navigate]);
 
-  const scrollToSection = (id: string) => {
+  const handleNavClick = (id: string, route?: string) => {
+    if (route) {
+      navigate(route);
+      return;
+    }
+    if (location.pathname !== "/") {
+      navigate(`/#${id}`);
+      return;
+    }
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: "smooth" });
   };
 
+  const getIsActive = (id: string) => activeSection === id;
+
   return (
     <ScrollProgressProvider global>
       <motion.nav
-        initial={{ y: -20, opacity: 0 }}
+        initial={{ y: -28, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.4 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-transparent border-b border-transparent"
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed top-0 left-0 right-0 z-50 flex justify-center"
+        style={{ padding: "24px 0" }}
       >
-        {/* Three-column grid: left | center | right */}
-        <div className="w-full grid grid-cols-3 items-center py-3.5 px-8">
+        {/* ── Floating pill container ── */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0",
+            background: "rgba(14, 13, 20, 0.82)",
+            backdropFilter: "blur(18px)",
+            WebkitBackdropFilter: "blur(18px)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: "9999px",
+            padding: "8px 16px 8px 20px",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.04) inset",
+            minWidth: "680px",
+          }}
+        >
+          {/* ── LEFT: Logo + Orehack Shuffle text ── */}
+          <Link
+            to="/"
+            className="flex items-center gap-2 shrink-0"
+            style={{ textDecoration: "none", marginRight: "28px" }}
+          >
+            <img
+              src="/oregent-logo.png"
+              alt="Orehack Logo"
+              style={{ height: "26px", width: "auto", objectFit: "contain" }}
+            />
+            <Shuffle
+              text="Orehack"
+              tag="span"
+              className="text-[15px] font-semibold tracking-tight text-white"
+              duration={0.35}
+              stagger={0.04}
+              shuffleDirection="right"
+              shuffleTimes={1}
+              triggerOnHover={true}
+              triggerOnce={false}
+            />
+          </Link>
 
-          {/* ── LEFT: Shuffle animated "Orehack" title ── */}
-          <div className="flex items-center">
-            <Link to="/" className="group">
-              <Shuffle
-                text="Orehack"
-                tag="span"
-                className="text-2xl font-bold tracking-tight text-foreground"
-                duration={0.35}
-                stagger={0.04}
-                shuffleDirection="right"
-                shuffleTimes={1}
-                triggerOnHover={true}
-                triggerOnce={false}
-              />
-            </Link>
-          </div>
-
-          {/* ── CENTER: Navigation buttons ── */}
-          <div className="hidden md:flex items-center justify-center gap-1">
+          {/* ── CENTER: Nav links ── */}
+          <div className="hidden md:flex items-center" style={{ gap: "2px" }}>
             {NAV_SECTIONS.map(({ id, label }) => {
-              const isActive = activeSection === id;
+              const isActive = getIsActive(id);
               return (
                 <button
                   key={id}
-                  onClick={() => scrollToSection(id)}
-                  style={{ transition: "all 0.3s ease" }}
-                  className={`relative text-sm px-4 py-2 rounded-lg transition-all duration-300 ${
+                  onClick={() => handleNavClick(id)}
+                  style={{ transition: "color 0.2s ease" }}
+                  className={`relative text-[13px] font-medium px-3.5 py-1.5 rounded-full whitespace-nowrap outline-none ${
                     isActive
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
+                      ? "text-white"
+                      : "text-white/50 hover:text-white/80"
                   }`}
                 >
-                  {/* Active background pill */}
                   {isActive && (
                     <motion.span
                       layoutId="nav-active-pill"
-                      className="absolute inset-0 rounded-lg bg-white/[0.06] border border-white/[0.08]"
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
-                    />
-                  )}
-                  {/* Active bottom accent */}
-                  {isActive && (
-                    <motion.span
-                      layoutId="nav-active-line"
-                      className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-[2px] rounded-full bg-primary"
+                      className="absolute inset-0 rounded-full"
+                      style={{ background: "rgba(255,255,255,0.07)" }}
                       transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
                     />
                   )}
@@ -133,29 +156,75 @@ const Navbar = () => {
             })}
           </div>
 
-          {/* ── RIGHT: Logo + "from Oregent" branding ── */}
-          <div className="flex items-center justify-end">
-            <Link to="/" className="flex items-center gap-3">
-              <img
-                src="/oregent-logo.png"
-                alt="Oregent Logo"
-                className="h-8 w-auto object-contain"
-              />
-              <div className="flex flex-col justify-center">
-                <span className="text-[11px] text-muted-foreground font-medium leading-none uppercase tracking-wider">
-                  from Oregent
-                </span>
-              </div>
-            </Link>
-          </div>
+          {/* ── Divider ── */}
+          <div
+            style={{
+              width: "1px",
+              height: "20px",
+              background: "rgba(255,255,255,0.1)",
+              margin: "0 12px",
+              flexShrink: 0,
+            }}
+          />
 
+          {/* ── RIGHT: Live Hackathons pill button ── */}
+          <button
+            onClick={() => navigate("/hackathons")}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              background: "#ffffff",
+              color: "#0a0a0f",
+              border: "none",
+              borderRadius: "9999px",
+              padding: "6px 16px",
+              fontSize: "13px",
+              fontWeight: 600,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              flexShrink: 0,
+              transition: "background 0.2s ease, transform 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "#e8e8f0";
+              (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.03)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "#ffffff";
+              (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
+            }}
+          >
+            {/* Live pulse dot */}
+            <span
+              style={{
+                display: "inline-block",
+                width: "6px",
+                height: "6px",
+                borderRadius: "50%",
+                background: "#22c55e",
+                boxShadow: "0 0 6px rgba(34,197,94,0.9)",
+                animation: "navPulse 1.8s ease-in-out infinite",
+                flexShrink: 0,
+              }}
+            />
+            Live Hackathons
+          </button>
         </div>
 
+        {/* Scroll progress bar at very bottom of viewport edge */}
         <ScrollProgress
           mode="width"
-          className="h-[1px] bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500"
-          style={{ position: "absolute", bottom: 0, left: 0 }}
+          className="h-[1.5px] bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500"
+          style={{ position: "fixed", bottom: 0, left: 0 }}
         />
+
+        <style>{`
+          @keyframes navPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.85); }
+          }
+        `}</style>
       </motion.nav>
     </ScrollProgressProvider>
   );

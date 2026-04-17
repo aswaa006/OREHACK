@@ -16,11 +16,11 @@ function OrbitRing({ radius, tube, color, speed, tiltX, tiltZ, phase = 0 }) {
       <meshStandardMaterial
         color={color}
         emissive={color}
-        emissiveIntensity={0.8}
-        roughness={0.1}
-        metalness={0.9}
+        emissiveIntensity={1.2}
+        roughness={0.05}
+        metalness={0.95}
         transparent
-        opacity={0.6}
+        opacity={0.75}
       />
     </mesh>
   );
@@ -30,7 +30,7 @@ function OrbitRing({ radius, tube, color, speed, tiltX, tiltZ, phase = 0 }) {
 /* ─── 3D medallion with logo on BOTH front and back ─── */
 function LogoMedallion() {
   const groupRef = useRef();
-  const texture = useTexture('/oregent-logo.png');
+  const texture = useTexture('/oregent logo black.png');
 
   texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
@@ -47,45 +47,48 @@ function LogoMedallion() {
   }, [texture]);
 
   const [sideMat, frontMat, backMat] = useMemo(() => {
+    // Barrel edge — matte near-black; low metalness so it doesn't pick up environment reflections
     const side = new THREE.MeshStandardMaterial({
-      color: '#3b1f6e',
-      metalness: 0.95,
-      roughness: 0.1,
-      envMapIntensity: 2,
+      color: '#080808',
+      metalness: 0.2,
+      roughness: 0.75,
+      envMapIntensity: 0.05,  // near-zero: no environment shimmer
     });
 
+    // Front face — black logo on white disc
+    // emissive is black so the face doesn't glow/wash out on white bg
     const front = new THREE.MeshStandardMaterial({
       map: texture,
       transparent: true,
       alphaTest: 0.02,
-      metalness: 0.4,
-      roughness: 0.35,
+      metalness: 0.2,
+      roughness: 0.55,
       emissiveMap: texture,
-      emissive: new THREE.Color(0.45, 0.25, 1.0),
-      emissiveIntensity: 0.55,
-      envMapIntensity: 1,
-      toneMapped: false,
+      emissive: new THREE.Color(0.0, 0.0, 0.0),   // no purple glow — stays clean
+      emissiveIntensity: 0.0,
+      envMapIntensity: 0.1,
+      toneMapped: true,
     });
 
+    // Back face — mirrored logo, same dark treatment
     const back = new THREE.MeshStandardMaterial({
       map: textureBack,
       transparent: true,
       alphaTest: 0.02,
-      metalness: 0.4,
-      roughness: 0.35,
+      metalness: 0.2,
+      roughness: 0.55,
       emissiveMap: textureBack,
-      emissive: new THREE.Color(0.45, 0.25, 1.0),
-      emissiveIntensity: 0.55,
-      envMapIntensity: 1,
-      toneMapped: false,
+      emissive: new THREE.Color(0.0, 0.0, 0.0),
+      emissiveIntensity: 0.0,
+      envMapIntensity: 0.1,
+      toneMapped: true,
     });
 
     return [side, front, back];
   }, [texture, textureBack]);
 
-  useFrame(({ clock, mouse }) => {
+  useFrame(({ mouse }) => {
     if (!groupRef.current) return;
-    const t = clock.getElapsedTime();
     groupRef.current.rotation.y += 0.004;
     groupRef.current.rotation.x += (mouse.y * -0.18 - groupRef.current.rotation.x) * 0.05;
     groupRef.current.rotation.z += (mouse.x * 0.06 - groupRef.current.rotation.z) * 0.05;
@@ -107,32 +110,32 @@ function LogoMedallion() {
         <cylinderGeometry args={[1.5, 1.5, 0.28, 128, 1, false]} />
       </mesh>
 
-      {/* Glowing outer rim */}
+      {/* Glowing outer rim — dark purple, readable against white */}
       <mesh>
         <torusGeometry args={[1.505, 0.028, 16, 128]} />
         <meshStandardMaterial
-          color="#a78bfa"
-          emissive="#7c3aed"
-          emissiveIntensity={2.5}
+          color="#2d1060"
+          emissive="#3b1f6e"
+          emissiveIntensity={2.0}
           metalness={1}
           roughness={0}
           transparent
-          opacity={0.9}
+          opacity={0.95}
           toneMapped={false}
         />
       </mesh>
 
-      {/* Inner accent ring */}
+      {/* Inner accent ring — dark indigo */}
       <mesh>
         <torusGeometry args={[1.1, 0.012, 16, 128]} />
         <meshStandardMaterial
-          color="#c4b5fd"
-          emissive="#6d28d9"
-          emissiveIntensity={1.5}
+          color="#1a0845"
+          emissive="#2d1060"
+          emissiveIntensity={1.8}
           metalness={1}
           roughness={0}
           transparent
-          opacity={0.5}
+          opacity={0.7}
           toneMapped={false}
         />
       </mesh>
@@ -145,16 +148,23 @@ function LogoMedallion() {
 export default function OregentLogo3D() {
   return (
     <>
-      <ambientLight intensity={0.6} color="#ffffff" />
-      <directionalLight position={[3, 5, 4]} intensity={2.5} color="#ffffff" />
-      <directionalLight position={[-3, -5, -4]} intensity={1.5} color="#ffffff" />
-      <pointLight position={[0, 0, -4]} intensity={5} color="#7c3aed" />
-      <pointLight position={[0, 0, 4]} intensity={5} color="#7c3aed" />
-      <pointLight position={[-3, 2, 2]} intensity={1.5} color="#c4b5fd" />
-      <pointLight position={[3, -2, 2]} intensity={1.0} color="#a78bfa" />
-      <pointLight position={[-3, 2, -2]} intensity={1.5} color="#c4b5fd" />
+      {/* Softer neutral ambient — prevents washing the dark body to grey */}
+      <ambientLight intensity={0.35} color="#d0d0d0" />
 
-      <Environment preset="city" />
+      {/* Key light from front-top — cool white, moderate */}
+      <directionalLight position={[3, 5, 4]}  intensity={1.4} color="#e8e8e8" />
+      {/* Fill light from back-bottom — very dim */}
+      <directionalLight position={[-3, -5, -4]} intensity={0.5} color="#cccccc" />
+
+      {/* Deep purple rim lights — give the dark body depth without washing it */}
+      <pointLight position={[0, 0, -4]} intensity={3.0} color="#3b1f6e" />
+      <pointLight position={[0, 0,  4]} intensity={3.0} color="#3b1f6e" />
+      <pointLight position={[-3, 2,  2]} intensity={0.8} color="#1a0845" />
+      <pointLight position={[ 3, -2,  2]} intensity={0.6} color="#2d1060" />
+      <pointLight position={[-3, 2, -2]} intensity={0.8} color="#1a0845" />
+
+      {/* Night environment — very dark, only subtle reflections on rings */}
+      <Environment preset="night" />
 
       <OrbitControls
         enableZoom={false}
@@ -168,10 +178,10 @@ export default function OregentLogo3D() {
         <LogoMedallion />
       </Float>
 
-      {/* Orbit rings */}
-      <OrbitRing radius={1.7} tube={0.007} color="#7c3aed" speed={0.6} tiltX={Math.PI / 2.6} tiltZ={0} />
-      <OrbitRing radius={1.85} tube={0.005} color="#a78bfa" speed={-0.42} tiltX={Math.PI / 2.6} tiltZ={0} phase={1.2} />
-      <OrbitRing radius={2.0} tube={0.004} color="#c4b5fd" speed={0.30} tiltX={Math.PI / 2.6} tiltZ={0} phase={2.4} />
+      {/* Orbit rings — dark purple tones, clearly visible on white */}
+      <OrbitRing radius={1.7}  tube={0.007} color="#3b1f6e" speed={0.6}   tiltX={Math.PI / 2.6} tiltZ={0} />
+      <OrbitRing radius={1.85} tube={0.005} color="#4c2a8a" speed={-0.42} tiltX={Math.PI / 2.6} tiltZ={0} phase={1.2} />
+      <OrbitRing radius={2.0}  tube={0.004} color="#2d1060" speed={0.30}  tiltX={Math.PI / 2.6} tiltZ={0} phase={2.4} />
 
     </>
   );

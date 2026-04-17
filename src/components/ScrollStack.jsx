@@ -307,6 +307,23 @@ const ScrollStack = ({
       }, 500);
 
       window.addEventListener('scroll', handleScroll, { passive: true });
+
+      // ── One-time offset refresh when nearing viewport ──
+      // This ensures that even if ActiveHackathons shifted things, 
+      // we have the final correct pixel offsets right before flipping starts.
+      let hasRefreshedOnEntry = false;
+      const refreshListener = () => {
+        if (hasRefreshedOnEntry) return;
+        const rect = scroller.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 1.5) { // Refresh when within 1.5 screens
+          recalculateOffsets();
+          updateCardTransforms();
+          hasRefreshedOnEntry = true;
+          window.removeEventListener('scroll', refreshListener);
+        }
+      };
+      window.addEventListener('scroll', refreshListener, { passive: true });
+
       const handleResize = () => {
         recalculateOffsets();
         handleScroll();
@@ -321,6 +338,7 @@ const ScrollStack = ({
         clearTimeout(recalcTimer2);
         stopRAFLoop();
         window.removeEventListener('scroll', handleScroll);
+        window.removeEventListener('scroll', refreshListener);
         window.removeEventListener('resize', handleResize);
         window.removeEventListener('load', handleResize);
         if (rafIdRef.current) {

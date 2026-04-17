@@ -25,7 +25,7 @@ const steps = [
     roleLabel: "PROCESS",
     roleValue: "Code Snapshot",
     bg: "hsl(197, 55%, 11%)",
-    accent:"hsl(219, 56%, 11%)",
+    accent: "hsl(219, 56%, 11%)",
   },
   {
     num: "03",

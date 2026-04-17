@@ -199,7 +199,7 @@ const App = () => {
       <TooltipProvider>
         <BrowserRouter>
           <WatermarkManager logoRef={logoRef} />
-          
+
           <LoadingScreen onReveal={() => {
             console.log('Loading screen reveal triggered');
             setIsRevealed(true);
@@ -210,15 +210,15 @@ const App = () => {
           <Sonner />
 
           <EventProvider>
-            <div 
-              className={isRevealed ? 'site-ready' : ''} 
-              style={{ 
+            <div
+              className={isRevealed ? 'site-ready' : ''}
+              style={{
                 opacity: isRevealed ? 1 : 0,
                 transition: 'opacity 0.5s ease-in',
                 minHeight: '100vh'
               }}
             >
-                <AnimatedRoutes />
+              <AnimatedRoutes />
             </div>
           </EventProvider>
         </BrowserRouter>
