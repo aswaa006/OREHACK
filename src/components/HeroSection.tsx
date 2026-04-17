@@ -2,13 +2,14 @@ import { Suspense, lazy } from "react";
 import { motion } from "framer-motion";
 import { Canvas } from "@react-three/fiber";
 import Shuffle from "./Shuffle";
+import { useNavigate } from "react-router-dom";
 
 const OregentLogo3D = lazy(() => import("./OregentLogo3D"));
 
 const HeroSection = () => {
+  const navigate = useNavigate();
   const scrollToHackathons = () => {
-    const el = document.getElementById("hackathons");
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+    navigate("/hackathons");
   };
 
   return (

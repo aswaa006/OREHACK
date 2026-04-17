@@ -32,6 +32,23 @@ const Index = () => {
           }}
         >
           <HeroSection />
+          {/* Continuation blur — softly blurs the bottom of the hero just before overlap */}
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: "40px",
+              zIndex: 10,
+              pointerEvents: "none",
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(8px)",
+              maskImage: "linear-gradient(to top, black, transparent)",
+              WebkitMaskImage: "linear-gradient(to top, black, transparent)",
+            }}
+          />
         </div>
 
         {/* This wrapper scrolls UP and overlays the hero */}
@@ -39,29 +56,18 @@ const Index = () => {
           style={{
             position: "relative",
             zIndex: 2,
-            background: "hsl(222 47% 5%)",
+            borderTopLeftRadius: "2.5rem",
+            borderTopRightRadius: "2.5rem",
           }}
         >
-          {/* Rounded top edge overlay */}
-          <div
-            style={{
-              position: "sticky",
-              top: 0,
-              height: "2rem",
-              marginBottom: "-2rem",
-              zIndex: 10,
-              background: "hsl(222 47% 5%)",
-              borderTopLeftRadius: "2rem",
-              borderTopRightRadius: "2rem",
-              boxShadow: "0 -20px 60px rgba(0,0,0,0.5)",
-              pointerEvents: "none",
-            }}
-          />
           <ActiveHackathons />
-          <HowItWorks />
-          <AboutOregent />
-          <TeamOregent />
-          <Contact />
+          {/* Remaining sections revert to dark background */}
+          <div style={{ background: "hsl(222 47% 5%)", position: "relative" }}>
+            <HowItWorks />
+            <AboutOregent />
+            <TeamOregent />
+            <Contact />
+          </div>
         </div>
       </div>
     </div>

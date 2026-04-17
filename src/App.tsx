@@ -32,6 +32,7 @@ import WaitingRoom from "./pages/WaitingRoom";
 import ControlRoom from "./pages/ControlRoom";
 import ProblemStatementsOverview from "./pages/ProblemStatementsOverview";
 import OriginStage3 from "./pages/OriginStage3";
+import HackathonsPage from "./pages/Hackathons";
 
 const queryClient = new QueryClient();
 
@@ -158,6 +159,8 @@ const AnimatedRoutes = () => {
         <Route path="/event/:eventId/overview" element={<ProblemStatementsOverview />} />
         {/* Submission desk */}
         <Route path="/event/:eventId/submit" element={<SubmissionPage />} />
+
+        <Route path="/hackathons" element={<HackathonsPage />} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>
