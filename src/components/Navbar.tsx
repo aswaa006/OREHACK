@@ -5,6 +5,7 @@ import {
   ScrollProgressProvider,
   ScrollProgress,
 } from "./animate-ui/primitives/animate/scroll-progress";
+import Shuffle from "./Shuffle";
 
 const NAV_SECTIONS = [
   { id: "hackathons", label: "Live Hackathons" },
@@ -14,7 +15,6 @@ const NAV_SECTIONS = [
 ];
 
 const Navbar = () => {
-  const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("");
   const navigate = useNavigate();
   const [adminSequence, setAdminSequence] = useState<string[]>([]);
@@ -24,8 +24,6 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-
       // Active section detection
       const offsets = NAV_SECTIONS.map(({ id }) => {
         const el = document.getElementById(id);
@@ -76,24 +74,30 @@ const Navbar = () => {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.4 }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? "bg-[rgba(8,12,20,0.85)] backdrop-blur-xl border-b border-white/[0.07]"
-            : "bg-transparent border-b border-transparent"
-        }`}
+        className="fixed top-0 left-0 right-0 z-50 bg-transparent border-b border-transparent"
       >
-        <div className="w-full flex items-center justify-between py-3.5 px-8">
-          <Link to="/" className="flex items-center gap-3">
-            <img src="/oregent-logo.png" alt="Oregent Logo" className="h-8 w-auto object-contain" />
-            <div className="flex flex-col justify-center">
-              <span className="text-xl font-bold tracking-tight text-foreground leading-none">
-                ORE<span className="text-gradient-primary">HACK</span>
-              </span>
-              <span className="text-[11px] text-muted-foreground font-medium mt-1 leading-none uppercase tracking-wider">from Oregent</span>
-            </div>
-          </Link>
+        {/* Three-column grid: left | center | right */}
+        <div className="w-full grid grid-cols-3 items-center py-3.5 px-8">
 
-          <div className="hidden md:flex items-center gap-1">
+          {/* ── LEFT: Shuffle animated "Orehack" title ── */}
+          <div className="flex items-center">
+            <Link to="/" className="group">
+              <Shuffle
+                text="Orehack"
+                tag="span"
+                className="text-2xl font-bold tracking-tight text-foreground"
+                duration={0.35}
+                stagger={0.04}
+                shuffleDirection="right"
+                shuffleTimes={1}
+                triggerOnHover={true}
+                triggerOnce={false}
+              />
+            </Link>
+          </div>
+
+          {/* ── CENTER: Navigation buttons ── */}
+          <div className="hidden md:flex items-center justify-center gap-1">
             {NAV_SECTIONS.map(({ id, label }) => {
               const isActive = activeSection === id;
               return (
@@ -128,6 +132,23 @@ const Navbar = () => {
               );
             })}
           </div>
+
+          {/* ── RIGHT: Logo + "from Oregent" branding ── */}
+          <div className="flex items-center justify-end">
+            <Link to="/" className="flex items-center gap-3">
+              <img
+                src="/oregent-logo.png"
+                alt="Oregent Logo"
+                className="h-8 w-auto object-contain"
+              />
+              <div className="flex flex-col justify-center">
+                <span className="text-[11px] text-muted-foreground font-medium leading-none uppercase tracking-wider">
+                  from Oregent
+                </span>
+              </div>
+            </Link>
+          </div>
+
         </div>
 
         <ScrollProgress
