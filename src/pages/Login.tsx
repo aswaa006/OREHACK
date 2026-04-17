@@ -3,11 +3,10 @@ import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEvent } from "@/context/EventContext";
 import { useEventState } from "@/hooks/useEventState";
-import PageTransition from "@/components/PageTransition";
-
-/* ─── Supabase import – uncomment when connecting real auth ───
 import { supabase } from "@/lib/supabase";
-─────────────────────────────────────────────────────────────── */
+import { resolveHackathonBySlug } from "@/lib/event-db";
+import { verifyTeamCredentials } from "@/lib/team-auth";
+import PageTransition from "@/components/PageTransition";
 
 const Login = () => {
   const { eventId }    = useParams<{ eventId: string }>();
@@ -56,20 +55,62 @@ const Login = () => {
     setLoading(true);
     setAuthState("checking");
 
-    /* ── MOCK AUTH ── replace with Supabase block below ────────────
-      const { data: submission, error: loginError } = await supabase
-        .from("submissions")
-        .select("teamID, Team_Name, password")
-        .eq("teamID", id)
-        .maybeSingle();
+    const { data: hackathon, error: hackathonError } = await resolveHackathonBySlug(baseEvent);
+    if (hackathonError) {
+      setError(hackathonError.message || "Login failed. Please try again.");
+      setAuthState("idle");
+      setLoading(false);
+      setShakeTick((n) => n + 1);
+      return;
+    }
 
-      if (loginError || !submission) { ... setError(...); return; }
-      if (submission.Team_Name.toLowerCase() !== name.toLowerCase()) { ... }
-      if (submission.password !== pass) { ... }
-    ─────────────────────────────────────────────────────────────── */
+    if (!hackathon) {
+      setError("Hackathon not found.");
+      setAuthState("idle");
+      setLoading(false);
+      setShakeTick((n) => n + 1);
+      return;
+    }
+
+    const verification = await verifyTeamCredentials({
+      hackathonId: hackathon.id,
+      teamCode: id,
+      teamName: name,
+      password: pass,
+    });
+
+    if (!verification.valid) {
+      setError(verification.error || "Invalid Team ID, Team Name, or password.");
+      setAuthState("idle");
+      setLoading(false);
+      setShakeTick((n) => n + 1);
+      return;
+    }
+
+    const resolvedTeamId = verification.teamCode || id;
+    const resolvedTeamDbId = verification.teamDbId;
+    const resolvedTeamName = verification.teamName || name;
+
+    if (resolvedTeamDbId) {
+      await supabase.from("submissions").upsert(
+        {
+          hackathon_id: hackathon.id,
+          team_id: resolvedTeamDbId,
+          teamID: resolvedTeamId,
+          TeamID: resolvedTeamId,
+          Team_Name: resolvedTeamName,
+          password: pass,
+          Progress: "queued",
+        },
+        { onConflict: "team_id" },
+      );
+    } else {
+      await supabase.from("submissions").update({ Team_Name: resolvedTeamName }).eq("teamID", resolvedTeamId);
+    }
+
     await new Promise((r) => setTimeout(r, 700));
     setAuthState("granted");
-    setAuthenticated(id, name);
+    setAuthenticated(resolvedTeamId, resolvedTeamName);
 
     await new Promise((r) => setTimeout(r, 1900));
     setLoading(false);

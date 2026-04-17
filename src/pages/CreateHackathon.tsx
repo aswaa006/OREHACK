@@ -55,8 +55,8 @@ const CreateHackathon = () => {
       start_date: form.startDate || null,
       duration_hours: Number(form.durationHours || 24),
       status: "live",
-      submissions: 0,
-      evaluated: 0,
+      submissions_count: 0,
+      evaluated_count: 0,
     });
 
     if (insertError) {

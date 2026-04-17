@@ -29,6 +29,11 @@ import {
   Zap,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import {
+  clearAdminSession,
+  normalizeDashboardRole,
+  readLegacyAdminSession,
+} from "@/lib/dashboard-routing";
 
 const tabs = ["System", "Hackathons", "Evaluation", "Logs"] as const;
 
@@ -158,41 +163,51 @@ const DeveloperAdminDashboard = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Check Supabase session
         const {
-          data: { session },
-        } = await supabase.auth.getSession();
+          data: { user },
+        } = await supabase.auth.getUser();
 
-        if (!session) {
-          // Check encrypted localStorage session
-          const encryptedSession = localStorage.getItem("admin_session");
-          if (!encryptedSession) {
+        if (user) {
+          const { data: profile } = await supabase
+            .from("users")
+            .select("id, default_role, is_active")
+            .eq("id", user.id)
+            .maybeSingle();
+
+          const roleRows = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(1);
+
+          const resolvedRole = normalizeDashboardRole(roleRows.data?.[0]?.role ?? profile?.default_role);
+          const isDeveloper = resolvedRole === "developer_admin";
+
+          if (!profile || profile.is_active === false || !isDeveloper) {
+            clearAdminSession();
+            await supabase.auth.signOut();
             navigate("/admin/auth");
             return;
           }
 
-          try {
-            const sessionData = JSON.parse(atob(encryptedSession));
-            // Check if session is still valid (24 hours)
-            if (Date.now() - sessionData.timestamp > 24 * 60 * 60 * 1000) {
-              localStorage.removeItem("admin_session");
-              navigate("/admin/auth");
-              return;
-            }
-            
-            // Additional verification with hash
-            if (!sessionData.hash || sessionData.hash.length !== 16) {
-              localStorage.removeItem("admin_session");
-              navigate("/admin/auth");
-              return;
-            }
-          } catch (e) {
-            localStorage.removeItem("admin_session");
+          setIsAuthChecking(false);
+          return;
+        }
+
+        const legacySession = readLegacyAdminSession();
+        if (!legacySession) {
+          navigate("/admin/auth");
+          return;
+        }
+
+        if (legacySession.role && legacySession.role !== "unknown") {
+          if (legacySession.role !== "developer_admin") {
             navigate("/admin/auth");
             return;
           }
         }
-        
+
         setIsAuthChecking(false);
       } catch (error) {
         navigate("/admin/auth");
@@ -208,7 +223,7 @@ const DeveloperAdminDashboard = () => {
     const [hackathonsRes, usersRes] = await Promise.all([
       supabase
         .from("hackathons")
-        .select("name, slug, theme, start_date, duration_hours, status")
+        .select("name, slug, theme, start_date, duration_hours, status, submissions_count, evaluated_count")
         .order("created_at", { ascending: false }),
       supabase.from("users").select("id", { count: "exact", head: true }),
     ]);
@@ -229,8 +244,8 @@ const DeveloperAdminDashboard = () => {
           theme: hackathon.theme || "General",
           startDate: hackathon.start_date || "",
           durationHours: Number(hackathon.duration_hours || 24),
-          submissions: 0,
-          evaluated: 0,
+          submissions: Number(hackathon.submissions_count || 0),
+          evaluated: Number(hackathon.evaluated_count || 0),
           status: hackathon.status === "scheduled" ? "scheduled" : "live",
         };
       },
@@ -243,6 +258,8 @@ const DeveloperAdminDashboard = () => {
   }, []);
 
   useEffect(() => {
+    if (isAuthChecking) return;
+
     loadDashboardData();
 
     const channel = supabase
@@ -267,7 +284,7 @@ const DeveloperAdminDashboard = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [loadDashboardData]);
+  }, [loadDashboardData, isAuthChecking]);
 
   const hackathonStatsData = useMemo(
     () =>
@@ -348,8 +365,8 @@ const DeveloperAdminDashboard = () => {
       start_date: newHackathon.startDate || null,
       duration_hours: Number(newHackathon.durationHours || 24),
       status: "live",
-      submissions: 0,
-      evaluated: 0,
+      submissions_count: 0,
+      evaluated_count: 0,
     });
 
     if (error) {
@@ -369,11 +386,11 @@ const DeveloperAdminDashboard = () => {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      localStorage.removeItem("admin_session");
+      clearAdminSession();
       navigate("/admin/auth");
     } catch (error) {
       // Force logout even if signOut fails
-      localStorage.removeItem("admin_session");
+      clearAdminSession();
       navigate("/admin/auth");
     }
   };

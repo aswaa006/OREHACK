@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { SmoothCursor } from "@/components/ui/smooth-cursor";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -14,7 +14,7 @@ import HackathonLogin from "./pages/HackathonLogin";
 import SubmissionPage from "./pages/SubmissionPage";
 import Leaderboard from "./pages/Leaderboard";
 import AdminAuth from "./pages/AdminAuth";
-import HackathonAdminUnderDevelopment from "./pages/HackathonAdminUnderDevelopment";
+import HackathonAdminDashboard from "./pages/HackathonAdminDashboard";
 import DeveloperAdminDashboard from "./pages/DeveloperAdminDashboard";
 import CreateHackathon from "./pages/CreateHackathon";
 import OriginAdmin from "./pages/OriginAdmin";
@@ -122,6 +122,12 @@ const WatermarkManager = ({ logoRef }: { logoRef: React.RefObject<HTMLImageEleme
   return <LogoBackgroundWatermark imgRef={logoRef} hidden={isLandingPage} />;
 };
 
+const EventPathRedirect = ({ to }: { to: string }) => {
+  const { eventId } = useParams<{ eventId: string }>();
+  const baseEvent = eventId || "origin-2k25";
+  return <Navigate to={`/event/${baseEvent}/${to}`} replace />;
+};
+
 const AnimatedRoutes = () => {
   const location = useLocation();
 
@@ -137,8 +143,10 @@ const AnimatedRoutes = () => {
         <Route path="/hackathon/:hackathonId/login" element={<HackathonLogin />} />
         <Route path="/hackathon/:hackathonId/submit" element={<SubmissionPage />} />
         <Route path="/hackathon/:hackathonId/leaderboard" element={<Leaderboard />} />
+        <Route path="/admin" element={<Navigate to="/admin/auth" replace />} />
+        <Route path="/admin/login" element={<Navigate to="/admin/auth" replace />} />
         <Route path="/admin/auth" element={<AdminAuth />} />
-        <Route path="/admin/hackathon" element={<HackathonAdminUnderDevelopment />} />
+        <Route path="/admin/hackathon" element={<HackathonAdminDashboard />} />
         <Route path="/admin/hackathon/create" element={<CreateHackathon />} />
         <Route path="/admin/developer" element={<DeveloperAdminDashboard />} />
         <Route path="/orehackproject1924" element={<OriginAdmin />} />
@@ -153,12 +161,15 @@ const AnimatedRoutes = () => {
         <Route path="/event/:eventId/login" element={<Login />} />
         <Route path="/event/:eventId/rules" element={<Rules />} />
         <Route path="/event/:eventId/waiting-room" element={<WaitingRoom />} />
+        <Route path="/event/:eventId/stage-1" element={<EventPathRedirect to="waiting-room" />} />
         {/* Stage 2 — Control Room (Problem Statement Allocation) */}
         <Route path="/event/:eventId/stage-2" element={<ControlRoom />} />
         {/* Problem Statements Overview (after allocation completes) */}
         <Route path="/event/:eventId/overview" element={<ProblemStatementsOverview />} />
+        <Route path="/event/:eventId/problem-statements" element={<EventPathRedirect to="overview" />} />
         {/* Submission desk */}
         <Route path="/event/:eventId/submit" element={<SubmissionPage />} />
+        <Route path="/event/:eventId/stage-3" element={<EventPathRedirect to="submit" />} />
 
         <Route path="/hackathons" element={<HackathonsPage />} />
 

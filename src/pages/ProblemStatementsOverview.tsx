@@ -2,6 +2,8 @@ import React from "react";
 import { useParams, Navigate, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEventState } from "@/hooks/useEventState";
+import { loadHackathonProblems, resolveHackathonBySlug } from "@/lib/event-db";
+import { supabase } from "@/lib/supabase";
 import PageTransition from "@/components/PageTransition";
 import "@/styles/animations.css";
 
@@ -228,14 +230,84 @@ const ProblemStatementsOverview: React.FC = () => {
   const { isAuthenticated, hasAcceptedRules, teamName, submissionEnabled } = useEventState();
   const baseEvent = eventId ?? "origin-2k25";
 
-  // Load problems from sessionStorage (saved by ControlRoom before navigating here)
+  // Prefer live DB data; fallback to session snapshot when DB is unavailable.
   const [problems, setProblems] = React.useState<ProblemData[]>([]);
+  const [dataSource, setDataSource] = React.useState<"database" | "snapshot" | "none">("none");
+  const [isLoading, setIsLoading] = React.useState(true);
+
   React.useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem("orehack_problems_snapshot");
-      if (raw) setProblems(JSON.parse(raw));
-    } catch { /* ignore */ }
-  }, []);
+    let mounted = true;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    const readSnapshot = () => {
+      try {
+        const raw = sessionStorage.getItem("orehack_problems_snapshot");
+        if (!raw) return null;
+        return JSON.parse(raw) as ProblemData[];
+      } catch {
+        return null;
+      }
+    };
+
+    const loadDbProblems = async (hackathonId: string) => {
+      const { data, error } = await loadHackathonProblems(hackathonId);
+      if (error || !data) return false;
+
+      if (!mounted) return true;
+
+      const mapped: ProblemData[] = data.map((problem) => ({
+        id: problem.id,
+        title: problem.title,
+        description: problem.description,
+        slots: Number(problem.slots || 1),
+        slots_taken: Number(problem.slots_taken || 0),
+      }));
+
+      setProblems(mapped);
+      setDataSource("database");
+      return true;
+    };
+
+    const bootstrap = async () => {
+      setIsLoading(true);
+
+      const { data: hackathon } = await resolveHackathonBySlug(baseEvent);
+      if (!mounted) return;
+
+      if (hackathon) {
+        const loaded = await loadDbProblems(hackathon.id);
+        if (loaded) {
+          channel = supabase
+            .channel(`problem-overview-${hackathon.id}`)
+            .on(
+              "postgres_changes",
+              { event: "*", schema: "public", table: "problems", filter: `hackathon_id=eq.${hackathon.id}` },
+              () => {
+                void loadDbProblems(hackathon.id);
+              },
+            )
+            .subscribe();
+
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      const snapshot = readSnapshot();
+      setProblems(snapshot || []);
+      setDataSource(snapshot?.length ? "snapshot" : "none");
+      setIsLoading(false);
+    };
+
+    void bootstrap();
+
+    return () => {
+      mounted = false;
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [baseEvent]);
 
   /* Route guards */
   if (!isAuthenticated) return <Navigate to={`/event/${baseEvent}/login`} replace />;
@@ -323,6 +395,20 @@ const ProblemStatementsOverview: React.FC = () => {
                   {problems.length} problem{problems.length !== 1 ? "s" : ""}
                 </span>
               )}
+
+              {!isLoading && (
+                <span
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: "0.62rem",
+                    color: "rgba(255,255,255,0.24)",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Source: {dataSource}
+                </span>
+              )}
             </div>
           </motion.div>
 
@@ -354,7 +440,20 @@ const ProblemStatementsOverview: React.FC = () => {
           </motion.div>
 
           {/* Problem grid */}
-          {problems.length > 0 ? (
+          {isLoading ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              style={{
+                textAlign: "center",
+                padding: "4rem 1.5rem",
+                color: "rgba(255,255,255,0.3)",
+                fontSize: "0.9rem",
+              }}
+            >
+              Loading latest problem statements...
+            </motion.div>
+          ) : problems.length > 0 ? (
             <motion.div
               layout
               style={{
@@ -378,7 +477,7 @@ const ProblemStatementsOverview: React.FC = () => {
                 fontSize: "0.9rem",
               }}
             >
-              No problem statements data found. Please navigate back to the control room.
+              No problem statements found yet. Wait for organizers to publish them.
             </motion.div>
           )}
 

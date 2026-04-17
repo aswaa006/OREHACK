@@ -7,8 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Lock, Eye, EyeOff } from "lucide-react";
+import {
+  clearAdminSession,
+  normalizeDashboardRole,
+  resolveAdminRoute,
+  storeAdminSession,
+} from "@/lib/dashboard-routing";
 
 const AdminAuth = () => {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -21,19 +28,9 @@ const AdminAuth = () => {
     setError("");
 
     try {
-      // Hash the password client-side for additional encryption
-      const encoder = new TextEncoder();
-      const encodedPassword = encoder.encode(password);
-      const hashBuffer = await crypto.subtle.digest("SHA-256", encodedPassword);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashedPassword = hashArray
-        .map((b) => b.toString(16).padStart(2, "0"))
-        .join("");
-
-      // Use hashed password as the actual password for Supabase auth
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: "admin@orehack.com", // Fixed admin email
-        password: hashedPassword,
+        email: email.trim(),
+        password,
       });
 
       if (error) {
@@ -42,20 +39,56 @@ const AdminAuth = () => {
       }
 
       if (data.user) {
-        // Store encrypted session token with additional encryption
-        const sessionData = {
-          user_id: data.user.id,
-          email: data.user.email,
-          timestamp: Date.now(),
-          hash: hashedPassword.substring(0, 16), // Store part of hash for verification
-        };
+        const { data: userProfile, error: profileError } = await supabase
+          .from("users")
+          .select("id, email, full_name, default_role, is_active")
+          .eq("id", data.user.id)
+          .maybeSingle();
 
-        // Encrypt session data
-        const sessionJson = JSON.stringify(sessionData);
-        const encryptedSession = btoa(sessionJson); // Base64 encoding as encryption
+        if (profileError || !userProfile) {
+          clearAdminSession();
+          setError("Your Supabase account is not linked to a dashboard profile.");
+          return;
+        }
 
-        sessionStorage.setItem("admin_session", encryptedSession);
-        navigate("/admin/developer");
+        if (userProfile.is_active === false) {
+          clearAdminSession();
+          setError("This account is disabled.");
+          return;
+        }
+
+        const { data: roleRows, error: roleError } = await supabase
+          .from("user_roles")
+          .select("role, hackathon_id")
+          .eq("user_id", data.user.id)
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (roleError) {
+          clearAdminSession();
+          setError(roleError.message || "Unable to resolve your dashboard role.");
+          return;
+        }
+
+        const resolvedRole = normalizeDashboardRole(roleRows?.[0]?.role ?? userProfile.default_role);
+        const roleRoute = resolveAdminRoute(resolvedRole);
+
+        if (resolvedRole === "unknown") {
+          clearAdminSession();
+          setError("No dashboard role is assigned to this account.");
+          return;
+        }
+
+        storeAdminSession({
+          userId: data.user.id,
+          email: userProfile.email ?? data.user.email ?? null,
+          role: resolvedRole,
+          hackathonId: roleRows?.[0]?.hackathon_id ? String(roleRows[0].hackathon_id) : null,
+          source: "supabase",
+          createdAt: Date.now(),
+        });
+
+        navigate(roleRoute, { replace: true });
       }
     } catch (err) {
       setError("Authentication failed. Please try again.");
@@ -119,6 +152,21 @@ const AdminAuth = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-amber-200">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@company.com"
+                className="bg-amber-500/5 border-amber-300/30 text-amber-50 placeholder:text-amber-300/50"
+                required
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="password" className="text-amber-200">
                 Admin Password
