@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Area,
@@ -14,6 +14,12 @@ import {
 } from "recharts";
 import { Award, Clock, FileCheck, Send, Star, TrendingUp } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { loadNormalizedSubmissions, type NormalizedSubmission } from "@/lib/submission-data";
+import {
+  clearAdminSession,
+  normalizeDashboardRole,
+  readLegacyAdminSession,
+} from "@/lib/dashboard-routing";
 
 const tabs = ["Overview", "Submissions", "Leaderboard", "Reports"] as const;
 
@@ -33,32 +39,7 @@ const scoreDistributionData = [
   { range: "60-70", count: 4 },
 ];
 
-type SubmissionItem = {
-  id: string;
-  team_id: string;
-  team_name: string | null;
-  repository_url: string;
-  submitted_at: string;
-  score: number | null;
-  status: "queued" | "evaluated" | "rejected";
-  final_score: number | null;
-  max_total: number | null;
-  technical_score: number | null;
-  max_technical: number | null;
-  innovation_score: number | null;
-  max_innovation: number | null;
-  completeness_score: number | null;
-  max_completeness: number | null;
-  technical_breakdown: Record<string, number> | null;
-  innovation_breakdown: Record<string, number> | null;
-  completeness_breakdown: Record<string, number> | null;
-  evaluation_timestamp: string | null;
-};
-
-const normalizeStatus = (value: unknown): SubmissionItem["status"] => {
-  if (value === "evaluated" || value === "rejected") return value;
-  return "queued";
-};
+type SubmissionItem = NormalizedSubmission;
 
 const sectionTransition = { duration: 0.4, ease: "easeOut" as const };
 const contentVariants = {
@@ -94,6 +75,7 @@ const ChartTooltip = ({
 };
 
 const HackathonAdminDashboard = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("Overview");
   const [submissions, setSubmissions] = useState<SubmissionItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -102,60 +84,92 @@ const HackathonAdminDashboard = () => {
 
   useEffect(() => {
     let mounted = true;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    const checkAuth = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data: profile } = await supabase
+          .from("users")
+          .select("id, default_role, is_active")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        const roleRows = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        const resolvedRole = normalizeDashboardRole(roleRows.data?.[0]?.role ?? profile?.default_role);
+        const allowed = resolvedRole === "hackathon_admin" || resolvedRole === "developer_admin";
+
+        if (!profile || profile.is_active === false || !allowed) {
+          clearAdminSession();
+          await supabase.auth.signOut();
+          navigate("/admin/auth");
+          return false;
+        }
+
+        return true;
+      }
+
+      const legacySession = readLegacyAdminSession();
+      if (!legacySession) {
+        navigate("/admin/auth");
+        return false;
+      }
+
+      if (legacySession.role !== "unknown" && legacySession.role !== "hackathon_admin" && legacySession.role !== "developer_admin") {
+        navigate("/admin/auth");
+        return false;
+      }
+
+      return true;
+    };
 
     const load = async () => {
       setLoading(true);
       setError("");
 
-      const { data, error: fetchError } = await supabase
-        .from("submissions")
-        .select("*")
-        .limit(50);
+      const { data, error: fetchError } = await loadNormalizedSubmissions({
+        limit: 200,
+      });
 
       if (!mounted) return;
 
       if (fetchError) {
-        setError(fetchError.message || "Failed to load submissions.");
+        setError(fetchError || "Failed to load submissions.");
         setLoading(false);
         return;
       }
 
-      const normalized = (data || []).map((row: Record<string, unknown>, index: number) => ({
-        id: String(row.teamID ?? row.TeamID ?? row.id ?? index),
-        team_id: String(row.teamID ?? row.TeamID ?? row.id ?? ""),
-        team_name: (row.Team_Name as string | null) ?? null,
-        repository_url: ((row.Repo_URL as string | undefined) || "") as string,
-        submitted_at: "",
-        score: typeof row.Total_Scores === "number" ? row.Total_Scores : null,
-        status: normalizeStatus(row.Progress),
-        final_score: typeof row.Total_Scores === "number" ? row.Total_Scores : null,
-        max_total: 100,
-        technical_score: typeof row.Tech_Scores === "number" ? row.Tech_Scores : null,
-        max_technical: 65,
-        innovation_score: typeof row.Innov_Scores === "number" ? row.Innov_Scores : null,
-        max_innovation: 25,
-        completeness_score: typeof row.Completeness_Scores === "number" ? row.Completeness_Scores : null,
-        max_completeness: 10,
-        technical_breakdown: null,
-        innovation_breakdown: null,
-        completeness_breakdown: null,
-        evaluation_timestamp: null,
-      })) as SubmissionItem[];
-
-      setSubmissions(normalized);
+      setSubmissions(data as SubmissionItem[]);
       setLoading(false);
     };
 
-    load();
+    const boot = async () => {
+      const allowed = await checkAuth();
+      if (!allowed || !mounted) return;
 
-    const channel = supabase
-      .channel("hackathon-admin-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "submissions" }, load)
-      .subscribe();
+      await load();
+      channel = supabase
+        .channel("hackathon-admin-live")
+        .on("postgres_changes", { event: "*", schema: "public", table: "submissions" }, load)
+        .subscribe();
+    };
+
+    void boot();
 
     return () => {
       mounted = false;
-      supabase.removeChannel(channel);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, []);
 

@@ -29,16 +29,35 @@ const SubmissionPage = () => {
   const effectiveHackathonId = hackathonId || eventId || "origin-2k25";
 
   const storedSessionRaw = typeof window !== "undefined" ? localStorage.getItem("orehack_team_session") : null;
-  let storedSession: { hackathonId?: string; teamId?: string; teamName?: string } | null = null;
+  let storedSession: {
+    hackathonSlug?: string;
+    hackathonDbId?: string;
+    teamId?: string;
+    teamDbId?: string | null;
+    teamName?: string;
+  } | null = null;
   if (storedSessionRaw) {
     try {
-      storedSession = JSON.parse(storedSessionRaw) as { hackathonId?: string; teamId?: string; teamName?: string };
+      storedSession = JSON.parse(storedSessionRaw) as {
+        hackathonSlug?: string;
+        hackathonDbId?: string;
+        teamId?: string;
+        teamDbId?: string | null;
+        teamName?: string;
+      };
     } catch {
       storedSession = null;
     }
   }
   const navigationState = (location.state as { teamId?: string; teamName?: string } | null) || null;
-  const effectiveSession = navigationState || (storedSession?.hackathonId === effectiveHackathonId ? storedSession : null);
+  const effectiveSession = navigationState
+    ? {
+        ...navigationState,
+        hackathonSlug: effectiveHackathonId,
+      }
+    : storedSession?.hackathonSlug === effectiveHackathonId || storedSession?.hackathonDbId
+      ? storedSession
+      : null;
 
   // Prefer explicit session, then EventContext (for /event/ flow), then fallback
   const teamId   = effectiveSession?.teamId   || (eventState.isAuthenticated ? eventState.teamId   : "Unknown");
@@ -79,6 +98,8 @@ const SubmissionPage = () => {
     setPhase("processing");
 
     const submissionPayload = {
+      hackathon_id: effectiveSession?.hackathonDbId || null,
+      team_id: effectiveSession?.teamDbId || null,
       teamID: teamId,
       Team_Name: teamName.trim(),
       Repo_URL: repoUrl.trim(),
@@ -88,7 +109,7 @@ const SubmissionPage = () => {
 
     let { error: submissionError } = await supabase
       .from("submissions")
-      .upsert(submissionPayload, { onConflict: "teamID" });
+      .upsert(submissionPayload, { onConflict: effectiveSession?.teamDbId ? "team_id" : "teamID" });
 
     if (submissionError) {
       setError(submissionError.message || "Submission failed. Please try again.");

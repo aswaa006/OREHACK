@@ -22,8 +22,8 @@ export async function initDatabaseSync() {
         theme: h.theme,
         startDate: h.start_date || "",
         durationHours: h.duration_hours || 24,
-        submissions: h.submissions || 0,
-        evaluated: h.evaluated || 0,
+        submissions_count: h.submissions_count || 0,
+        evaluated_count: h.evaluated_count || 0,
         status: h.status || "live",
       }));
 
@@ -53,8 +53,8 @@ export async function initDatabaseSync() {
             theme: h.theme,
             start_date: h.startDate,
             duration_hours: parseInt(h.durationHours) || 24,
-            submissions: parseInt(h.submissions) || 0,
-            evaluated: parseInt(h.evaluated) || 0,
+            submissions_count: parseInt(h.submissions_count ?? h.submissions) || 0,
+            evaluated_count: parseInt(h.evaluated_count ?? h.evaluated) || 0,
             status: h.status || "live",
           }));
 
