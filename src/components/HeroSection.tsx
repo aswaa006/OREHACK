@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import CurvedLoop from "./CurvedLoop";
+import TrustIndicator from "./TrustIndicator";
 
 const HeroSection = () => {
   const navigate = useNavigate();
@@ -66,48 +67,7 @@ const HeroSection = () => {
           </button>
         </div>
 
-        {/* ── Trusted by section ── */}
-        <div style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "8px",
-          marginTop: "24px",
-          fontFamily: "'Inter', sans-serif",
-        }}>
-          <span style={{
-            fontSize: "12px",
-            fontWeight: 400,
-            color: "#ffffff",
-            opacity: 0.9,
-          }}>
-            Trusted by hundreds
-          </span>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <div style={{ display: "flex", gap: "2px" }}>
-              {[...Array(4)].map((_, i) => (
-                <svg
-                  key={i}
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="#7c3aed"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                </svg>
-              ))}
-            </div>
-            <span style={{
-              fontSize: "12px",
-              fontWeight: 400,
-              color: "#ffffff",
-              marginLeft: "4px"
-            }}>
-              4.0+
-            </span>
-          </div>
-        </div>
+        <TrustIndicator />
       </div>
         <style>{`
             @keyframes spin { to { transform: rotate(360deg); } }
@@ -123,7 +83,7 @@ const HeroSection = () => {
         bottom: "20px",
         left: 0,
         right: 0,
-        padding: "18px 0",
+        padding: "18px 140px",
         background: "transparent",
         zIndex: 20,
       }}>
