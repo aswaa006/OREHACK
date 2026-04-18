@@ -4,22 +4,22 @@ import { motion } from "framer-motion";
 import Shuffle from "./Shuffle";
 
 const NAV_SECTIONS = [
-  { id: "home",         label: "Home" },
+  { id: "home", label: "Home" },
   { id: "how-it-works", label: "How It Works" },
-  { id: "about",        label: "About" },
-  { id: "contact",      label: "Contact" },
+  { id: "about", label: "About" },
+  { id: "contact", label: "Contact" },
 ];
 
 const Navbar = () => {
   const [activeSection, setActiveSection] = useState<string>("");
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-  
+
   const navigate = useNavigate();
   const location = useLocation();
   const [adminSequence, setAdminSequence] = useState<string[]>([]);
   const CONTACT_ADMIN_TARGET = "12345678";
-  const ORIGIN_ADMIN_TARGET  = "192421";
+  const ORIGIN_ADMIN_TARGET = "192421";
   const ORIGIN_ADMIN_SESSION_KEY = "orehack_origin_admin_auth";
 
   /* ── Smart scroll visibility logic ── */
@@ -100,8 +100,8 @@ const Navbar = () => {
     <motion.nav
       initial={{ y: 0 }}
       animate={{ y: isVisible ? 0 : -100 }}
-      transition={{ 
-        duration: 0.4, 
+      transition={{
+        duration: 0.4,
         ease: [0.22, 1, 0.36, 1] // Smooth transition
       }}
       style={{
@@ -133,8 +133,8 @@ const Navbar = () => {
         >
           <span
             className="text-2xl font-bold tracking-[0.05em] orehack-liquid-text"
-            style={{ 
-              color: "#7c3aed", 
+            style={{
+              color: "#7c3aed",
               fontFamily: "'Outfit', sans-serif",
               fontWeight: 600,
               letterSpacing: "-0.05em",

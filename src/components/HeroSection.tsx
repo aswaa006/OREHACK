@@ -98,19 +98,25 @@ const HeroSection = () => {
           <span style={{
             fontFamily: "'Instrument Serif', serif",
             fontStyle: "italic",
-            fontWeight: 500,
+            fontWeight: 400,
             wordSpacing: "0.15em"
           }}>
-            <span className="orehack-liquid-text">OreHack</span>
-          </span>
-          <span style={{
-            fontFamily: "'Instrument Serif', serif",
-            fontStyle: "italic",
-            fontWeight: 400,
-            wordSpacing: "0.15em",
-            marginLeft: "0.3em"
-          }}>
-            Ecosystems
+            <span className="orehack-liquid-text">
+              OreHack
+              <img
+                src="/globe.png"
+                alt=""
+                style={{
+                  display: 'inline-block',
+                  height: '1.0em',
+                  width: 'auto',
+                  margin: '0 0.3em',
+                  verticalAlign: 'middle',
+                  marginTop: '-0.15em'
+                }}
+              />
+              Ecosystems
+            </span>
           </span>
         </motion.h1>
 
