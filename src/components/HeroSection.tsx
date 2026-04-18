@@ -1,7 +1,46 @@
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import CurvedLoop from "./CurvedLoop";
 import TrustIndicator from "./TrustIndicator";
+import BlurText from "./BlurText";
+
+const WordsLoop = () => {
+  const words = ["Innovation", "Ideation", "Iteration", "Impact"];
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % words.length);
+    }, 6500);
+    return () => clearInterval(timer);
+  }, [words.length]);
+
+  return (
+    <span style={{
+      position: 'relative',
+      display: 'inline-block',
+      minWidth: '9ch',
+      textAlign: 'center',
+      padding: '0 0.1em',
+      verticalAlign: 'bottom',
+      fontFamily: "'Instrument Serif', serif",
+      fontStyle: "italic",
+      fontWeight: 500,
+      color: "#7c3aed"
+    }}>
+      <BlurText
+        key={words[index]}
+        text={words[index]}
+        delay={150}
+        animateBy="letters"
+        direction="top"
+        className="inline-block"
+        stepDuration={0.8}
+      />
+    </span>
+  );
+};
 
 const HeroSection = () => {
   const navigate = useNavigate();
@@ -11,34 +50,74 @@ const HeroSection = () => {
 
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
-
-
-
       <div className="relative z-10 container mx-auto px-6 flex flex-col items-center justify-center min-h-screen py-24 text-center">
 
-        <motion.p
+        <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.15, ease: "easeOut" }}
-          className="text-lg md:text-xl text-muted-foreground font-medium tracking-wide"
+          className="max-w-[1200px] text-center"
+          style={{
+            fontSize: "clamp(2rem, 5vw, 64px)",
+            lineHeight: "1.37",
+            color: "#ffffff",
+            textAlign: "center"
+          }}
         >
-          A Controlled Technical Evaluation System.
-        </motion.p>
+          <span style={{
+            fontFamily: "'Outfit', sans-serif",
+            fontWeight: 600,
+            letterSpacing: "-0.05em",
+            wordSpacing: "0.15em"
+          }}>
+            A New-Era
+          </span>
+          <span style={{
+            fontFamily: "'Outfit', sans-serif",
+            fontWeight: 600,
+            letterSpacing: "-0.05em",
+            wordSpacing: "0.15em",
+            marginLeft: "0.3em"
+          }}>
+            of
+          </span>
+          <span style={{ display: 'inline-block', margin: '0 0.3em' }}>
+            <WordsLoop />
+          </span>
+          <span style={{
+            fontFamily: "'Outfit', sans-serif",
+            fontWeight: 600,
+            letterSpacing: "-0.05em",
+            wordSpacing: "0.15em",
+            marginLeft: "0.15em",
+            marginRight: "0.3em"
+          }}>
+            through
+          </span>
+          <br />
+          <span style={{
+            fontFamily: "'Instrument Serif', serif",
+            fontStyle: "italic",
+            fontWeight: 500,
+            wordSpacing: "0.15em"
+          }}>
+            <span className="orehack-liquid-text">OreHack</span>
+          </span>
+          <span style={{
+            fontFamily: "'Instrument Serif', serif",
+            fontStyle: "italic",
+            fontWeight: 400,
+            wordSpacing: "0.15em",
+            marginLeft: "0.3em"
+          }}>
+            Ecosystems
+          </span>
+        </motion.h1>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.3, ease: "easeOut" }}
-          className="text-sm md:text-base text-muted-foreground/70 max-w-lg leading-relaxed font-mono tracking-tight mt-2"
-        >
-          Engineered by Oregent to process and validate competitive builds
-          through structured intelligence.
-        </motion.p>
-
-        <div className="flex items-center gap-4 pt-14">
+        <div className="flex items-center gap-4 pt-20">
           <button
             onClick={scrollToHackathons}
-            className="cursor-target group relative inline-flex items-center gap-3 px-8 py-3 rounded-full overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-lg active:scale-[0.98]"
+            className="group relative inline-flex items-center gap-3 px-8 py-3 rounded-full overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-lg active:scale-[0.98]"
             style={{
               fontFamily: "'Outfit', 'Inter', sans-serif",
               fontSize: "0.875rem",
@@ -53,9 +132,9 @@ const HeroSection = () => {
             }}
           >
             <span className="relative z-10 flex items-center gap-2">
-              Enter Arena
+              ENTER ARENA
               <svg
-                className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
+                className="w-4 h-4 transition-transform duration-300 -rotate-45 group-hover:rotate-0"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -69,7 +148,7 @@ const HeroSection = () => {
 
         <TrustIndicator />
       </div>
-        <style>{`
+      <style>{`
             @keyframes spin { to { transform: rotate(360deg); } }
             @keyframes shimmerBtn {
               0% { background-position: 200% 0; }

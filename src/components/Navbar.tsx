@@ -128,36 +128,23 @@ const Navbar = () => {
           alignItems: "center",
         }}
       >
-        <motion.div
-          whileHover={{ 
-            scale: 1.08,
-            filter: "drop-shadow(0 0 10px rgba(124, 58, 237, 0.7))",
-          }}
-          transition={{ 
-            type: "spring", 
-            stiffness: 400, 
-            damping: 17 
-          }}
+        <div
           style={{ display: "inline-block" }}
         >
-          <Shuffle
-            text="Orehack"
-            tag="span"
-            className="text-2xl font-bold tracking-[0.05em] uppercase"
+          <span
+            className="text-2xl font-bold tracking-[0.05em] orehack-liquid-text"
             style={{ 
               color: "#7c3aed", 
-              fontFamily: "'Press Start 2P', monospace", 
-              lineHeight: "2rem", 
-              fontSize: "1.6rem" 
+              fontFamily: "'Outfit', sans-serif",
+              fontWeight: 600,
+              letterSpacing: "-0.05em",
+              lineHeight: "2.4rem",
+              fontSize: "2rem"
             }}
-            duration={0.4}
-            stagger={0.05}
-            shuffleDirection="right"
-            shuffleTimes={1}
-            triggerOnHover={true}
-            triggerOnce={false}
-          />
-        </motion.div>
+          >
+            OREHACK ++
+          </span>
+        </div>
       </Link>
 
       {/* ── RIGHT: Nav links ── */}
@@ -165,7 +152,7 @@ const Navbar = () => {
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "32px",
+          gap: "48px",
         }}
       >
         {NAV_SECTIONS.map(({ id, label }) => {
@@ -180,9 +167,9 @@ const Navbar = () => {
                 padding: "4px 0",
                 cursor: "pointer",
                 fontFamily: "'Outfit', 'Inter', sans-serif",
-                fontSize: "0.75rem",    /* 12px */
-                fontWeight: 500,
-                lineHeight: "1.25rem",  /* 20px */
+                fontSize: "0.85rem",
+                fontWeight: 550,
+                lineHeight: "1.4rem",
                 fontStyle: "normal",
                 textTransform: "none",
                 color: isActive ? "#ffffff" : "rgba(255,255,255,0.5)",
@@ -211,7 +198,7 @@ const Navbar = () => {
                     left: 0,
                     right: 0,
                     height: "1.5px",
-                    background: "#ffffff",
+                    background: "#7c3aed",
                     borderRadius: "1px",
                   }}
                 />

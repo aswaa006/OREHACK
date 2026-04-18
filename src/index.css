@@ -3261,3 +3261,22 @@ html.lenis body {
 .reveal-body {
   animation: revealFromBottom 1s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+/* ============================================================
+   OREHACK LIQUID SWEEP ANIMATION
+   ============================================================ */
+.orehack-liquid-text {
+  background: linear-gradient(to right, #ffffff 33.33%, #7c3aed 33.33%, #7c3aed 66.66%, #ffffff 66.66%);
+  background-size: 300% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline-block;
+  animation: liquidSweep 14s linear infinite !important;
+}
+
+@keyframes liquidSweep {
+  0%, 21.4% { background-position: 100% 0; }
+  50%, 71.4% { background-position: 50% 0; }
+  100% { background-position: 0% 0; }
+}
