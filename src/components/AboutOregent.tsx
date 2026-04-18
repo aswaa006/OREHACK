@@ -420,7 +420,7 @@ pre.og-code {
 
 /* ═══ HERO — center card (Card E) ═══ */
 .og-c-e {
-  background: linear-gradient(140deg,#0a1228,#060d1c 55%,#0d1420);
+  background: linear-gradient(140deg,#000000,#050508 55%,#000000);
   border-color: rgba(124,58,237,.18);
   display: flex; align-items: center; justify-content: center;
   text-align: center; padding: 32px;

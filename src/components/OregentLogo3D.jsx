@@ -152,15 +152,15 @@ export default function OregentLogo3D() {
       <ambientLight intensity={0.35} color="#d0d0d0" />
 
       {/* Key light from front-top — cool white, moderate */}
-      <directionalLight position={[3, 5, 4]}  intensity={1.4} color="#e8e8e8" />
+      <directionalLight position={[3, 5, 4]} intensity={1.4} color="#e8e8e8" />
       {/* Fill light from back-bottom — very dim */}
       <directionalLight position={[-3, -5, -4]} intensity={0.5} color="#cccccc" />
 
       {/* Deep purple rim lights — give the dark body depth without washing it */}
       <pointLight position={[0, 0, -4]} intensity={3.0} color="#3b1f6e" />
-      <pointLight position={[0, 0,  4]} intensity={3.0} color="#3b1f6e" />
-      <pointLight position={[-3, 2,  2]} intensity={0.8} color="#1a0845" />
-      <pointLight position={[ 3, -2,  2]} intensity={0.6} color="#2d1060" />
+      <pointLight position={[0, 0, 4]} intensity={3.0} color="#3b1f6e" />
+      <pointLight position={[-3, 2, 2]} intensity={0.8} color="#1a0845" />
+      <pointLight position={[3, -2, 2]} intensity={0.6} color="#2d1060" />
       <pointLight position={[-3, 2, -2]} intensity={0.8} color="#1a0845" />
 
       {/* Night environment — very dark, only subtle reflections on rings */}
@@ -179,9 +179,9 @@ export default function OregentLogo3D() {
       </Float>
 
       {/* Orbit rings — dark purple tones, clearly visible on white */}
-      <OrbitRing radius={1.7}  tube={0.007} color="#3b1f6e" speed={0.6}   tiltX={Math.PI / 2.6} tiltZ={0} />
+      <OrbitRing radius={1.7} tube={0.007} color="#3b1f6e" speed={0.6} tiltX={Math.PI / 2.6} tiltZ={0} />
       <OrbitRing radius={1.85} tube={0.005} color="#4c2a8a" speed={-0.42} tiltX={Math.PI / 2.6} tiltZ={0} phase={1.2} />
-      <OrbitRing radius={2.0}  tube={0.004} color="#2d1060" speed={0.30}  tiltX={Math.PI / 2.6} tiltZ={0} phase={2.4} />
+      <OrbitRing radius={2.0} tube={0.004} color="#2d1060" speed={0.30} tiltX={Math.PI / 2.6} tiltZ={0} phase={2.4} />
 
     </>
   );
