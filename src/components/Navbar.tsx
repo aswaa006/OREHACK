@@ -12,12 +12,41 @@ const NAV_SECTIONS = [
 
 const Navbar = () => {
   const [activeSection, setActiveSection] = useState<string>("");
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  
   const navigate = useNavigate();
   const location = useLocation();
   const [adminSequence, setAdminSequence] = useState<string[]>([]);
   const CONTACT_ADMIN_TARGET = "12345678";
   const ORIGIN_ADMIN_TARGET  = "192421";
   const ORIGIN_ADMIN_SESSION_KEY = "orehack_origin_admin_auth";
+
+  /* ── Smart scroll visibility logic ── */
+  useEffect(() => {
+    const handleScrollVisibility = () => {
+      const currentScrollY = window.scrollY;
+      const heroHeight = window.innerHeight - 100; // Buffer for hero section
+
+      // Always visible at the top (Hero section)
+      if (currentScrollY <= heroHeight) {
+        setIsVisible(true);
+      } else {
+        // Scroll direction detection
+        if (currentScrollY > lastScrollY) {
+          // Scrolling down
+          setIsVisible(false);
+        } else {
+          // Scrolling up
+          setIsVisible(true);
+        }
+      }
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScrollVisibility, { passive: true });
+    return () => window.removeEventListener("scroll", handleScrollVisibility);
+  }, [lastScrollY]);
 
   /* ── Scroll-active section detection ── */
   useEffect(() => {
@@ -68,19 +97,25 @@ const Navbar = () => {
   };
 
   return (
-    <nav
+    <motion.nav
+      initial={{ y: 0 }}
+      animate={{ y: isVisible ? 0 : -100 }}
+      transition={{ 
+        duration: 0.4, 
+        ease: [0.22, 1, 0.36, 1] // Smooth transition
+      }}
       style={{
         position: "fixed",
-        top: "10px",
-        left: "100px",
-        right: "100px",
+        top: 0,
+        left: 0,
+        right: 0,
         zIndex: 50,
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "0 40px",
-        height: "60px",
-        background: "transparent",
+        padding: "0 140px",
+        height: "100px",
+        background: "#000000",
       }}
     >
       {/* ── LEFT: OREHACK wordmark ── */}
@@ -89,7 +124,6 @@ const Navbar = () => {
         style={{
           textDecoration: "none",
           userSelect: "none",
-          marginTop: "12px",
           display: "flex",
           alignItems: "center",
         }}
@@ -185,11 +219,8 @@ const Navbar = () => {
             </button>
           );
         })}
-
-
       </div>
-    </nav>
+    </motion.nav>
   );
 };
-
 export default Navbar;
