@@ -89,7 +89,7 @@ const HeroSection = () => {
             fontWeight: 600,
             letterSpacing: "-0.05em",
             wordSpacing: "0.15em",
-            marginLeft: "0.15em",
+            marginLeft: "-0.1em",
             marginRight: "0.3em"
           }}>
             through

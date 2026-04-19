@@ -206,6 +206,33 @@ const Navbar = () => {
             </button>
           );
         })}
+        
+        {/* JOIN US CTA Button */}
+        <button
+          className="group relative inline-flex items-center gap-2 px-5 py-1.5 rounded-full overflow-hidden transition-all duration-300 hover:scale-[1.05] hover:shadow-lg active:scale-[0.98]"
+          style={{
+            background: "#ffffff",
+            color: "#000000",
+            fontFamily: "'Outfit', 'Inter', sans-serif",
+            fontSize: "0.85rem",
+            fontWeight: 700,
+            border: "none",
+            cursor: "pointer"
+          }}
+        >
+          <span className="relative z-10 flex items-center gap-1.5">
+            JOIN US
+            <svg
+              className="w-3.5 h-3.5 transition-transform duration-300 -rotate-45 group-hover:rotate-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={3}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </span>
+        </button>
       </div>
     </motion.nav>
   );
