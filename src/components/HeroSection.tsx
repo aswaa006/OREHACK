@@ -58,8 +58,9 @@ const HeroSection = () => {
           transition={{ duration: 0.7, delay: 0.15, ease: "easeOut" }}
           className="max-w-[1200px] text-center"
           style={{
-            fontSize: "clamp(2rem, 5vw, 64px)",
-            lineHeight: "1.37",
+            marginTop: "4rem",
+            fontSize: "clamp(2.5rem, 7vw, 92px)",
+            lineHeight: "1.2",
             color: "#ffffff",
             textAlign: "center"
           }}
@@ -92,7 +93,7 @@ const HeroSection = () => {
             marginLeft: "-0.1em",
             marginRight: "0.3em"
           }}>
-            through
+            via
           </span>
           <br />
           <span style={{
@@ -120,7 +121,32 @@ const HeroSection = () => {
           </span>
         </motion.h1>
 
-        <div className="flex items-center gap-4 pt-20">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.4, ease: "easeOut" }}
+          style={{
+            marginTop: "2.5rem",
+            maxWidth: "800px"
+          }}
+        >
+          <p style={{
+            fontFamily: "'Outfit', sans-serif",
+            fontSize: "clamp(1rem, 1.5vw, 1.25rem)",
+            color: "#a1a1aa",
+            fontWeight: 400,
+            fontStyle: "italic",
+            lineHeight: "1.6",
+            letterSpacing: "0.02em"
+          }}>
+            Are hackathons merely competitions?<br />
+            <span style={{ color: "#7c3aed", fontWeight: 500 }}>
+              That is precisely what we are here to change.
+            </span>
+          </p>
+        </motion.div>
+
+        <div className="flex items-center gap-4 pt-12">
           <button
             onClick={scrollToHackathons}
             className="group relative inline-flex items-center gap-3 px-8 py-3 rounded-full overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-lg active:scale-[0.98]"
