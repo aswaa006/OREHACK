@@ -35,6 +35,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { gsap } from "gsap";
 
 const logoSrc = "/oregent-logo.png";
 
@@ -238,11 +239,70 @@ const CSS = `
 .og-card-glow {
   position: absolute; inset: 0; border-radius: 20px;
   background: radial-gradient(500px circle at var(--gx,50%) var(--gy,50%),
-    rgba(124,58,237,.08), transparent 40%);
+    rgba(132, 0, 255, 0.1), transparent 40%);
   pointer-events: none; z-index: 0;
   opacity: 0; transition: opacity .4s;
 }
 .og-card:hover .og-card-glow { opacity: 1; }
+
+/* MagicBento border glow */
+.og-card {
+  --glow-x: 50%;
+  --glow-y: 50%;
+  --glow-intensity: 0;
+  --glow-radius: 300px;
+  --glow-color: 132, 0, 255;
+}
+
+.og-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  background: radial-gradient(
+    var(--glow-radius) circle at var(--glow-x) var(--glow-y),
+    rgba(var(--glow-color), calc(var(--glow-intensity) * 0.8)) 0%,
+    rgba(var(--glow-color), calc(var(--glow-intensity) * 0.4)) 30%,
+    transparent 60%
+  );
+  border-radius: inherit;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+  z-index: 12;
+}
+
+.og-card:hover {
+  box-shadow: 0 4px 20px rgba(46, 24, 78, 0.4), 0 0 30px rgba(132, 0, 255, 0.2);
+}
+
+.global-spotlight {
+  position: fixed;
+  width: 800px;
+  height: 800px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle,
+    rgba(132, 0, 255, 0.15) 0%,
+    rgba(132, 0, 255, 0.08) 15%,
+    rgba(132, 0, 255, 0.04) 25%,
+    rgba(132, 0, 255, 0.02) 40%,
+    rgba(132, 0, 255, 0.01) 65%,
+    transparent 70%
+  );
+  z-index: 200;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: screen;
+}
+
+.bento-section {
+  position: relative;
+  user-select: none;
+}
 
 /* Dot texture */
 .og-tex::after {
@@ -420,7 +480,7 @@ pre.og-code {
 
 /* ═══ HERO — center card (Card E) ═══ */
 .og-c-e {
-  background: linear-gradient(140deg,#0a1228,#060d1c 55%,#0d1420);
+  background: linear-gradient(140deg,#000000,#050508 55%,#000000);
   border-color: rgba(124,58,237,.18);
   display: flex; align-items: center; justify-content: center;
   text-align: center; padding: 32px;
@@ -633,6 +693,140 @@ const SvgIcons = {
   layers: <svg viewBox="0 0 24 24" strokeWidth="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>,
 };
 
+/* ═══ MagicBento Utility Functions ═══ */
+const calculateSpotlightValues = (radius: number) => ({
+  proximity: radius * 0.5,
+  fadeDistance: radius * 0.75
+});
+
+const updateCardGlowProperties = (card: HTMLElement, mouseX: number, mouseY: number, glow: number, radius: number) => {
+  const rect = card.getBoundingClientRect();
+  const relativeX = ((mouseX - rect.left) / rect.width) * 100;
+  const relativeY = ((mouseY - rect.top) / rect.height) * 100;
+
+  card.style.setProperty('--glow-x', `${relativeX}%`);
+  card.style.setProperty('--glow-y', `${relativeY}%`);
+  card.style.setProperty('--glow-intensity', glow.toString());
+  card.style.setProperty('--glow-radius', `${radius}px`);
+};
+
+/* ═══ Global Spotlight Component ═══ */
+const GlobalSpotlight = ({
+  gridRef,
+  disableAnimations = false,
+  enabled = true,
+  spotlightRadius = 300,
+  glowColor = '132, 0, 255'
+}: {
+  gridRef: React.RefObject<HTMLDivElement>;
+  disableAnimations?: boolean;
+  enabled?: boolean;
+  spotlightRadius?: number;
+  glowColor?: string;
+}) => {
+  const spotlightRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (disableAnimations || !gridRef?.current || !enabled) return;
+
+    const spotlight = document.createElement('div');
+    spotlight.className = 'global-spotlight';
+    document.body.appendChild(spotlight);
+    spotlightRef.current = spotlight;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!spotlightRef.current || !gridRef.current) return;
+
+      const section = gridRef.current;
+      const rect = section.getBoundingClientRect();
+      const mouseInside =
+        e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+
+      const cards = gridRef.current.querySelectorAll('.og-card');
+
+      if (!mouseInside) {
+        gsap.to(spotlightRef.current, {
+          opacity: 0,
+          duration: 0.3,
+          ease: 'power2.out'
+        });
+        cards.forEach(card => {
+          (card as HTMLElement).style.setProperty('--glow-intensity', '0');
+        });
+        return;
+      }
+
+      const { proximity, fadeDistance } = calculateSpotlightValues(spotlightRadius);
+      let minDistance = Infinity;
+
+      cards.forEach(card => {
+        const cardElement = card as HTMLElement;
+        const cardRect = cardElement.getBoundingClientRect();
+        const centerX = cardRect.left + cardRect.width / 2;
+        const centerY = cardRect.top + cardRect.height / 2;
+        const distance =
+          Math.hypot(e.clientX - centerX, e.clientY - centerY) - Math.max(cardRect.width, cardRect.height) / 2;
+        const effectiveDistance = Math.max(0, distance);
+
+        minDistance = Math.min(minDistance, effectiveDistance);
+
+        let glowIntensity = 0;
+        if (effectiveDistance <= proximity) {
+          glowIntensity = 1;
+        } else if (effectiveDistance <= fadeDistance) {
+          glowIntensity = (fadeDistance - effectiveDistance) / (fadeDistance - proximity);
+        }
+
+        updateCardGlowProperties(cardElement, e.clientX, e.clientY, glowIntensity, spotlightRadius);
+      });
+
+      gsap.to(spotlightRef.current, {
+        left: e.clientX,
+        top: e.clientY,
+        duration: 0.1,
+        ease: 'power2.out'
+      });
+
+      const targetOpacity =
+        minDistance <= proximity
+          ? 0.8
+          : minDistance <= fadeDistance
+            ? ((fadeDistance - minDistance) / (fadeDistance - proximity)) * 0.8
+            : 0;
+
+      gsap.to(spotlightRef.current, {
+        opacity: targetOpacity,
+        duration: targetOpacity > 0 ? 0.2 : 0.5,
+        ease: 'power2.out'
+      });
+    };
+
+    const handleMouseLeave = () => {
+      gridRef.current?.querySelectorAll('.og-card').forEach(card => {
+        (card as HTMLElement).style.setProperty('--glow-intensity', '0');
+      });
+      if (spotlightRef.current) {
+        gsap.to(spotlightRef.current, {
+          opacity: 0,
+          duration: 0.3,
+          ease: 'power2.out'
+        });
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseleave', handleMouseLeave);
+      spotlightRef.current?.parentNode?.removeChild(spotlightRef.current);
+    };
+  }, [gridRef, disableAnimations, enabled, spotlightRadius, glowColor]);
+
+  return null;
+};
+
 /* ═══ CODE LINES (Card A typing animation) ═══ */
 const CODE_LINES = [
   '<span class="cm">// Initialize Orehack Platform</span>',
@@ -678,8 +872,13 @@ function BentoCard({
     el.style.transform = `perspective(800px) rotateX(${-dy * 5}deg) rotateY(${dx * 7}deg) scale(1.01)`;
     const g = el.querySelector(".og-card-glow") as HTMLElement;
     if (g) {
-      g.style.setProperty("--gx", `${((e.clientX - r.left) / r.width) * 100}%`);
-      g.style.setProperty("--gy", `${((e.clientY - r.top) / r.height) * 100}%`);
+      const px = ((e.clientX - r.left) / r.width) * 100;
+      const py = ((e.clientY - r.top) / r.height) * 100;
+      g.style.setProperty("--gx", `${px}%`);
+      g.style.setProperty("--gy", `${py}%`);
+      // Update MagicBento variables
+      el.style.setProperty('--glow-x', `${px}%`);
+      el.style.setProperty('--glow-y', `${py}%`);
     }
   }, []);
 
@@ -704,6 +903,7 @@ function BentoCard({
 
 export default function AboutOregent() {
   const sectionRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
   const codeRef = useRef<HTMLPreElement>(null);
   const searchRef = useRef<HTMLSpanElement>(null);
@@ -901,10 +1101,11 @@ export default function AboutOregent() {
     <div className="og-about" ref={sectionRef} id="about">
       <style>{CSS}</style>
       <div className="og-wrap">
+        <GlobalSpotlight gridRef={gridRef} />
         <div ref={triggerRef} style={{ position: 'absolute', top: '400px', left: 0, width: '1px', height: '1px' }} />
 
         <div className={`og-zoom${started ? " og-anim" : ""}`}>
-          <div className="og-bento">
+          <div className="og-bento bento-section" ref={gridRef}>
 
             {/* ═══ A — Startup Development (col1 top, 50%) ═══ */}
             <BentoCard className="og-c-a og-tex" delay={0.36}>

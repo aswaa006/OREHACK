@@ -1,25 +1,36 @@
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
-import ActiveHackathons from "@/components/ActiveHackathons";
+import WhatWeDo from "@/components/WhatWeDo";
 import HowItWorks from "@/components/HowItWorks";
 import AboutOregent from "@/components/AboutOregent";
 import TeamOregent from "@/components/TeamOregent";
 import Contact from "@/components/Contact";
-import Footer from "@/components/Footer";
+
 import GlobalBackground from "@/components/GlobalBackground";
+import TargetCursor from "@/components/TargetCursor";
 
 const Index = () => {
   return (
-    <div className="min-h-screen text-foreground relative z-0">
+    <div className="min-h-screen text-foreground relative z-0" style={{ background: "#000000" }}>
       <GlobalBackground />
+      <TargetCursor
+        targetSelector=".cursor-target"
+        spinDuration={2}
+        hideDefaultCursor={false}
+        hoverDuration={0.2}
+        parallaxOn={true}
+      />
       <Navbar />
+
+
       <HeroSection />
-      <ActiveHackathons />
+
+      <WhatWeDo />
+
       <HowItWorks />
       <AboutOregent />
       <TeamOregent />
       <Contact />
-      <Footer />
     </div>
   );
 };

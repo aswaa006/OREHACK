@@ -11,8 +11,8 @@ const steps = [
     infoValue: "Onboarding",
     roleLabel: "PROCESS",
     roleValue: "Identity Verification",
-    bg: "hsl(219, 56%, 11%)",
-    accent: "hsl(197, 55%, 11%)",
+    bg: "#0a0a0a",
+    accent: "#0d0d0d",
   },
   {
     num: "02",
@@ -24,8 +24,8 @@ const steps = [
     infoValue: "Submission",
     roleLabel: "PROCESS",
     roleValue: "Code Snapshot",
-    bg: "hsl(197, 55%, 11%)",
-    accent:"hsl(219, 56%, 11%)",
+    bg: "#0d0d0d",
+    accent: "#0a0a0a",
   },
   {
     num: "03",
@@ -37,8 +37,8 @@ const steps = [
     infoValue: "Analysis",
     roleLabel: "PROCESS",
     roleValue: "AI Code Review",
-    bg: "hsl(249, 64%, 17%)",
-    accent: "hsl(264, 51%, 10%)",
+    bg: "#0a0a12",
+    accent: "#0d0d18",
   },
   {
     num: "04",
@@ -50,8 +50,8 @@ const steps = [
     infoValue: "Results",
     roleLabel: "PROCESS",
     roleValue: "Real-time Ranking",
-    bg: "hsl(264, 51%, 10%)",
-    accent: "hsl(249, 64%, 17%)",
+    bg: "#0d0d18",
+    accent: "#0a0a12",
   },
 ];
 
@@ -62,7 +62,9 @@ export default function HowItWorks() {
       style={{
         position: "relative",
         zIndex: 10,
-        marginTop: "clamp(-14rem, -15vh, -6rem)",
+        marginTop: "80px",
+        marginLeft: "100px",
+        marginRight: "100px",
       }}
     >
       <ScrollStack

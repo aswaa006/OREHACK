@@ -43,14 +43,17 @@ const STAGES = [
   },
   {
     number: 3,
-    title: "Evaluation Engine",
-    subtitle: "Scoring & Judging Interface",
-    description: "Assign judges, distribute scoring templates, collect technical, innovation and completeness scores per team.",
-    status: "coming-soon" as const,
+    title: "Submission Control",
+    subtitle: "Submission Desk Access",
+    description: "Open or lock the submission desk for participants. When enabled, a 'Go to Submission' button appears on the Problem Statements Overview page.",
+    status: "active" as const,
+    route: "/orehackproject1924/panel/stage-3",
     icon: (
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M9 11l3 3L22 4" />
-        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
       </svg>
     ),
     gradient: "linear-gradient(135deg, rgba(168,85,247,0.10) 0%, rgba(236,72,153,0.06) 100%)",
@@ -265,7 +268,7 @@ const OriginControlPanel = () => {
           transition={{ delay: 0.55 }}
           style={{ textAlign: "center", fontSize: "0.68rem", color: "rgba(255,255,255,0.2)", letterSpacing: "0.12em" }}
         >
-          Stages 1 – 3 are under active development and will be unlocked progressively.
+          Stages 1 – 4 are operational. Select a stage to manage.
         </motion.p>
       </div>
     </div>

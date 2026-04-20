@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@1,900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,22 +7,22 @@
 
 @layer base {
   :root {
-    --background: 222 40% 7%;
+    --background: 0 0% 0%;
     --foreground: 220 14% 96%;
 
-    --card: 220 33% 11%;
+    --card: 0 0% 4%;
     --card-foreground: 220 14% 96%;
 
-    --popover: 220 33% 11%;
+    --popover: 0 0% 4%;
     --popover-foreground: 220 14% 96%;
 
     --primary: 263 84% 58%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 217 33% 17%;
+    --secondary: 0 0% 8%;
     --secondary-foreground: 220 14% 96%;
 
-    --muted: 217 33% 17%;
+    --muted: 0 0% 8%;
     --muted-foreground: 218 11% 65%;
 
     --accent: 263 70% 50%;
@@ -37,19 +37,19 @@
     --gold: 46 66% 52%;
     --gold-foreground: 0 0% 7%;
 
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
+    --border: 0 0% 10%;
+    --input: 0 0% 8%;
     --ring: 263 84% 58%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 220 33% 11%;
+    --sidebar-background: 0 0% 4%;
     --sidebar-foreground: 220 14% 96%;
     --sidebar-primary: 263 84% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent: 0 0% 8%;
     --sidebar-accent-foreground: 220 14% 96%;
-    --sidebar-border: 217 33% 17%;
+    --sidebar-border: 0 0% 10%;
     --sidebar-ring: 263 84% 58%;
   }
 }
@@ -3260,4 +3260,23 @@ html.lenis body {
 
 .reveal-body {
   animation: revealFromBottom 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+/* ============================================================
+   OREHACK LIQUID SWEEP ANIMATION
+   ============================================================ */
+.orehack-liquid-text {
+  background: linear-gradient(to right, #ffffff 33.33%, #7c3aed 33.33%, #7c3aed 66.66%, #ffffff 66.66%);
+  background-size: 300% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline-block;
+  animation: liquidSweep 14s linear infinite !important;
+}
+
+@keyframes liquidSweep {
+  0%, 21.4% { background-position: 100% 0; }
+  50%, 71.4% { background-position: 50% 0; }
+  100% { background-position: 0% 0; }
 }

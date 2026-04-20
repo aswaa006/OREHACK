@@ -1,5 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
+import {
+  loadHackathonProblems,
+  loadHackathonRuntime,
+  loadHackathonSelections,
+  resolveHackathonBySlug,
+} from "@/lib/event-db";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -45,6 +51,8 @@ export interface UseControlStateReturn {
   selectProblem: (teamId: string, problemId: string) => Promise<{ success: boolean; error?: string }>;
   /** True if the current team has already locked in a selection */
   hasSelected: boolean;
+  /** True when the entire allocation cycle has completed */
+  allocationComplete: boolean;
   /** Manually refresh all data (e.g. after page regain focus) */
   refresh: () => void;
 }
@@ -60,12 +68,22 @@ export function useControlState(teamId: string, isActive: boolean): UseControlSt
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasSelected, setHasSelected] = useState(false);
+  const [allocationComplete, setAllocationComplete] = useState(false);
 
   // Prevent stale-closure issues in subscriptions and simulation
   const teamIdRef = useRef(teamId);
   const problemsRef = useRef<Problem[]>([]);
+  const hackathonSlugRef = useRef<string>("origin-2k25");
   useEffect(() => { teamIdRef.current = teamId; }, [teamId]);
   useEffect(() => { problemsRef.current = problems; }, [problems]);
+
+  const getEventSlug = useCallback(() => {
+    if (typeof window === "undefined") return "origin-2k25";
+    const parts = window.location.pathname.split("/").filter(Boolean);
+    if (parts[0] === "event" && parts[1]) return parts[1];
+    if (parts[0] === "hackathon" && parts[1]) return parts[1];
+    return "origin-2k25";
+  }, []);
 
   // ── Initial data fetch ────────────────────────────────────────────────────
   const fetchAll = useCallback(async () => {
@@ -73,24 +91,55 @@ export function useControlState(teamId: string, isActive: boolean): UseControlSt
     setError(null);
 
     try {
-      // Fetch control_state (HARDCODED FOR TESTING)
-      setPhase("VIEW");
-      setCurrentProblemId(null);
-      setPhaseEndTime(new Date(Date.now() + 60000).toISOString()); // 10 minutes from now
+      const eventSlug = getEventSlug();
+      hackathonSlugRef.current = eventSlug;
+      const { data: hackathon, error: hackathonError } = await resolveHackathonBySlug(eventSlug);
 
-      // Fetch problems (HARDCODED FOR TESTING)
-      const hardcodedProblems: Problem[] = Array.from({ length: 10 }, (_, i) => ({
-        id: `PS-${i + 1}`,
-        title: `Problem Statement ${i + 1}`,
-        description: `This is a test description for problem statement ${i + 1}. The goal is to build an innovative solution for real-world challenges.`,
-        slots: 10,
-        slots_taken: 0,
+      if (hackathonError) {
+        throw hackathonError;
+      }
+
+      if (!hackathon) {
+        throw new Error(`Hackathon not found for slug: ${eventSlug}`);
+      }
+
+      const { runtime, runtimeError, controlState, controlStateError } = await loadHackathonRuntime(hackathon.id);
+      if (runtimeError && runtimeError.code !== "PGRST116") throw runtimeError;
+      if (controlStateError && controlStateError.code !== "PGRST116") throw controlStateError;
+
+      const [problemsRes, selectionsRes] = await Promise.all([
+        loadHackathonProblems(hackathon.id),
+        loadHackathonSelections(hackathon.id),
+      ]);
+
+      if (problemsRes.error) throw problemsRes.error;
+      if (selectionsRes.error) throw selectionsRes.error;
+
+      const loadedProblems = (problemsRes.data || []).map((problem) => ({
+        id: problem.id,
+        title: problem.title,
+        description: problem.description,
+        slots: Number(problem.slots || 1),
+        slots_taken: Number(problem.slots_taken || 0),
       }));
-      setProblems(hardcodedProblems);
 
-      // Fetch selections (HARDCODED FOR TESTING)
-      setSelections([]);
-      setHasSelected(false);
+      const loadedSelections = (selectionsRes.data || []).map((selection) => ({
+        problem_id: selection.problem_id,
+        team_id: selection.team_id,
+        team_name: selection.team_name,
+        created_at: selection.created_at,
+      }));
+
+      const currentPhase = runtime?.phase || controlState?.phase || "VIEW";
+      const currentProblem = runtime?.current_problem_id || controlState?.current_problem_id || null;
+      const currentPhaseEnd = runtime?.phase_end_time || controlState?.phase_end_time || null;
+
+      setPhase(currentPhase);
+      setCurrentProblemId(currentProblem);
+      setPhaseEndTime(currentPhaseEnd);
+      setProblems(loadedProblems);
+      setSelections(loadedSelections);
+      setHasSelected(loadedSelections.some((selection) => selection.team_id === teamIdRef.current));
     } catch (e: unknown) {
       setError((e as Error).message ?? "Unknown error");
     } finally {
@@ -110,180 +159,194 @@ export function useControlState(teamId: string, isActive: boolean): UseControlSt
 
     const runSimulation = async () => {
       if (!isActive) return;
-      
-      // Initial delay for VIEW phase
-      await new Promise(r => setTimeout(r, 6000));
-      if (!mounted) return;
 
-      let keepLooping = true;
-      while (keepLooping && mounted) {
-        let showedAny = false;
+      const pollRuntime = async () => {
+        const { data: hackathon } = await resolveHackathonBySlug(hackathonSlugRef.current);
+        if (!hackathon || !mounted) return;
 
-        for (let i = 0; i < problemsRef.current.length; i++) {
-          const currentProbs = problemsRef.current;
-          const p = currentProbs[i];
-          
-          // Skip if this problem is already fully booked
-          if (!p || p.slots_taken >= p.slots) continue; 
+        const { runtime, controlState } = await loadHackathonRuntime(hackathon.id);
+        if (!mounted) return;
 
-          showedAny = true;
+        const nextPhase = runtime?.phase || controlState?.phase || "VIEW";
+        setPhase(nextPhase);
+        setCurrentProblemId(runtime?.current_problem_id || controlState?.current_problem_id || null);
+        setPhaseEndTime(runtime?.phase_end_time || controlState?.phase_end_time || null);
 
-          // 1. SELECT phase (60 seconds / 1 minute)
-          setPhase("SELECT");
-          setCurrentProblemId(p.id);
-          setPhaseEndTime(new Date(Date.now() + 60000).toISOString());
-          
-          await new Promise(r => setTimeout(r, 60000));
-          if (!mounted) return;
-
-          // 2. RESULT phase (10 seconds)
-          setPhase("RESULT");
-          
-          // Simulate other teams randomly picking this problem
-          // We must read from problemsRef again in case we selected it during the 30s ourselves!
-          const updatedP = problemsRef.current[i];
-          const availableSlots = updatedP.slots - updatedP.slots_taken;
-          if (availableSlots > 0) {
-            // Pick 0 to 2 random mock teams to fill slots
-            const numFakes = Math.min(availableSlots, Math.floor(Math.random() * 3));
-            if (numFakes > 0) {
-              const fakeSelections = Array.from({ length: numFakes }, (_, j) => ({
-                problem_id: updatedP.id,
-                team_id: `mock-team-${Date.now()}-${j}`,
-                team_name: `Team Mock-${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${j}`,
-                created_at: new Date().toISOString()
-              }));
-              
-              setSelections(prev => [...fakeSelections, ...prev]);
-              setProblems(prev => prev.map(prob => 
-                prob.id === updatedP.id ? { ...prob, slots_taken: prob.slots_taken + numFakes } : prob
-              ));
-            }
-          }
-
-          setPhaseEndTime(new Date(Date.now() + 10000).toISOString());
-          
-          await new Promise(r => setTimeout(r, 10000));
-          if (!mounted) return;
+        const { data: latestProblems } = await loadHackathonProblems(hackathon.id);
+        if (!mounted) return;
+        if (latestProblems) {
+          setProblems(latestProblems.map((problem) => ({
+            id: problem.id,
+            title: problem.title,
+            description: problem.description,
+            slots: Number(problem.slots || 1),
+            slots_taken: Number(problem.slots_taken || 0),
+          })));
         }
 
-        if (!showedAny) {
-          // All problems full, cycle stops
-          keepLooping = false;
+        const { data: latestSelections } = await loadHackathonSelections(hackathon.id);
+        if (!mounted) return;
+        if (latestSelections) {
+          setSelections(latestSelections.map((selection) => ({
+            problem_id: selection.problem_id,
+            team_id: selection.team_id,
+            team_name: selection.team_name,
+            created_at: selection.created_at,
+          })));
+          setHasSelected(latestSelections.some((selection) => selection.team_id === teamIdRef.current));
         }
-      }
+
+        if (nextPhase === "VIEW" && runtime?.stage1_active === false) {
+          setAllocationComplete(false);
+        }
+      };
+
+      await pollRuntime();
+      const timer = setInterval(() => {
+        void pollRuntime();
+      }, 2500);
+
+      return () => clearInterval(timer);
     };
 
-    runSimulation();
+    const cleanup = runSimulation();
 
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+      if (typeof cleanup === "function") cleanup();
+    };
   }, [problems.length, isActive]);
 
   // ── Realtime subscriptions ────────────────────────────────────────────────
   useEffect(() => {
-    // 1. control_state changes → update phase/currentProblemId/phaseEndTime
-    const controlSub = supabase
-      .channel("control_state_changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "control_state" },
-        (payload) => {
-          const row = payload.new as {
-            phase: Phase;
-            current_problem_id: string | null;
-            phase_end_time: string | null;
-          };
-          if (row) {
-            setPhase(row.phase ?? "VIEW");
-            setCurrentProblemId(row.current_problem_id ?? null);
-            setPhaseEndTime(row.phase_end_time ?? null);
-          }
-        }
-      )
-      .subscribe();
+    const hackathonSlug = hackathonSlugRef.current;
+    let controlSub: ReturnType<typeof supabase.channel> | null = null;
+    let problemsSub: ReturnType<typeof supabase.channel> | null = null;
+    let selectionsSub: ReturnType<typeof supabase.channel> | null = null;
 
-    // 2. problems changes → keep slot counts live
-    const problemsSub = supabase
-      .channel("problems_changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "problems" },
-        (payload) => {
-          const updated = payload.new as Problem;
-          if (!updated) return;
-          setProblems((prev) =>
-            prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p))
-          );
-        }
-      )
-      .subscribe();
+    const subscribe = async () => {
+      const { data: hackathon } = await resolveHackathonBySlug(hackathonSlug);
+      if (!hackathon) return;
 
-    // 3. problem_selections → live winner feed
-    const selectionsSub = supabase
-      .channel("problem_selections_changes")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "problem_selections" },
-        (payload) => {
-          const newSel = payload.new as ProblemSelection;
-          if (!newSel) return;
-          setSelections((prev) => {
-            // Avoid duplicates from concurrent triggers
-            if (prev.some((s) => s.team_id === newSel.team_id && s.problem_id === newSel.problem_id)) {
-              return prev;
-            }
-            return [newSel, ...prev];
-          });
-          // Flag own team as having selected
-          if (newSel.team_id === teamIdRef.current) {
-            setHasSelected(true);
-          }
-        }
-      )
-      .subscribe();
+      controlSub = supabase
+        .channel(`control_state_changes_${hackathon.id}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "control_state" },
+          () => {
+            void fetchAll();
+          },
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "hackathon_runtime" },
+          () => {
+            void fetchAll();
+          },
+        )
+        .subscribe();
+
+      problemsSub = supabase
+        .channel(`problems_changes_${hackathon.id}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "problems" },
+          () => {
+            void fetchAll();
+          },
+        )
+        .subscribe();
+
+      selectionsSub = supabase
+        .channel(`problem_selections_changes_${hackathon.id}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "problem_selections" },
+          () => {
+            void fetchAll();
+          },
+        )
+        .subscribe();
+    };
+
+    void subscribe();
 
     return () => {
-      supabase.removeChannel(controlSub);
-      supabase.removeChannel(problemsSub);
-      supabase.removeChannel(selectionsSub);
+      if (controlSub) supabase.removeChannel(controlSub);
+      if (problemsSub) supabase.removeChannel(problemsSub);
+      if (selectionsSub) supabase.removeChannel(selectionsSub);
     };
-  }, []);
+  }, [fetchAll]);
 
   // ── selectProblem ─────────────────────────────────────────────────────────
   const selectProblem = useCallback(
     async (tid: string, problemId: string): Promise<{ success: boolean; error?: string }> => {
       try {
-        // --- MOCK BEHAVIOR FOR TESTING WITHOUT SUPABASE ---
-        setHasSelected(true);
-        setProblems(prev => prev.map(p => 
-          p.id === problemId ? { ...p, slots_taken: p.slots_taken + 1 } : p
-        ));
-        setSelections(prev => [
-          {
-            problem_id: problemId,
-            team_id: tid,
-            team_name: `Team ${tid}`, // the real UI fetches actual teamname from context
-            created_at: new Date().toISOString()
-          },
-          ...prev
-        ]);
-        return { success: true };
-        
-        /* 
-        // ORIGINAL SUPABASE CODE 
-        const { error: rpcErr } = await supabase.rpc("select_problem_atomic", {
-          p_team_id: tid,
-          p_problem_id: problemId,
+        const { data: hackathon } = await resolveHackathonBySlug(hackathonSlugRef.current);
+        if (!hackathon) {
+          return { success: false, error: "Hackathon not found." };
+        }
+
+        const { data: problem } = await supabase
+          .from("problems")
+          .select("id, slots, slots_taken")
+          .eq("hackathon_id", hackathon.id)
+          .eq("id", problemId)
+          .maybeSingle<{ id: string; slots: number; slots_taken: number }>();
+
+        if (!problem) {
+          return { success: false, error: "Problem not found." };
+        }
+
+        if (problem.slots_taken >= problem.slots) {
+          return { success: false, error: "This problem is already full." };
+        }
+
+        // Reserve a slot first using optimistic concurrency on slots_taken.
+        const { data: reservedRows, error: reserveError } = await supabase
+          .from("problems")
+          .update({ slots_taken: problem.slots_taken + 1 })
+          .eq("hackathon_id", hackathon.id)
+          .eq("id", problemId)
+          .eq("slots_taken", problem.slots_taken)
+          .select("id")
+          .limit(1);
+
+        if (reserveError) {
+          return { success: false, error: reserveError.message || "Failed to reserve slot." };
+        }
+
+        if (!reservedRows || reservedRows.length === 0) {
+          return { success: false, error: "This problem was just taken. Please pick another one." };
+        }
+
+        const { error: selectionError } = await supabase.from("problem_selections").insert({
+          hackathon_id: hackathon.id,
+          problem_id: problemId,
+          team_id: tid,
+          team_name: `Team ${tid}`,
         });
-        if (rpcErr) return { success: false, error: rpcErr.message };
+
+        if (selectionError) {
+          // Best-effort rollback if selection insert fails after reservation.
+          await supabase
+            .from("problems")
+            .update({ slots_taken: problem.slots_taken })
+            .eq("hackathon_id", hackathon.id)
+            .eq("id", problemId)
+            .eq("slots_taken", problem.slots_taken + 1);
+
+          return { success: false, error: selectionError.message || "Failed to save selection." };
+        }
+
         setHasSelected(true);
+        await fetchAll();
         return { success: true };
-        */
       } catch (e: unknown) {
         return { success: false, error: (e as Error).message ?? "RPC failed" };
       }
     },
-    []
+    [fetchAll]
   );
 
   return {
@@ -296,6 +359,7 @@ export function useControlState(teamId: string, isActive: boolean): UseControlSt
     error,
     selectProblem,
     hasSelected,
+    allocationComplete,
     refresh: fetchAll,
   };
 }

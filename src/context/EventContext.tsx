@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { useLocation } from "react-router-dom";
+import { resolveHackathonBySlug, loadHackathonRuntime, upsertHackathonRuntime } from "@/lib/event-db";
 
 export interface EventState {
   eventId: string;
@@ -14,6 +16,7 @@ export interface EventState {
   timerEnabled: boolean;
   rulesEnabled: boolean;
   waitingRoomEnabled: boolean;
+  submissionEnabled: boolean;
 }
 
 interface EventContextValue {
@@ -25,6 +28,7 @@ interface EventContextValue {
   setTimerEnabled: (v: boolean) => void;
   setRulesEnabled: (v: boolean) => void;
   setWaitingRoomEnabled: (v: boolean) => void;
+  setSubmissionEnabled: (v: boolean) => void;
   logout: () => void;
 }
 
@@ -42,12 +46,12 @@ function loadTimerConfig(): { eventStartTime: number; timerEnabled: boolean } {
   return { eventStartTime: DEFAULT_EVENT_START, timerEnabled: true };
 }
 
-function loadFlowConfig(): { rulesEnabled: boolean; waitingRoomEnabled: boolean; stage1Active: boolean } {
+function loadFlowConfig(): { rulesEnabled: boolean; waitingRoomEnabled: boolean; stage1Active: boolean; submissionEnabled: boolean } {
   try {
     const raw = localStorage.getItem(FLOW_STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch { /* ignore */ }
-  return { rulesEnabled: true, waitingRoomEnabled: true, stage1Active: false };
+  return { rulesEnabled: true, waitingRoomEnabled: true, stage1Active: false, submissionEnabled: false };
 }
 
 const defaultState: EventState = {
@@ -64,6 +68,7 @@ const defaultState: EventState = {
   timerEnabled: true,
   rulesEnabled: true,
   waitingRoomEnabled: true,
+  submissionEnabled: false,
 };
 
 const EventContext = createContext<EventContextValue>({
@@ -75,6 +80,7 @@ const EventContext = createContext<EventContextValue>({
   setTimerEnabled: () => {},
   setRulesEnabled: () => {},
   setWaitingRoomEnabled: () => {},
+  setSubmissionEnabled: () => {},
   logout: () => {},
 });
 
@@ -88,7 +94,21 @@ function loadSession(): Partial<EventState> {
   return {};
 }
 
+function routeEventSlug(pathname: string): string | null {
+  const match = pathname.match(/^\/(event|hackathon)\/([^/]+)/i);
+  if (!match) return null;
+  const slug = decodeURIComponent(match[2] || "").trim();
+  return slug || null;
+}
+
+function slugToName(slug: string): string {
+  return slug
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const location = useLocation();
   const [state, setState] = useState<EventState>(() => {
     const session    = loadSession();
     const timerCfg   = loadTimerConfig();
@@ -104,12 +124,42 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       timerEnabled:   enabled,
       rulesEnabled:        flowCfg.rulesEnabled,
       waitingRoomEnabled:  flowCfg.waitingRoomEnabled,
+      submissionEnabled:   flowCfg.submissionEnabled ?? false,
       // stage1Active from flow config wins if session doesn't have it
       stage1Active: (session as EventState).stage1Active ?? flowCfg.stage1Active,
       currentTime:  now,
       isEventLive:  !enabled || now >= startTime,
     };
   });
+
+  useEffect(() => {
+    let mounted = true;
+
+    const syncFromDatabase = async () => {
+      const { data: hackathon } = await resolveHackathonBySlug(state.eventId || "origin-2k25");
+      if (!mounted || !hackathon) return;
+
+      const { runtime } = await loadHackathonRuntime(hackathon.id);
+      if (!mounted || !runtime) return;
+
+      setState((prev) => ({
+        ...prev,
+        timerEnabled: runtime.timer_enabled,
+        rulesEnabled: runtime.rules_enabled,
+        waitingRoomEnabled: runtime.waiting_room_enabled,
+        submissionEnabled: runtime.submission_enabled,
+        stage1Active: runtime.stage1_active,
+        eventStartTime: runtime.event_start_time ? new Date(runtime.event_start_time).getTime() : prev.eventStartTime,
+        isEventLive: !runtime.timer_enabled || (runtime.event_start_time ? Date.now() >= new Date(runtime.event_start_time).getTime() : prev.isEventLive),
+      }));
+    };
+
+    void syncFromDatabase();
+
+    return () => {
+      mounted = false;
+    };
+  }, [state.eventId]);
 
   // Tick every second
   useEffect(() => {
@@ -134,6 +184,8 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const next = { ...prev, ...patch };
       try {
         sessionStorage.setItem("orehack_event_session", JSON.stringify({
+          eventId: next.eventId,
+          eventName: next.eventName,
           isAuthenticated: next.isAuthenticated,
           teamId:          next.teamId,
           teamName:        next.teamName,
@@ -144,6 +196,16 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return next;
     });
   }, []);
+
+  useEffect(() => {
+    const slugFromRoute = routeEventSlug(location.pathname);
+    if (!slugFromRoute || slugFromRoute === state.eventId) return;
+
+    persist({
+      eventId: slugFromRoute,
+      eventName: slugToName(slugFromRoute),
+    });
+  }, [location.pathname, persist, state.eventId]);
 
   const setAuthenticated = useCallback((teamId: string, teamName: string) => {
     persist({ isAuthenticated: true, teamId, teamName });
@@ -160,7 +222,14 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const flowCfg = loadFlowConfig();
       localStorage.setItem(FLOW_STORAGE_KEY, JSON.stringify({ ...flowCfg, stage1Active: v }));
     } catch { /* ignore */ }
-  }, [persist]);
+
+    void (async () => {
+      const { data: hackathon } = await resolveHackathonBySlug(state.eventId || defaultState.eventId);
+      if (hackathon) {
+        await upsertHackathonRuntime(hackathon.id, { stage1_active: v });
+      }
+    })();
+  }, [persist, state.eventId]);
 
   const setEventStartTime = useCallback((ts: number) => {
     setState((prev) => {
@@ -169,9 +238,16 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       try {
         localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify({ eventStartTime: ts, timerEnabled: prev.timerEnabled }));
       } catch { /* ignore */ }
+
+      void (async () => {
+        const { data: hackathon } = await resolveHackathonBySlug(state.eventId || defaultState.eventId);
+        if (hackathon) {
+          await upsertHackathonRuntime(hackathon.id, { event_start_time: new Date(ts).toISOString() });
+        }
+      })();
       return next;
     });
-  }, []);
+  }, [state.eventId]);
 
   const setTimerEnabled = useCallback((v: boolean) => {
     setState((prev) => {
@@ -180,9 +256,16 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       try {
         localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify({ eventStartTime: prev.eventStartTime, timerEnabled: v }));
       } catch { /* ignore */ }
+
+      void (async () => {
+        const { data: hackathon } = await resolveHackathonBySlug(state.eventId || defaultState.eventId);
+        if (hackathon) {
+          await upsertHackathonRuntime(hackathon.id, { timer_enabled: v });
+        }
+      })();
       return next;
     });
-  }, []);
+  }, [state.eventId]);
 
   const setRulesEnabled = useCallback((v: boolean) => {
     setState((prev) => {
@@ -191,9 +274,16 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const flowCfg = loadFlowConfig();
         localStorage.setItem(FLOW_STORAGE_KEY, JSON.stringify({ ...flowCfg, rulesEnabled: v }));
       } catch { /* ignore */ }
+
+      void (async () => {
+        const { data: hackathon } = await resolveHackathonBySlug(state.eventId || defaultState.eventId);
+        if (hackathon) {
+          await upsertHackathonRuntime(hackathon.id, { rules_enabled: v });
+        }
+      })();
       return next;
     });
-  }, []);
+  }, [state.eventId]);
 
   const setWaitingRoomEnabled = useCallback((v: boolean) => {
     setState((prev) => {
@@ -202,9 +292,34 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const flowCfg = loadFlowConfig();
         localStorage.setItem(FLOW_STORAGE_KEY, JSON.stringify({ ...flowCfg, waitingRoomEnabled: v }));
       } catch { /* ignore */ }
+
+      void (async () => {
+        const { data: hackathon } = await resolveHackathonBySlug(state.eventId || defaultState.eventId);
+        if (hackathon) {
+          await upsertHackathonRuntime(hackathon.id, { waiting_room_enabled: v });
+        }
+      })();
       return next;
     });
-  }, []);
+  }, [state.eventId]);
+
+  const setSubmissionEnabled = useCallback((v: boolean) => {
+    setState((prev) => {
+      const next = { ...prev, submissionEnabled: v };
+      try {
+        const flowCfg = loadFlowConfig();
+        localStorage.setItem(FLOW_STORAGE_KEY, JSON.stringify({ ...flowCfg, submissionEnabled: v }));
+      } catch { /* ignore */ }
+
+      void (async () => {
+        const { data: hackathon } = await resolveHackathonBySlug(state.eventId || defaultState.eventId);
+        if (hackathon) {
+          await upsertHackathonRuntime(hackathon.id, { submission_enabled: v });
+        }
+      })();
+      return next;
+    });
+  }, [state.eventId]);
 
   const logout = useCallback(() => {
     sessionStorage.removeItem("orehack_event_session");
@@ -228,6 +343,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setTimerEnabled,
       setRulesEnabled,
       setWaitingRoomEnabled,
+      setSubmissionEnabled,
       logout,
     }}>
       {children}

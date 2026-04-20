@@ -1,3 +1,5 @@
+import CurvedLoop from './CurvedLoop';
+
 const Footer = () => {
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -90,6 +92,17 @@ const Footer = () => {
             contact@oregent.com
           </a>
         </div>
+      </div>
+
+      {/* ── Straight marquee strip ── */}
+      <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: "0", paddingTop: "24px", paddingBottom: "8px" }}>
+        <CurvedLoop
+          marqueeText="Power fair and efficient hackathon evaluations ✦ Build a culture of innovation across institutions ✦ Enable colleges to run high-impact hackathons ✦ Drive students from learning to real execution ✦ "
+          speed={1.2}
+          curveAmount={0}
+          direction="left"
+          interactive={true}
+        />
       </div>
 
       {/* Giant brand text */}
