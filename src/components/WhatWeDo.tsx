@@ -1,0 +1,290 @@
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import TrustIndicator from "./TrustIndicator";
+
+
+const items = [
+  {
+    num: "01",
+    title: "Power Fair & Efficient\nHackathon Evaluations",
+    desc: "OreHack ensures every submission is assessed with precision, consistency, and complete transparency. Fairness is not optional — it is engineered. By standardizing evaluation frameworks and eliminating bias, the platform delivers accurate and timely outcomes.",
+  },
+  {
+    num: "02",
+    title: "Build a Culture of Innovation\nAcross Institutions",
+    desc: "OreHack enables institutions to move beyond traditional learning and foster continuous innovation. Innovation is not an event — it is a culture. Students are encouraged to think critically, experiment, and build consistently, transforming campuses into environments where ideas evolve into real solutions.",
+  },
+  {
+    num: "03",
+    title: "Enable High-Impact\nHackathons",
+    desc: "OreHack provides end-to-end infrastructure to design and execute hackathons with precision and scale. Execution defines the experience. From participant management to evaluation, every stage is handled seamlessly, enabling institutions to deliver impactful and structured innovation experiences.",
+  },
+  {
+    num: "04",
+    title: "Drive Students from Learning\nto Real Execution",
+    desc: "OreHack bridges the gap between academic learning and real-world application. Learning matters only when it leads to execution. Through structured pathways from ideation to implementation, students gain hands-on experience and evolve into confident builders ready for real challenges.",
+  },
+  {
+    num: "05",
+    title: "Hackathon-as-a-Service\n(HaaS)",
+    desc: "OreHack delivers a complete, ready-to-deploy innovation ecosystem for institutions. Innovation, delivered as a service. By integrating training, execution, and evaluation into a unified platform, institutions can seamlessly adopt and scale innovation programs with confidence.",
+  },
+];
+
+const WhatWeDo = () => {
+  const [active, setActive] = useState(0);
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  const goNext = () => setActive((prev) => Math.min(prev + 1, items.length - 1));
+  const goPrev = () => setActive((prev) => Math.max(prev - 1, 0));
+
+  // Scroll-driven active item update
+  useEffect(() => {
+    const handleScroll = () => {
+      const section = sectionRef.current;
+      if (!section) return;
+
+      const rect = section.getBoundingClientRect();
+      const sectionHeight = section.offsetHeight;
+      const viewportHeight = window.innerHeight;
+
+      // How far we've scrolled into the section (0 = top just entered, 1 = bottom leaving)
+      const scrolled = -rect.top / (sectionHeight - viewportHeight);
+      const clamped = Math.max(0, Math.min(1, scrolled));
+
+      // Map scroll progress to item index
+      const newIndex = Math.min(
+        items.length - 1,
+        Math.floor(clamped * items.length)
+      );
+
+      setActive((prev) => {
+        if (prev !== newIndex) return newIndex;
+        return prev;
+      });
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // initial check
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <section
+      ref={sectionRef}
+      id="what-we-do"
+      className="relative z-10 bg-black"
+      style={{
+        // 5 items × 100vh gives enough scroll distance for smooth transitions
+        // 5 items × 85vh gives a substantial scroll distance
+        height: `${items.length * 85}vh`,
+
+      }}
+    >
+      {/* Sticky inner container — stays in viewport while scrolling */}
+      <div
+        className="sticky top-0 flex flex-col justify-start pt-24 pb-40 px-6 md:px-16 lg:px-32"
+        style={{ minHeight: "100vh" }}
+      >
+        {/* ── Header: Eyebrow + WHAT WE DO ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="w-full text-left mb-16"
+        >
+          <p
+            className="text-xs font-bold uppercase tracking-[0.2em] mb-4 orehack-liquid-text"
+            style={{ fontFamily: "'Outfit', sans-serif" }}
+          >
+            (TRUST THE BUILD)
+          </p>
+          <h2
+            className="text-4xl md:text-7xl font-black leading-none text-white m-0 uppercase flex flex-row flex-wrap items-baseline gap-4 md:gap-6 italic"
+            style={{
+              fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
+              letterSpacing: "-0.04em",
+            }}
+          >
+            <span>WHAT</span>
+            <span>WE</span>
+            <span
+              style={{
+                fontFamily: '"Playfair Display", serif',
+                color: "#7c3aed",
+                letterSpacing: "0.02em",
+              }}
+            >
+              DO ?
+            </span>
+          </h2>
+        </motion.div>
+
+        {/* ── Content Area: Left Text + Right Image Placeholder ── */}
+        <div className="w-full flex flex-col lg:flex-row gap-12 lg:gap-20 flex-1">
+          {/* Left Side — Title + Content */}
+          <div className="flex-1 flex flex-col justify-between min-h-[360px]">
+            <div className="relative min-h-[300px]">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={active}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                  className="absolute inset-0"
+                >
+                  {/* Number */}
+                  <span
+                    className="block mb-4 italic"
+                    style={{
+                      fontFamily: '"Playfair Display", serif',
+                      fontSize: "clamp(0.85rem, 1.2vw, 1rem)",
+                      fontWeight: 400,
+                      letterSpacing: "0.08em",
+                    }}
+                  >
+                    <span style={{ color: "#ffffff" }}>{items[active].num}</span>
+                    <span style={{ color: "#7c3aed" }}> / 0{items.length}</span>
+                  </span>
+
+                  {/* Title */}
+                  <h3
+                    className="italic uppercase mb-6"
+                    style={{
+                      fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
+                      fontSize: "clamp(1.5rem, 3.5vw, 2.8rem)",
+                      fontWeight: 500,
+                      lineHeight: 1.15,
+                      color: "#7c3aed",
+                      letterSpacing: "-0.02em",
+                      whiteSpace: "pre-line",
+                    }}
+                  >
+                    {items[active].title}
+                  </h3>
+
+                  {/* Description */}
+                  <p
+                    style={{
+                      fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
+                      fontSize: "clamp(0.875rem, 1.3vw, 1.05rem)",
+                      fontWeight: 300,
+                      fontStyle: "italic",
+                      lineHeight: 1.8,
+                      color: "#e4e4e7",
+                      letterSpacing: "0.01em",
+                      maxWidth: "540px",
+                    }}
+                  >
+                    {items[active].desc}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* ── Navigation Arrows ── */}
+            <div className="flex items-center gap-6 mt-20">
+              <button
+                onClick={goPrev}
+                aria-label="Previous item"
+                className="group flex items-center justify-center w-12 h-12 rounded-full border border-[#333] transition-all duration-300 hover:border-[#7c3aed] hover:bg-[#7c3aed]/10"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-[#888] group-hover:text-[#7c3aed] transition-colors duration-300"
+                >
+                  <path d="M19 12H5" />
+                  <path d="M12 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              {/* Dots indicator */}
+              <div className="flex items-center gap-2">
+                {items.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActive(i)}
+                    aria-label={`Go to item ${i + 1}`}
+                    className="transition-all duration-300"
+                    style={{
+                      width: i === active ? "24px" : "6px",
+                      height: "6px",
+                      borderRadius: "3px",
+                      background: i === active ? "#7c3aed" : "#333",
+                    }}
+                  />
+                ))}
+              </div>
+
+              <button
+                onClick={goNext}
+                aria-label="Next item"
+                className="group flex items-center justify-center w-12 h-12 rounded-full border border-[#333] transition-all duration-300 hover:border-[#7c3aed] hover:bg-[#7c3aed]/10"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-[#888] group-hover:text-[#7c3aed] transition-colors duration-300"
+                >
+                  <path d="M5 12h14" />
+                  <path d="M12 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Right Side — Image Column */}
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[360px] -mt-20">
+            <div className="mb-8 scale-90 opacity-80">
+              <TrustIndicator />
+            </div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={active}
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.02 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="w-full h-full max-h-[460px] rounded-2xl flex items-center justify-center"
+                style={{
+                  background: "linear-gradient(135deg, #0d0d0d 0%, #111 100%)",
+                  border: "1px dashed #222",
+                  minHeight: "360px",
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: "'Outfit', sans-serif",
+                    fontSize: "0.8rem",
+                    color: "#333",
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Image {items[active].num}
+                </span>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default WhatWeDo;

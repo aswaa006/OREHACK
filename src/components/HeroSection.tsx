@@ -178,7 +178,7 @@ const HeroSection = () => {
           </button>
         </div>
 
-        <TrustIndicator />
+
       </div>
       <style>{`
             @keyframes spin { to { transform: rotate(360deg); } }
@@ -194,7 +194,7 @@ const HeroSection = () => {
         bottom: "20px",
         left: 0,
         right: 0,
-        padding: "18px 140px",
+        padding: "18px 0px",
         background: "transparent",
         zIndex: 20,
       }}>
