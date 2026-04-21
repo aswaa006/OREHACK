@@ -1,4 +1,5 @@
 import ScrollStack, { ScrollStackItem } from "./ScrollStack";
+import { motion } from "framer-motion";
 
 const steps = [
   {
@@ -11,8 +12,8 @@ const steps = [
     infoValue: "Onboarding",
     roleLabel: "PROCESS",
     roleValue: "Identity Verification",
-    bg: "#0a0a0a",
-    accent: "#0d0d0d",
+    bg: "#7c3aed",
+    accent: "#000000",
   },
   {
     num: "02",
@@ -24,8 +25,8 @@ const steps = [
     infoValue: "Submission",
     roleLabel: "PROCESS",
     roleValue: "Code Snapshot",
-    bg: "#0d0d0d",
-    accent: "#0a0a0a",
+    bg: "#000000",
+    accent: "#7c3aed",
   },
   {
     num: "03",
@@ -37,8 +38,8 @@ const steps = [
     infoValue: "Analysis",
     roleLabel: "PROCESS",
     roleValue: "AI Code Review",
-    bg: "#0a0a12",
-    accent: "#0d0d18",
+    bg: "#7c3aed",
+    accent: "#000000",
   },
   {
     num: "04",
@@ -50,8 +51,8 @@ const steps = [
     infoValue: "Results",
     roleLabel: "PROCESS",
     roleValue: "Real-time Ranking",
-    bg: "#0d0d18",
-    accent: "#0a0a12",
+    bg: "#000000",
+    accent: "#7c3aed",
   },
 ];
 
@@ -59,14 +60,47 @@ export default function HowItWorks() {
   return (
     <section
       id="how-it-works"
+      className="px-6 md:px-16 lg:px-32"
       style={{
         position: "relative",
         zIndex: 10,
-        marginTop: "80px",
-        marginLeft: "100px",
-        marginRight: "100px",
+        marginTop: "160px",
       }}
     >
+      {/* ── Header: Eyebrow + WHO WE EMPOWER ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        viewport={{ once: true }}
+        className="w-full text-left mb-24"
+      >
+        <p
+          className="text-xs font-bold uppercase tracking-[0.2em] mb-4 orehack-liquid-text"
+          style={{ fontFamily: "'Outfit', sans-serif" }}
+        >
+          (TRUST THE BUILD)
+        </p>
+        <h2
+          className="text-4xl md:text-7xl font-black leading-none text-white m-0 uppercase flex flex-row flex-wrap items-baseline gap-4 md:gap-6 italic"
+          style={{
+            fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
+            letterSpacing: "-0.04em",
+          }}
+        >
+          <span>WHO</span>
+          <span>WE</span>
+          <span
+            style={{
+              fontFamily: '"Playfair Display", serif',
+              color: "#7c3aed",
+              letterSpacing: "0.02em",
+            }}
+          >
+            EMPOWER ?
+          </span>
+        </h2>
+      </motion.div>
       <ScrollStack
         useWindowScroll
         itemDistance={60}
@@ -77,9 +111,15 @@ export default function HowItWorks() {
         baseScale={0.88}
         blurAmount={2}
       >
-        {steps.map((s) => (
+        {steps.map((s, idx) => (
           <ScrollStackItem key={s.num}>
-            <div className="hiw-card" style={{ background: s.bg }}>
+            <div
+              className="hiw-card"
+              style={{
+                background: s.bg,
+                border: "2px solid #ffffff"
+              }}
+            >
               {/* Left content */}
               <div className="hiw-card-left">
                 <p className="hiw-step-label">
@@ -102,7 +142,13 @@ export default function HowItWorks() {
                   className="hiw-info-box"
                   style={{ background: s.accent }}
                 >
-                  <div className="hiw-arrow-circle">
+                  <div
+                    className="hiw-arrow-circle"
+                    style={{
+                      background: idx % 2 === 0 ? "#7c3aed" : "#ffffff",
+                      color: idx % 2 === 0 ? "#ffffff" : "#000000"
+                    }}
+                  >
                     <svg
                       width="20"
                       height="20"
@@ -118,12 +164,32 @@ export default function HowItWorks() {
                     </svg>
                   </div>
                   <div className="hiw-info-block">
-                    <span className="hiw-info-label">{s.infoLabel}</span>
-                    <span className="hiw-info-value">{s.infoValue}</span>
+                    <span
+                      className="hiw-info-label"
+                      style={{ color: idx % 2 === 0 ? "#7c3aed" : "#000000" }}
+                    >
+                      {s.infoLabel}
+                    </span>
+                    <span
+                      className="hiw-info-value"
+                      style={{ color: idx % 2 === 0 ? "#7c3aed" : "#000000" }}
+                    >
+                      {s.infoValue}
+                    </span>
                   </div>
                   <div className="hiw-info-block">
-                    <span className="hiw-info-label">{s.roleLabel}</span>
-                    <span className="hiw-info-value">{s.roleValue}</span>
+                    <span
+                      className="hiw-info-label"
+                      style={{ color: idx % 2 === 0 ? "#7c3aed" : "#000000" }}
+                    >
+                      {s.roleLabel}
+                    </span>
+                    <span
+                      className="hiw-info-value"
+                      style={{ color: idx % 2 === 0 ? "#7c3aed" : "#000000" }}
+                    >
+                      {s.roleValue}
+                    </span>
                   </div>
                 </div>
               </div>

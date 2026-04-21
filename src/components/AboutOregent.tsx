@@ -36,6 +36,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { gsap } from "gsap";
+import { motion } from "framer-motion";
 
 const logoSrc = "/oregent-logo.png";
 
@@ -58,7 +59,8 @@ const CSS = `
   --blue:   #3b82f6;
   color: var(--text);
   background: var(--bg);
-  padding: 80px 24px 60px;
+  padding: 60px 0 100px;
+  margin-top: 180px;
   position: relative;
   overflow: hidden;
 }
@@ -71,7 +73,7 @@ const CSS = `
   background-size: 60px 60px;
   pointer-events: none;
 }
-.og-wrap { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+.og-wrap { max-width: 1400px; margin: 0 auto; position: relative; z-index: 1; }
 
 /* ═══════════════════════════════════════
    ZOOM WRAPPER — Simple immediate fade
@@ -98,6 +100,7 @@ const CSS = `
   grid-template-rows: repeat(6, 1fr);
   gap: 8px;
   height: 790px;
+  margin-top: 10px;
 }
 
 /* Col 1 — 50/50 */
@@ -673,24 +676,24 @@ pre.og-code {
 
 /* ═══ SVG ICONS — formal replacements for emojis ═══ */
 const SvgIcons = {
-  close: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>,
-  mic: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>,
-  camera: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>,
-  search: <svg viewBox="0 0 24 24" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>,
-  chart: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>,
-  bolt: <svg viewBox="0 0 24 24" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
-  link: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>,
-  message: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
-  code: <svg viewBox="0 0 24 24" strokeWidth="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>,
-  pen: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>,
-  grid: <svg viewBox="0 0 24 24" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
-  cpu: <svg viewBox="0 0 24 24" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>,
-  star: <svg viewBox="0 0 24 24" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
-  globe: <svg viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
-  brain: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M12 2a4 4 0 0 1 4 4 4 4 0 0 1-1.2 2.85A5 5 0 0 1 17 13a5 5 0 0 1-2 4 3 3 0 0 1-3 5 3 3 0 0 1-3-5 5 5 0 0 1-2-4 5 5 0 0 1 2.2-4.15A4 4 0 0 1 8 6a4 4 0 0 1 4-4z"/><line x1="12" y1="2" x2="12" y2="22"/></svg>,
-  shield: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
-  target: <svg viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
-  layers: <svg viewBox="0 0 24 24" strokeWidth="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>,
+  close: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>,
+  mic: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /></svg>,
+  camera: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>,
+  search: <svg viewBox="0 0 24 24" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>,
+  chart: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M18 20V10M12 20V4M6 20v-6" /></svg>,
+  bolt: <svg viewBox="0 0 24 24" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>,
+  link: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>,
+  message: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>,
+  code: <svg viewBox="0 0 24 24" strokeWidth="2"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>,
+  pen: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M12 19l7-7 3 3-7 7-3-3z" /><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" /><path d="M2 2l7.586 7.586" /><circle cx="11" cy="11" r="2" /></svg>,
+  grid: <svg viewBox="0 0 24 24" strokeWidth="2"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>,
+  cpu: <svg viewBox="0 0 24 24" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2" /><rect x="9" y="9" width="6" height="6" /><line x1="9" y1="1" x2="9" y2="4" /><line x1="15" y1="1" x2="15" y2="4" /><line x1="9" y1="20" x2="9" y2="23" /><line x1="15" y1="20" x2="15" y2="23" /><line x1="20" y1="9" x2="23" y2="9" /><line x1="20" y1="14" x2="23" y2="14" /><line x1="1" y1="9" x2="4" y2="9" /><line x1="1" y1="14" x2="4" y2="14" /></svg>,
+  star: <svg viewBox="0 0 24 24" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>,
+  globe: <svg viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>,
+  brain: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M12 2a4 4 0 0 1 4 4 4 4 0 0 1-1.2 2.85A5 5 0 0 1 17 13a5 5 0 0 1-2 4 3 3 0 0 1-3 5 3 3 0 0 1-3-5 5 5 0 0 1-2-4 5 5 0 0 1 2.2-4.15A4 4 0 0 1 8 6a4 4 0 0 1 4-4z" /><line x1="12" y1="2" x2="12" y2="22" /></svg>,
+  shield: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>,
+  target: <svg viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg>,
+  layers: <svg viewBox="0 0 24 24" strokeWidth="2"><polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" /></svg>,
 };
 
 /* ═══ MagicBento Utility Functions ═══ */
@@ -948,7 +951,7 @@ export default function AboutOregent() {
       if (deltaY > 0 && rect.top <= windowHeight && rect.top > windowHeight * 0.15) {
         isSnapping = true;
         const absoluteTop = rect.top + window.scrollY;
-        
+
         // Use smooth scrollTo to snap the view
         window.scrollTo({
           top: absoluteTop,
@@ -963,7 +966,7 @@ export default function AboutOregent() {
     };
 
     const onWheel = (e: WheelEvent) => handleScrollSnap(e.deltaY);
-    
+
     let touchStartY = 0;
     const onTouchStart = (e: TouchEvent) => { touchStartY = e.touches[0].clientY; };
     const onTouchMove = (e: TouchEvent) => {
@@ -989,7 +992,7 @@ export default function AboutOregent() {
     let alive = true;
     const el = codeRef.current;
     if (!el || !started) return;
-    
+
     // Tokenize HTML versus pure characters to type smoothly over spans
     const fullHtml = CODE_LINES.join('\n');
     const tokens: string[] = [];
@@ -1018,12 +1021,12 @@ export default function AboutOregent() {
       }
       idx++;
       if (el) el.innerHTML = tokens.slice(0, idx).join('') + '<span class="og-cur"></span>';
-      
+
       const isTag = tokens[idx - 1] && tokens[idx - 1].startsWith('<');
       // If it’s an HTML tag, type it instantly (0ms), otherwise type like a fast keyboard
       setTimeout(typeTokens, isTag ? 0 : 20 + Math.random() * 30);
     };
-    
+
     el.innerHTML = '';
     const startTimer = setTimeout(typeTokens, 600);
     return () => { alive = false; clearTimeout(startTimer); };
@@ -1104,7 +1107,43 @@ export default function AboutOregent() {
         <GlobalSpotlight gridRef={gridRef} />
         <div ref={triggerRef} style={{ position: 'absolute', top: '400px', left: 0, width: '1px', height: '1px' }} />
 
-        <div className={`og-zoom${started ? " og-anim" : ""}`}>
+        {/* ── Header: Eyebrow + WHO WE ARE ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="w-full text-left mt-32 mb-64 px-6 md:px-16 lg:px-32"
+        >
+          <p
+            className="text-xs font-bold uppercase tracking-[0.2em] mb-4 orehack-liquid-text"
+            style={{ fontFamily: "'Outfit', sans-serif" }}
+          >
+            (TRUST THE BUILD)
+          </p>
+          <h2
+            className="text-4xl md:text-7xl font-black leading-none text-white m-0 uppercase flex flex-row flex-wrap items-baseline gap-4 md:gap-6 italic"
+            style={{
+              fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
+              letterSpacing: "-0.04em",
+            }}
+          >
+            <span>WHO</span>
+            <span>WE</span>
+            <span
+              style={{
+                fontFamily: '"Playfair Display", serif',
+                color: "#7c3aed",
+                letterSpacing: "0.02em",
+              }}
+            >
+              ARE ?
+            </span>
+          </h2>
+        </motion.div>
+
+        <div className={`og-zoom${started ? " og-anim" : ""} px-6 md:px-16 lg:px-32 pt-10 pb-20`}>
+          <div style={{ height: '100px' }} className="w-full" />
           <div className="og-bento bento-section" ref={gridRef}>
 
             {/* ═══ A — Startup Development (col1 top, 50%) ═══ */}
@@ -1132,10 +1171,10 @@ export default function AboutOregent() {
               <div className="og-inner">
                 <div className="og-title">Oregent Teach</div>
                 <div className="og-desc">Oregent Teach (formerly EyeQ) - practical, project-based technical education, 40 active students.</div>
-                
+
                 <div className="og-counter-wrap" style={{ marginTop: 'auto', paddingBottom: '20px' }}>
                   <span className="og-counter-num" ref={counterRef}>0</span>
-                  <span className="og-counter-label">+<br/>projects<br/>shipped</span>
+                  <span className="og-counter-label">+<br />projects<br />shipped</span>
                 </div>
               </div>
             </BentoCard>
@@ -1157,31 +1196,31 @@ export default function AboutOregent() {
             {/* ═══ E — HERO (col2 center, 33%) — Loading Screen Logo animation ═══ */}
             <BentoCard className="og-c-e" delay={0.1}>
               <div className="og-hero-glow" />
-              
+
               <div className="cl-word-orbit" style={{ position: 'absolute', inset: -50, pointerEvents: 'none', transform: 'scale(1.8)' }}>
-                  <svg viewBox="0 0 400 400" className="cl-word-orbit-svg" width="100%" height="100%">
-                      <defs>
-                          <path
-                              id="wordCircleReal"
-                              d="M 200,200 m -160,0 a 160,160 0 1,1 320,0 a 160,160 0 1,1 -320,0"
-                              fill="none"
-                          />
-                      </defs>
-                      <g className="cl-word-orbit-spin" style={{ transformOrigin: '200px 200px', animation: 'spinLogo 20s linear infinite' }}>
-                          {['INNOVATE', 'CREATE', 'BUILD', 'HACK', 'DESIGN', 'CODE', 'LAUNCH', 'DEPLOY'].map((word, i, arr) => {
-                              const offset = `${(i / arr.length) * 100}%`;
-                              return (
-                                  <text key={word} className="cl-orbit-word" dy="-8" fill="rgba(255,255,255,0.5)" fontSize="13px" fontFamily="monospace" letterSpacing="0.22em" fontWeight="700">
-                                      <textPath href="#wordCircleReal" startOffset={offset} textAnchor="middle">
-                                          {word}
-                                      </textPath>
-                                  </text>
-                              );
-                          })}
-                      </g>
-                  </svg>
+                <svg viewBox="0 0 400 400" className="cl-word-orbit-svg" width="100%" height="100%">
+                  <defs>
+                    <path
+                      id="wordCircleReal"
+                      d="M 200,200 m -160,0 a 160,160 0 1,1 320,0 a 160,160 0 1,1 -320,0"
+                      fill="none"
+                    />
+                  </defs>
+                  <g className="cl-word-orbit-spin" style={{ transformOrigin: '200px 200px', animation: 'spinLogo 20s linear infinite' }}>
+                    {['INNOVATE', 'CREATE', 'BUILD', 'HACK', 'DESIGN', 'CODE', 'LAUNCH', 'DEPLOY'].map((word, i, arr) => {
+                      const offset = `${(i / arr.length) * 100}%`;
+                      return (
+                        <text key={word} className="cl-orbit-word" dy="-8" fill="rgba(255,255,255,0.5)" fontSize="13px" fontFamily="monospace" letterSpacing="0.22em" fontWeight="700">
+                          <textPath href="#wordCircleReal" startOffset={offset} textAnchor="middle">
+                            {word}
+                          </textPath>
+                        </text>
+                      );
+                    })}
+                  </g>
+                </svg>
               </div>
-              
+
               <img src={logoSrc} alt="Oregent BG Logo" className="og-ls-logo" />
               <div className="og-hero-inner">
                 <div className="og-hero-badge">
@@ -1232,7 +1271,7 @@ export default function AboutOregent() {
                 <div className="og-strip-wrap" ref={stripRef} data-hovered="false" onMouseEnter={onStripEnter} onMouseLeave={onStripLeave}>
                   <div className="og-strip-track">
                     {[SvgIcons.cpu, SvgIcons.brain, SvgIcons.target, SvgIcons.star, SvgIcons.shield, SvgIcons.globe, SvgIcons.layers,
-                      SvgIcons.cpu, SvgIcons.brain, SvgIcons.target, SvgIcons.star, SvgIcons.shield, SvgIcons.globe, SvgIcons.layers].map((icon, i) => (
+                    SvgIcons.cpu, SvgIcons.brain, SvgIcons.target, SvgIcons.star, SvgIcons.shield, SvgIcons.globe, SvgIcons.layers].map((icon, i) => (
                       <div className="og-strip-chip" key={i}>{icon}</div>
                     ))}
                   </div>

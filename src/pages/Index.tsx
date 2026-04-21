@@ -4,7 +4,6 @@ import WhatWeDo from "@/components/WhatWeDo";
 import HowItWorks from "@/components/HowItWorks";
 import QuoteSection from "@/components/QuoteSection";
 import AboutOregent from "@/components/AboutOregent";
-import TeamOregent from "@/components/TeamOregent";
 import Contact from "@/components/Contact";
 
 import GlobalBackground from "@/components/GlobalBackground";
@@ -30,7 +29,6 @@ const Index = () => {
       <QuoteSection />
       <HowItWorks />
       <AboutOregent />
-      <TeamOregent />
       <Contact />
     </div>
   );
