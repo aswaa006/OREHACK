@@ -16,6 +16,7 @@ import Leaderboard from "./pages/Leaderboard";
 import AdminAuth from "./pages/AdminAuth";
 import HackathonAdminDashboard from "./pages/HackathonAdminDashboard";
 import DeveloperAdminDashboard from "./pages/DeveloperAdminDashboard";
+import AdminHealth from "./pages/AdminHealth";
 import CreateHackathon from "./pages/CreateHackathon";
 import OriginAdmin from "./pages/OriginAdmin";
 import OriginControlPanel from "./pages/OriginControlPanel";
@@ -33,6 +34,7 @@ import ControlRoom from "./pages/ControlRoom";
 import ProblemStatementsOverview from "./pages/ProblemStatementsOverview";
 import OriginStage3 from "./pages/OriginStage3";
 import HackathonsPage from "./pages/Hackathons";
+import { runStartupHealthCheck } from "@/lib/health-check";
 
 const queryClient = new QueryClient();
 
@@ -149,6 +151,7 @@ const AnimatedRoutes = () => {
         <Route path="/admin/hackathon" element={<HackathonAdminDashboard />} />
         <Route path="/admin/hackathon/create" element={<CreateHackathon />} />
         <Route path="/admin/developer" element={<DeveloperAdminDashboard />} />
+        <Route path="/admin/health" element={<AdminHealth />} />
         <Route path="/orehackproject1924" element={<OriginAdmin />} />
         <Route path="/orehackproject1924/panel" element={<OriginControlPanel />} />
         <Route path="/orehackproject1924/panel/stage-1" element={<OriginStage1 />} />
@@ -203,6 +206,10 @@ const App = () => {
     return () => {
       lenis.destroy();
     };
+  }, []);
+
+  useEffect(() => {
+    void runStartupHealthCheck(true);
   }, []);
 
   return (

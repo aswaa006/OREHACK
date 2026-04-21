@@ -89,7 +89,6 @@ const HackathonLogin = () => {
             teamID: resolvedTeamId,
             TeamID: resolvedTeamId,
             Team_Name: resolvedTeamName,
-            password: normalizedPassword,
             Progress: "queued",
           },
           { onConflict: "team_id" },

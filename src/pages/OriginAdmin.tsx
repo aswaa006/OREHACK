@@ -1,9 +1,57 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
+import { clearAdminSession, normalizeDashboardRole } from "@/lib/dashboard-routing";
+import { uploadHackathonBanner } from "@/lib/storage";
 
 /* ─── Auth constants ─────────────────────────────────────── */
 const ADMIN_SESSION_KEY = "orehack_origin_admin_auth";
+
+const toSlug = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+
+const mapStatusToDb = (status: HackathonStatus) => {
+  if (status === "Upcoming") return "scheduled";
+  if (status === "Completed") return "completed";
+  return "live";
+};
+
+const verifyOriginAdminAccess = async (userId: string) => {
+  const { data: profile, error: profileError } = await supabase
+    .from("users")
+    .select("id, default_role, is_active")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (profileError || !profile || profile.is_active === false) {
+    return { ok: false, error: "This account cannot access Origin admin." };
+  }
+
+  const roleRows = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (roleRows.error) {
+    return { ok: false, error: roleRows.error.message || "Unable to resolve role." };
+  }
+
+  const resolvedRole = normalizeDashboardRole(roleRows.data?.[0]?.role ?? profile.default_role);
+  const allowed = resolvedRole === "developer_admin" || resolvedRole === "hackathon_admin";
+  if (!allowed) {
+    return { ok: false, error: "You do not have admin access." };
+  }
+
+  return { ok: true, error: "" };
+};
 
 /* ─── Hackathon dataset (mirrors ActiveHackathons.tsx) ───── */
 type HackathonStatus = "Live" | "Upcoming" | "Completed";
@@ -160,15 +208,35 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
   const [err,  setErr]  = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (user.trim() === "Execution@oregent.in" && pass === "Zerotouch192421") {
+    setErr("");
+    setLoading(true);
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: user.trim(),
+      password: pass,
+    });
+
+    if (error || !data.user) {
+      setErr("Invalid credentials.");
+      setLoading(false);
+      return;
+    }
+
+    const access = await verifyOriginAdminAccess(data.user.id);
+    if (!access.ok) {
+      await supabase.auth.signOut();
+      setErr(access.error || "Access denied.");
+      setLoading(false);
+      return;
+    }
+
       sessionStorage.setItem(ADMIN_SESSION_KEY, "true");
       onLogin();
-    } else {
-      setErr("Invalid credentials.");
-    }
+      setLoading(false);
   };
 
   const iStyle: React.CSSProperties = {
@@ -189,10 +257,10 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
         <h1 style={{ fontSize: "1.8rem", fontWeight: 900, color: "#f1f5f9", marginBottom: "0.4rem" }}>Admin Dashboard</h1>
         <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.4)", marginBottom: "1.5rem" }}>Sign in to access the admin panel.</p>
         <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          <input value={user} onChange={e => setUser(e.target.value)} placeholder="Username" autoComplete="off" style={iStyle} />
+          <input type="email" value={user} onChange={e => setUser(e.target.value)} placeholder="admin@company.com" autoComplete="off" style={iStyle} />
           <input type="password" value={pass} onChange={e => setPass(e.target.value)} placeholder="Password" autoComplete="new-password" style={iStyle} />
           {err && <p style={{ fontSize: "0.78rem", color: "#f87171" }}>{err}</p>}
-          <button type="submit" style={{ background: "#7c3aed", border: "none", borderRadius: "0.6rem", padding: "0.7rem", color: "#fff", fontWeight: 700, fontSize: "0.875rem", cursor: "pointer" }}>Sign In</button>
+          <button type="submit" disabled={loading} style={{ background: "#7c3aed", border: "none", borderRadius: "0.6rem", padding: "0.7rem", color: "#fff", fontWeight: 700, fontSize: "0.875rem", cursor: "pointer", opacity: loading ? 0.7 : 1 }}> {loading ? "Signing in..." : "Sign In"}</button>
         </div>
       </form>
     </div>
@@ -204,7 +272,11 @@ const OriginAdmin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(
     () => typeof window !== "undefined" && sessionStorage.getItem(ADMIN_SESSION_KEY) === "true"
   );
+  const [authChecking, setAuthChecking] = useState(true);
   const [events, setEvents] = useState<HackathonCard[]>(INITIAL_EVENTS);
+  const [formError, setFormError] = useState("");
+  const [savingEvent, setSavingEvent] = useState(false);
+  const [uploadingPoster, setUploadingPoster] = useState(false);
 
   /* Add-event form state */
   const [newName,         setNewName]         = useState("");
@@ -215,14 +287,66 @@ const OriginAdmin = () => {
   const [posterFileName,  setPosterFileName]  = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const logout = () => {
+  useEffect(() => {
+    const checkAuth = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        sessionStorage.removeItem(ADMIN_SESSION_KEY);
+        setIsAuthenticated(false);
+        setAuthChecking(false);
+        return;
+      }
+
+      const access = await verifyOriginAdminAccess(user.id);
+      if (!access.ok) {
+        await supabase.auth.signOut();
+        clearAdminSession();
+        sessionStorage.removeItem(ADMIN_SESSION_KEY);
+        setIsAuthenticated(false);
+      } else {
+        sessionStorage.setItem(ADMIN_SESSION_KEY, "true");
+        setIsAuthenticated(true);
+      }
+
+      setAuthChecking(false);
+    };
+
+    void checkAuth();
+  }, []);
+
+  const logout = async () => {
     setIsAuthenticated(false);
+    clearAdminSession();
+    await supabase.auth.signOut();
     sessionStorage.removeItem(ADMIN_SESSION_KEY);
   };
 
-  const handleAddEvent = () => {
+  const handleAddEvent = async () => {
     if (!newName.trim()) return;
-    const id = newName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+
+    setSavingEvent(true);
+    setFormError("");
+
+    const id = toSlug(newName);
+    const insertRes = await supabase.from("hackathons").insert({
+      name: newName.trim(),
+      slug: id,
+      theme: "General",
+      duration_hours: 24,
+      status: mapStatusToDb(newStatus),
+      submissions_count: Number(newParticipants) || 0,
+      evaluated_count: 0,
+    });
+
+    if (insertRes.error) {
+      setFormError(insertRes.error.message || "Failed to save event to database.");
+      setSavingEvent(false);
+      return;
+    }
+
     setEvents(prev => [...prev, {
       id,
       name: newName.trim(),
@@ -231,18 +355,43 @@ const OriginAdmin = () => {
       deadline: newDeadline.trim() || "TBD",
       poster: newPoster,
     }]);
+
     setNewName(""); setNewStatus("Upcoming"); setNewParticipants("0");
     setNewDeadline(""); setNewPoster(undefined); setPosterFileName("");
+    setSavingEvent(false);
   };
 
-  const handlePosterFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePosterFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
     setPosterFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = (ev) => setNewPoster(ev.target?.result as string);
-    reader.readAsDataURL(file);
+    setUploadingPoster(true);
+
+    try {
+      const upload = await uploadHackathonBanner({
+        hackathonSlug: toSlug(newName || file.name),
+        file,
+      });
+      setNewPoster(upload.publicUrl);
+    } catch (error) {
+      // Keep local preview fallback when storage is unavailable.
+      const reader = new FileReader();
+      reader.onload = (ev) => setNewPoster(ev.target?.result as string);
+      reader.readAsDataURL(file);
+      setFormError(error instanceof Error ? error.message : "Banner upload failed.");
+    } finally {
+      setUploadingPoster(false);
+    }
   };
+
+  if (authChecking) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#080b14", display: "flex", alignItems: "center", justifyContent: "center", color: "#f1f5f9" }}>
+        Verifying admin access...
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return <LoginScreen onLogin={() => setIsAuthenticated(true)} />;
@@ -400,7 +549,7 @@ const OriginAdmin = () => {
           {/* Add Event Button */}
           <button
             onClick={handleAddEvent}
-            disabled={!newName.trim()}
+            disabled={!newName.trim() || savingEvent}
             style={{
               marginTop: "0.75rem",
               display: "inline-flex",
@@ -424,8 +573,13 @@ const OriginAdmin = () => {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            + Add Event
+            {savingEvent ? "Saving..." : "+ Add Event"}
           </button>
+          {(uploadingPoster || formError) && (
+            <p style={{ marginTop: "0.65rem", fontSize: "0.72rem", color: formError ? "#f87171" : "#a78bfa" }}>
+              {formError || "Uploading banner to storage..."}
+            </p>
+          )}
         </motion.section>
 
       </div>
