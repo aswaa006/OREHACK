@@ -81,6 +81,7 @@ const WhatWeDo = () => {
       style={{
         // Substantial scroll distance for smooth transitions
         height: `${items.length * 85}vh`,
+        marginTop: "120px",
       }}
     >
       {/* Sticky inner container — stays in viewport while scrolling */}
