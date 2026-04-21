@@ -2,32 +2,36 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import TrustIndicator from "./TrustIndicator";
 
-
 const items = [
   {
     num: "01",
-    title: "Power Fair & Efficient\nHackathon Evaluations",
-    desc: "OreHack ensures every submission is assessed with precision, consistency, and complete transparency. Fairness is not optional — it is engineered. By standardizing evaluation frameworks and eliminating bias, the platform delivers accurate and timely outcomes.",
+    title: "Build a Culture of Innovation\nAcross Institutions",
+    desc: "OreHack enables institutions to move beyond traditional learning and foster continuous innovation. Innovation is not an event — it is a culture. Students are encouraged to think critically, experiment, and build consistently, transforming campuses into environments where ideas evolve into real solutions.",
+    img: "/Wwd1.png",
   },
   {
     num: "02",
-    title: "Build a Culture of Innovation\nAcross Institutions",
-    desc: "OreHack enables institutions to move beyond traditional learning and foster continuous innovation. Innovation is not an event — it is a culture. Students are encouraged to think critically, experiment, and build consistently, transforming campuses into environments where ideas evolve into real solutions.",
+    title: "Enable High-Impact\nHackathons",
+    desc: "OreHack provides end-to-end infrastructure to design and execute hackathons with precision and scale. Execution defines the experience. From participant management to evaluation, every stage is handled seamlessly, enabling institutions to deliver impactful and structured innovation experiences.",
+    img: "/Wwd2.png",
   },
   {
     num: "03",
-    title: "Enable High-Impact\nHackathons",
-    desc: "OreHack provides end-to-end infrastructure to design and execute hackathons with precision and scale. Execution defines the experience. From participant management to evaluation, every stage is handled seamlessly, enabling institutions to deliver impactful and structured innovation experiences.",
+    title: "Drive Students from Learning\nto Real Execution",
+    desc: "OreHack bridges the gap between academic learning and real-world application. Learning matters only when it leads to execution. Through structured pathways from ideation to implementation, students gain hands-on experience and evolve into confident builders ready for real challenges.",
+    img: "",
   },
   {
     num: "04",
-    title: "Drive Students from Learning\nto Real Execution",
-    desc: "OreHack bridges the gap between academic learning and real-world application. Learning matters only when it leads to execution. Through structured pathways from ideation to implementation, students gain hands-on experience and evolve into confident builders ready for real challenges.",
+    title: "Hackathon-as-a-Service\n(HaaS)",
+    desc: "OreHack delivers a complete, ready-to-deploy innovation ecosystem for institutions. Innovation, delivered as a service. By integrating training, execution, and evaluation into a unified platform, institutions can seamlessly adopt and scale innovation programs with confidence.",
+    img: "",
   },
   {
     num: "05",
-    title: "Hackathon-as-a-Service\n(HaaS)",
-    desc: "OreHack delivers a complete, ready-to-deploy innovation ecosystem for institutions. Innovation, delivered as a service. By integrating training, execution, and evaluation into a unified platform, institutions can seamlessly adopt and scale innovation programs with confidence.",
+    title: "Power Fair & Efficient\nHackathon Evaluations",
+    desc: "OreHack ensures every submission is assessed with precision, consistency, and complete transparency. Fairness is not optional — it is engineered. By standardizing evaluation frameworks and eliminating bias, the platform delivers accurate and timely outcomes.",
+    img: "",
   },
 ];
 
@@ -75,10 +79,8 @@ const WhatWeDo = () => {
       id="what-we-do"
       className="relative z-10 bg-black"
       style={{
-        // 5 items × 100vh gives enough scroll distance for smooth transitions
-        // 5 items × 85vh gives a substantial scroll distance
+        // Substantial scroll distance for smooth transitions
         height: `${items.length * 85}vh`,
-
       }}
     >
       {/* Sticky inner container — stays in viewport while scrolling */}
@@ -154,7 +156,7 @@ const WhatWeDo = () => {
                     className="italic uppercase mb-6"
                     style={{
                       fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
-                      fontSize: "clamp(1.5rem, 3.5vw, 2.8rem)",
+                      fontSize: "clamp(1.4rem, 3vw, 2.4rem)",
                       fontWeight: 500,
                       lineHeight: 1.15,
                       color: "#7c3aed",
@@ -169,7 +171,7 @@ const WhatWeDo = () => {
                   <p
                     style={{
                       fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
-                      fontSize: "clamp(0.875rem, 1.3vw, 1.05rem)",
+                      fontSize: "clamp(0.8rem, 1.1vw, 0.98rem)",
                       fontWeight: 300,
                       fontStyle: "italic",
                       lineHeight: 1.8,
@@ -249,7 +251,7 @@ const WhatWeDo = () => {
           </div>
 
           {/* Right Side — Image Column */}
-          <div className="flex-1 flex flex-col items-center justify-center min-h-[360px] -mt-20">
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[360px] -mt-36">
             <div className="mb-8 scale-90 opacity-80">
               <TrustIndicator />
             </div>
@@ -260,24 +262,32 @@ const WhatWeDo = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.02 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
-                className="w-full h-full max-h-[460px] rounded-2xl flex items-center justify-center"
+                className="w-full h-full max-h-[460px] rounded-2xl flex items-center justify-center overflow-hidden"
                 style={{
-                  background: "linear-gradient(135deg, #0d0d0d 0%, #111 100%)",
-                  border: "1px dashed #222",
+                  background: items[active].img ? "transparent" : "linear-gradient(135deg, #0d0d0d 0%, #111 100%)",
+                  border: items[active].img ? "none" : "1px dashed #222",
                   minHeight: "360px",
                 }}
               >
-                <span
-                  style={{
-                    fontFamily: "'Outfit', sans-serif",
-                    fontSize: "0.8rem",
-                    color: "#333",
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Image {items[active].num}
-                </span>
+                {items[active].img ? (
+                  <img
+                    src={items[active].img}
+                    alt={items[active].title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span
+                    style={{
+                      fontFamily: "'Outfit', sans-serif",
+                      fontSize: "0.8rem",
+                      color: "#333",
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Image {items[active].num}
+                  </span>
+                )}
               </motion.div>
             </AnimatePresence>
           </div>
