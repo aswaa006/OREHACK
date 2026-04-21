@@ -86,6 +86,7 @@ export default function HowItWorks() {
           style={{
             fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
             letterSpacing: "-0.04em",
+            textShadow: "0 0 60px rgba(124, 58, 237, 0.45), 0 0 120px rgba(124, 58, 237, 0.2)",
           }}
         >
           <span>WHO</span>
@@ -95,11 +96,32 @@ export default function HowItWorks() {
               fontFamily: '"Playfair Display", serif',
               color: "#7c3aed",
               letterSpacing: "0.02em",
+              textShadow: "0 0 40px rgba(124, 58, 237, 0.8), 0 0 80px rgba(124, 58, 237, 0.4)",
             }}
           >
             EMPOWER ?
           </span>
         </h2>
+
+        {/* Glow divider */}
+        <div style={{ position: "relative", marginTop: "2.5rem", height: "2px" }}>
+          <div style={{
+            width: "100%",
+            height: "1px",
+            background: "linear-gradient(to right, transparent, rgba(124,58,237,0.6), rgba(255,255,255,0.3), rgba(124,58,237,0.6), transparent)",
+          }} />
+          <div style={{
+            position: "absolute",
+            top: "-12px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "60%",
+            height: "24px",
+            background: "radial-gradient(ellipse at center, rgba(124,58,237,0.35) 0%, transparent 70%)",
+            filter: "blur(6px)",
+            pointerEvents: "none",
+          }} />
+        </div>
       </motion.div>
       <ScrollStack
         useWindowScroll
