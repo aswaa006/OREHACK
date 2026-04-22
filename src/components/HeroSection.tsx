@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import CurvedLoop from "./CurvedLoop";
-import TrustIndicator from "./TrustIndicator";
 import BlurText from "./BlurText";
 
 const WordsLoop = () => {

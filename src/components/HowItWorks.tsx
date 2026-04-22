@@ -64,7 +64,7 @@ export default function HowItWorks() {
       style={{
         position: "relative",
         zIndex: 10,
-        marginTop: "160px",
+        marginTop: "112px",
       }}
     >
       {/* ── Header: Eyebrow + WHO WE EMPOWER ── */}
@@ -73,7 +73,7 @@ export default function HowItWorks() {
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
         viewport={{ once: true }}
-        className="w-full text-left mb-24"
+        className="w-full text-center mb-8"
       >
         <p
           className="text-xs font-bold uppercase tracking-[0.2em] mb-4 orehack-liquid-text"
@@ -82,7 +82,7 @@ export default function HowItWorks() {
           (TRUST THE BUILD)
         </p>
         <h2
-          className="text-4xl md:text-7xl font-black leading-none text-white m-0 uppercase flex flex-row flex-wrap items-baseline gap-4 md:gap-6 italic"
+          className="text-4xl md:text-7xl font-black leading-none text-white m-0 uppercase flex flex-row flex-wrap items-baseline justify-center gap-4 md:gap-6 italic"
           style={{
             fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
             letterSpacing: "-0.04em",
@@ -132,6 +132,7 @@ export default function HowItWorks() {
         scaleEndPosition="10%"
         baseScale={0.88}
         blurAmount={2}
+        unpinOnLastItem={true}
       >
         {steps.map((s, idx) => (
           <ScrollStackItem key={s.num}>
@@ -214,7 +215,7 @@ export default function HowItWorks() {
                     </span>
                   </div>
                 </div>
-              </div>
+               </div>
             </div>
           </ScrollStackItem>
         ))}

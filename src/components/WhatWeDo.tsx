@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import TrustIndicator from "./TrustIndicator";
 
 const items = [
   {
@@ -81,7 +80,7 @@ const WhatWeDo = () => {
       style={{
         // Substantial scroll distance for smooth transitions
         height: `${items.length * 85}vh`,
-        marginTop: "120px",
+        marginTop: "40px",
       }}
     >
       {/* Sticky inner container — stays in viewport while scrolling */}
@@ -95,7 +94,7 @@ const WhatWeDo = () => {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="w-full text-left mb-16"
+          className="w-full text-center mb-4"
         >
           <p
             className="text-xs font-bold uppercase tracking-[0.2em] mb-4 orehack-liquid-text"
@@ -104,7 +103,7 @@ const WhatWeDo = () => {
             (TRUST THE BUILD)
           </p>
           <h2
-            className="text-4xl md:text-7xl font-black leading-none text-white m-0 uppercase flex flex-row flex-wrap items-baseline gap-4 md:gap-6 italic"
+            className="text-4xl md:text-7xl font-black leading-none text-white m-0 uppercase flex flex-row flex-wrap items-baseline justify-center gap-4 md:gap-6 italic"
             style={{
               fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
               letterSpacing: "-0.04em",
@@ -274,10 +273,7 @@ const WhatWeDo = () => {
           </div>
 
           {/* Right Side — Image Column */}
-          <div className="flex-1 flex flex-col items-center justify-center min-h-[360px] -mt-36">
-            <div className="mb-8 scale-90 opacity-80">
-              <TrustIndicator />
-            </div>
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[360px]">
             <AnimatePresence mode="wait">
               <motion.div
                 key={active}

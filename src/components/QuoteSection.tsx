@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 
 const QuoteSection = () => {
   return (
-    <section className="relative py-32 px-6 md:px-16 lg:px-32 bg-black overflow-hidden flex items-center justify-center min-h-[60vh]">
+    <section className="relative pt-32 pb-28 px-6 md:px-16 lg:px-32 bg-black overflow-hidden flex items-center justify-center min-h-[60vh]">
       {/* Decorative gradient background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div 
@@ -48,12 +48,83 @@ const QuoteSection = () => {
             className="h-px w-24 bg-gradient-to-r from-transparent via-[#7c3aed] to-transparent mx-auto mt-12 mb-8"
           />
 
-          <p 
-            className="text-sm md:text-base uppercase tracking-[0.3em] text-[#7c3aed] font-medium"
-            style={{ fontFamily: "'Outfit', sans-serif" }}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85, y: 12 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ delay: 0.7, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            viewport={{ once: true }}
+            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", position: "relative" }}
           >
-            The OreHack Philosophy
-          </p>
+            {/* Outer glow bloom */}
+            <div style={{
+              position: "absolute",
+              inset: "-20px",
+              borderRadius: "60px",
+              background: "radial-gradient(ellipse at center, rgba(124,58,237,0.25) 0%, transparent 70%)",
+              filter: "blur(12px)",
+              pointerEvents: "none",
+              animation: "philosophyGlow 3s ease-in-out infinite alternate",
+            }} />
+
+            {/* Badge pill */}
+            <div style={{
+              position: "relative",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "10px",
+              padding: "10px 24px",
+              borderRadius: "50px",
+              background: "rgba(10, 0, 20, 0.7)",
+              border: "1px solid rgba(124,58,237,0.45)",
+              backdropFilter: "blur(16px)",
+              boxShadow: "0 0 24px rgba(124,58,237,0.2), inset 0 0 16px rgba(124,58,237,0.06)",
+              overflow: "hidden",
+            }}>
+              {/* Shimmer sweep */}
+              <div style={{
+                position: "absolute",
+                inset: 0,
+                borderRadius: "50px",
+                background: "linear-gradient(90deg, transparent 0%, transparent 30%, rgba(124,58,237,0.35) 48%, rgba(255,255,255,0.15) 50%, rgba(124,58,237,0.35) 52%, transparent 70%, transparent 100%)",
+                backgroundSize: "200% 100%",
+                animation: "philosophyShimmer 3s linear infinite",
+                pointerEvents: "none",
+              }} />
+
+              {/* Dot indicator */}
+              <span style={{
+                width: "7px",
+                height: "7px",
+                borderRadius: "50%",
+                background: "#7c3aed",
+                flexShrink: 0,
+                boxShadow: "0 0 8px rgba(124,58,237,0.9)",
+                animation: "philosophyPulse 2s ease-in-out infinite",
+              }} />
+
+              <p
+                className="text-sm md:text-base uppercase tracking-[0.3em] text-[#7c3aed] font-semibold m-0"
+                style={{ fontFamily: "'Outfit', sans-serif", position: "relative", zIndex: 1 }}
+              >
+                The OreHack Philosophy
+              </p>
+            </div>
+
+            <style>{`
+              @keyframes philosophyGlow {
+                0%   { opacity: 0.6; transform: scale(1); }
+                100% { opacity: 1;   transform: scale(1.08); }
+              }
+              @keyframes philosophyShimmer {
+                0%   { background-position: 200% 0; }
+                100% { background-position: -200% 0; }
+              }
+              @keyframes philosophyPulse {
+                0%, 100% { opacity: 1;   box-shadow: 0 0 8px rgba(124,58,237,0.9); }
+                50%       { opacity: 0.4; box-shadow: 0 0 16px rgba(124,58,237,0.4); }
+              }
+            `}</style>
+          </motion.div>
         </motion.div>
       </div>
     </section>

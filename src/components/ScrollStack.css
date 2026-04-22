@@ -21,12 +21,12 @@
 }
 
 .scroll-stack-inner {
-  padding: 10vh 0 50rem;
+  padding: 10vh 0 2rem;
   min-height: 100vh;
 }
 
 .scroll-stack-window-mode .scroll-stack-inner {
-  padding: 5vh 0 40rem;
+  padding: 5vh 0 0;
 }
 
 .scroll-stack-card-wrapper {

@@ -59,8 +59,8 @@ const CSS = `
   --blue:   #3b82f6;
   color: var(--text);
   background: var(--bg);
-  padding: 60px 0 100px;
-  margin-top: 180px;
+  padding: 80px 0 120px;
+  margin-top: 100px;
   position: relative;
   overflow: hidden;
 }
@@ -1113,7 +1113,7 @@ export default function AboutOregent() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="w-full text-left mt-32 mb-64 px-6 md:px-16 lg:px-32"
+          className="w-full text-center mt-12 mb-8 px-6 md:px-16 lg:px-32"
         >
           <p
             className="text-xs font-bold uppercase tracking-[0.2em] mb-4 orehack-liquid-text"
@@ -1122,7 +1122,7 @@ export default function AboutOregent() {
             (TRUST THE BUILD)
           </p>
           <h2
-            className="text-4xl md:text-7xl font-black leading-none text-white m-0 uppercase flex flex-row flex-wrap items-baseline gap-4 md:gap-6 italic"
+            className="text-4xl md:text-7xl font-black leading-none text-white m-0 uppercase flex flex-row flex-wrap items-baseline justify-center gap-4 md:gap-6 italic"
             style={{
               fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
               letterSpacing: "-0.04em",
@@ -1144,7 +1144,7 @@ export default function AboutOregent() {
           </h2>
 
           {/* Glow divider */}
-          <div style={{ position: "relative", marginTop: "2.5rem", height: "2px" }}>
+          <div style={{ position: "relative", marginTop: "2rem", height: "2px" }}>
             <div style={{
               width: "100%",
               height: "1px",
@@ -1165,7 +1165,6 @@ export default function AboutOregent() {
         </motion.div>
 
         <div className={`og-zoom${started ? " og-anim" : ""} px-6 md:px-16 lg:px-32 pt-10 pb-20`}>
-          <div style={{ height: '100px' }} className="w-full" />
           <div className="og-bento bento-section" ref={gridRef}>
 
             {/* ═══ A — Startup Development (col1 top, 50%) ═══ */}
