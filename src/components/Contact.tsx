@@ -188,7 +188,7 @@ const Contact = () => {
     <section
       id="contact"
       ref={ref}
-      className="relative pt-32 pb-0 overflow-hidden"
+      className="relative pt-20 pb-0 overflow-hidden"
     >
       {/* Animated background */}
       <div className="absolute inset-0 grid-bg opacity-20" />

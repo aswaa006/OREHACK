@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 
 const QuoteSection = () => {
   return (
-    <section className="relative pt-32 pb-28 px-6 md:px-16 lg:px-32 bg-black overflow-hidden flex items-center justify-center min-h-[60vh]">
+    <section className="relative pt-12 pb-28 px-6 md:px-16 lg:px-32 bg-black overflow-hidden flex items-center justify-center min-h-[60vh]">
       {/* Decorative gradient background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div 

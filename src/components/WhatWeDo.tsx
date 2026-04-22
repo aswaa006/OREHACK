@@ -85,7 +85,7 @@ const WhatWeDo = () => {
     >
       {/* Sticky inner container — stays in viewport while scrolling */}
       <div
-        className="sticky top-0 flex flex-col justify-start pt-24 pb-40 px-6 md:px-16 lg:px-32"
+        className="sticky top-0 flex flex-col justify-start pt-24 pb-16 px-6 md:px-16 lg:px-32"
         style={{ minHeight: "100vh" }}
       >
         {/* ── Header: Eyebrow + WHAT WE DO ── */}

@@ -59,7 +59,7 @@ const CSS = `
   --blue:   #3b82f6;
   color: var(--text);
   background: var(--bg);
-  padding: 80px 0 120px;
+  padding: 80px 0 80px;
   margin-top: 100px;
   position: relative;
   overflow: hidden;
@@ -100,7 +100,7 @@ const CSS = `
   grid-template-rows: repeat(6, 1fr);
   gap: 8px;
   height: 790px;
-  margin-top: 10px;
+  margin-top: 80px;
 }
 
 /* Col 1 — 50/50 */
@@ -1164,7 +1164,7 @@ export default function AboutOregent() {
           </div>
         </motion.div>
 
-        <div className={`og-zoom${started ? " og-anim" : ""} px-6 md:px-16 lg:px-32 pt-10 pb-20`}>
+        <div className={`og-zoom${started ? " og-anim" : ""} px-6 md:px-16 lg:px-32 pt-32 pb-20`}>
           <div className="og-bento bento-section" ref={gridRef}>
 
             {/* ═══ A — Startup Development (col1 top, 50%) ═══ */}
