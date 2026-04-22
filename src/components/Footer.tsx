@@ -1,3 +1,5 @@
+import CurvedLoop from './CurvedLoop';
+
 const Footer = () => {
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -19,7 +21,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-background border-t border-border/50 pt-16 pb-0 overflow-hidden">
+    <footer className="border-t border-border/50 pt-16 pb-0 overflow-hidden text-foreground">
       <div className="container mx-auto px-6">
         {/* Top section: Navigation + Social */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
@@ -33,7 +35,8 @@ const Footer = () => {
                 <li key={link.id}>
                   <button
                     onClick={() => scrollToSection(link.id)}
-                    className="text-base text-foreground/80 hover:text-primary transition-colors duration-300"
+                    style={{ transition: "all 0.3s ease" }}
+                    className="text-base text-foreground/80 hover:text-[#c4b5fd]"
                   >
                     {link.label}
                   </button>
@@ -54,7 +57,8 @@ const Footer = () => {
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-base text-foreground/80 hover:text-primary transition-colors duration-300"
+                    style={{ transition: "all 0.3s ease" }}
+                    className="text-base text-foreground/80 hover:text-[#c4b5fd]"
                   >
                     {link.label}
                   </a>
@@ -82,12 +86,23 @@ const Footer = () => {
             © {new Date().getFullYear()} Oregent. All rights reserved.
           </p>
           <a
-            href="mailto:contact@oregent.com"
+            href="mailto:srisayee.oregent@gmail.com"
             className="text-sm text-primary hover:text-primary/80 transition-colors duration-300"
           >
             contact@oregent.com
           </a>
         </div>
+      </div>
+
+      {/* ── Straight marquee strip ── */}
+      <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: "0", paddingTop: "24px", paddingBottom: "8px" }}>
+        <CurvedLoop
+          marqueeText="Power fair and efficient hackathon evaluations ✦ Build a culture of innovation across institutions ✦ Enable colleges to run high-impact hackathons ✦ Drive students from learning to real execution ✦ "
+          speed={1.2}
+          curveAmount={0}
+          direction="left"
+          interactive={true}
+        />
       </div>
 
       {/* Giant brand text */}

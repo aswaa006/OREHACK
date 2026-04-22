@@ -1,0 +1,293 @@
+/* ============================================================
+   MODERN LOADING SCREEN - CUSTOMIZATION GUIDE
+   ============================================================
+   
+   This guide shows you how to further customize the loading
+   screen animation with CSS variables and alternate themes.
+*/
+
+/* ============================================================
+   OPTION 1: CSS VARIABLES FOR EASY THEMING
+   ============================================================
+   
+   Add this to the top of your index.css or in a variables section
+   to use CSS variables throughout the loading screen.
+*/
+
+:root {
+  /* Loading Screen Colors */
+  --cl-bg-dark: #0f0f1e;
+  --cl-primary-cyan: #0EA5E9;
+  --cl-primary-teal: #06B6D4;
+  --cl-primary-dark: #0891B2;
+  --cl-glow-intense: rgba(6, 182, 212, 0.8);
+  --cl-glow-soft: rgba(6, 182, 212, 0.25);
+  
+  /* Animation Timing */
+  --cl-duration: 4s;
+  --cl-easing-smooth: cubic-bezier(0.4, 0.1, 0.2, 1);
+  --cl-easing-bouncy: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --cl-easing-orbital: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Then update your CSS to use variables: */
+
+.cl-center-glow {
+  background: radial-gradient(circle, var(--cl-glow-soft) 0%, transparent 70%);
+  animation: clCenterGlow var(--cl-duration) var(--cl-easing-smooth) forwards;
+}
+
+/* ============================================================
+   OPTION 2: ALTERNATE COLOR THEMES
+   ============================================================ */
+
+/* PURPLE MYSTIQUE THEME */
+:root.theme-purple {
+  --cl-bg-dark: #1a0f2e;
+  --cl-primary-cyan: #c084fc;
+  --cl-primary-teal: #a855f7;
+  --cl-primary-dark: #9333ea;
+  --cl-glow-intense: rgba(168, 85, 247, 0.8);
+  --cl-glow-soft: rgba(168, 85, 247, 0.25);
+}
+
+/* NEON GREEN CYBERPUNK THEME */
+:root.theme-green {
+  --cl-bg-dark: #0f1f0f;
+  --cl-primary-cyan: #4ade80;
+  --cl-primary-teal: #22c55e;
+  --cl-primary-dark: #16a34a;
+  --cl-glow-intense: rgba(34, 197, 94, 0.8);
+  --cl-glow-soft: rgba(34, 197, 94, 0.25);
+}
+
+/* CORAL SUNSET THEME */
+:root.theme-coral {
+  --cl-bg-dark: #2a1f1f;
+  --cl-primary-cyan: #ff7f50;
+  --cl-primary-teal: #ff6b6b;
+  --cl-primary-dark: #ff5252;
+  --cl-glow-intense: rgba(255, 107, 107, 0.8);
+  --cl-glow-soft: rgba(255, 107, 107, 0.25);
+}
+
+/* DEEP OCEAN THEME */
+:root.theme-ocean {
+  --cl-bg-dark: #0a1f2e;
+  --cl-primary-cyan: #00d4ff;
+  --cl-primary-teal: #00a8ff;
+  --cl-primary-dark: #0080d0;
+  --cl-glow-intense: rgba(0, 212, 255, 0.8);
+  --cl-glow-soft: rgba(0, 212, 255, 0.25);
+}
+
+/* GOLD PREMIUM THEME */
+:root.theme-gold {
+  --cl-bg-dark: #1f1810;
+  --cl-primary-cyan: #fbbf24;
+  --cl-primary-teal: #f59e0b;
+  --cl-primary-dark: #d97706;
+  --cl-glow-intense: rgba(245, 158, 11, 0.8);
+  --cl-glow-soft: rgba(245, 158, 11, 0.25);
+}
+
+/* ============================================================
+   OPTION 3: PRESET ANIMATION SPEEDS
+   ============================================================ */
+
+/* ULTRA FAST - 2 second load */
+:root.speed-fast {
+  --cl-duration: 2s;
+}
+
+/* DEFAULT - 4 second load */
+:root.speed-default {
+  --cl-duration: 4s;
+}
+
+/* CINEMATIC - 6 second load with more emphasis */
+:root.speed-slow {
+  --cl-duration: 6s;
+}
+
+/* ============================================================
+   OPTION 4: HOW TO APPLY THEMES IN JAVASCRIPT
+   ============================================================
+
+// In your App.tsx or theme selector:
+
+// Set theme on document root
+function setLoadingScreenTheme(themeName) {
+  document.documentElement.classList.remove(
+    'theme-purple', 'theme-green', 'theme-coral', 'theme-ocean', 'theme-gold'
+  );
+  document.documentElement.classList.add(`theme-${themeName}`);
+}
+
+// Set animation speed
+function setLoadingScreenSpeed(speed) {
+  document.documentElement.classList.remove(
+    'speed-fast', 'speed-default', 'speed-slow'
+  );
+  document.documentElement.classList.add(`speed-${speed}`);
+}
+
+// Usage examples:
+setLoadingScreenTheme('purple');  // Apply purple theme
+setLoadingScreenSpeed('fast');    // Apply fast animation
+setLoadingScreenTheme('ocean');   // Apply ocean theme
+setLoadingScreenSpeed('slow');    // Apply cinematic speed
+
+*/
+
+/* ============================================================
+   OPTION 5: CUSTOM SVG COLORS USING CSS
+   ============================================================ */
+
+/* Update SVG stroke colors dynamically */
+.cl-ring {
+  stroke: url(#cl-blue-gradient);
+  /* Or use variable in gradient definition */
+}
+
+.cl-core {
+  fill: url(#cl-blue-gradient);
+}
+
+.cl-orbit-dot {
+  fill: var(--cl-primary-cyan);
+}
+
+.cl-line {
+  stroke: url(#cl-blue-gradient);
+}
+
+/* ============================================================
+   OPTION 6: ACCESSIBILITY - REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .cinematic-loader-root,
+  .cl-ring,
+  .cl-core,
+  .cl-center-glow,
+  .cl-particle,
+  .cl-orbit-dot,
+  .cl-line {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ============================================================
+   OPTION 7: DARK/LIGHT MODE SUPPORT
+   ============================================================ */
+
+/* Light mode variant (if needed) */
+@media (prefers-color-scheme: light) {
+  .cinematic-loader-root {
+    background: #f5f5f5;
+  }
+  
+  :root {
+    --cl-bg-dark: #ffffff;
+  }
+}
+
+/* ============================================================
+   OPTION 8: PERFORMANCE MONITORING
+   ============================================================
+
+// Add this to measure animation performance:
+
+const observer = new PerformanceObserver((list) => {
+  for (const entry of list.getEntries()) {
+    console.log(`Animation: ${entry.name}`, `${entry.duration}ms`);
+  }
+});
+
+observer.observe({ entryTypes: ['measure'] });
+
+// Mark animation start/end:
+performance.mark('loading-start');
+// ... wait for animation ...
+performance.mark('loading-end');
+performance.measure('loading-animation', 'loading-start', 'loading-end');
+
+*/
+
+/* ============================================================
+   OPTION 9: ADVANCED TIMING CUSTOMIZATION
+   ============================================================ */
+
+/* Slow down specific animations */
+/* (Uncomment to use)
+.cl-ring-outer {
+  animation-duration: 5s;
+}
+*/
+
+/* Speed up particle animations */
+/* (Uncomment to use)
+.cl-particle-1 {
+  animation-duration: 3s;
+}
+*/
+
+/* Customize delay timing */
+/* (Uncomment to use)
+.cl-line-1 {
+  animation-delay: 0s;
+}
+
+.cl-line-2 {
+  animation-delay: 0.2s;
+}
+*/
+
+/* ============================================================
+   OPTION 10: DEBUGGING ANIMATION TIMING
+   ============================================================
+
+// Add to your browser console to visualize animation timeline:
+
+// Slow down all animations for debugging
+document.documentElement.style.animationPlayState = 'running';
+document.documentElement.style.animationDuration = '20s'; // 5x slower
+
+// Or target specific elements:
+document.querySelectorAll('.cl-ring').forEach(el => {
+  el.style.animationDuration = '20s';
+});
+
+// Check animation status:
+const loader = document.getElementById('premium-loader');
+console.log(window.getComputedStyle(loader).animation);
+
+*/
+
+/* ============================================================
+   EXAMPLE: COMPLETE CUSTOM IMPLEMENTATION
+   ============================================================
+
+// This shows how to use all the features together:
+
+// 1. In your HTML/JSX at the start of your app:
+// <div id="app"></div>
+
+// 2. Add to a custom CSS file:
+:root.custom-branding {
+  --cl-bg-dark: #1a1a2e;
+  --cl-primary-cyan: #16c784;
+  --cl-primary-teal: #00d4aa;
+  --cl-primary-dark: #0099cc;
+  --cl-duration: 3.5s;
+}
+
+// 3. Apply theme on app load:
+document.documentElement.classList.add('custom-branding');
+
+// 4. The loading screen will use your custom variables automatically!
+
+*/
