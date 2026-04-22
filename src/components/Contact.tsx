@@ -212,42 +212,64 @@ const Contact = () => {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="text-center mb-20"
         >
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={isInView ? { scale: 1, rotate: 0 } : {}}
-            transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 150 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/20 bg-primary/5 text-primary text-sm font-medium mb-6"
+          <p
+            className="text-xs font-bold uppercase tracking-[0.2em] mb-4 orehack-liquid-text"
+            style={{ fontFamily: "'Outfit', sans-serif" }}
           >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-            </span>
-            Let's Connect
-          </motion.div>
+            (TRUST THE BUILD)
+          </p>
 
           <motion.h2
             initial={{ opacity: 0, y: 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.7, delay: 0.3 }}
-            className="text-4xl md:text-6xl font-bold text-foreground mb-4"
+            className="text-4xl md:text-7xl font-black leading-none text-white m-0 uppercase flex flex-row flex-wrap items-baseline justify-center gap-4 md:gap-6 italic"
+            style={{
+              fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
+              letterSpacing: "-0.04em",
+              textShadow: "0 0 60px rgba(124, 58, 237, 0.45), 0 0 120px rgba(124, 58, 237, 0.2)",
+            }}
           >
-            Get in{" "}
-            <span className="relative">
-              <span className="text-gradient-primary">Touch</span>
-              <motion.span
-                className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-primary via-pink-500 to-orange-400 rounded-full"
-                initial={{ scaleX: 0 }}
-                animate={isInView ? { scaleX: 1 } : {}}
-                transition={{ duration: 0.6, delay: 0.8 }}
-                style={{ transformOrigin: "left" }}
-              />
+            <span>GET</span>
+            <span>IN</span>
+            <span
+              style={{
+                fontFamily: '"Playfair Display", serif',
+                color: "#7c3aed",
+                letterSpacing: "0.02em",
+                textShadow: "0 0 40px rgba(124, 58, 237, 0.8), 0 0 80px rgba(124, 58, 237, 0.4)",
+              }}
+            >
+              TOUCH
             </span>
           </motion.h2>
+
+          {/* Glow divider */}
+          <div style={{ position: "relative", marginTop: "2.5rem", height: "2px" }}>
+            <div style={{
+              width: "100%",
+              height: "1px",
+              background: "linear-gradient(to right, transparent, rgba(124,58,237,0.6), rgba(255,255,255,0.3), rgba(124,58,237,0.6), transparent)",
+            }} />
+            <div style={{
+              position: "absolute",
+              top: "-12px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: "60%",
+              height: "24px",
+              background: "radial-gradient(ellipse at center, rgba(124,58,237,0.35) 0%, transparent 70%)",
+              filter: "blur(6px)",
+              pointerEvents: "none",
+            }} />
+          </div>
+
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.7, delay: 0.4 }}
-            className="text-muted-foreground text-lg max-w-xl mx-auto"
+            className="text-white/60 text-lg max-w-xl mx-auto mt-6 italic"
+            style={{ fontFamily: 'ui-serif, Georgia, serif' }}
           >
             Have a question, idea, or want to collaborate? Reach out — we'd love to hear from you.
           </motion.p>

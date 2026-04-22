@@ -43,39 +43,70 @@ const FAQ = () => {
 
   return (
     <section className="relative z-10 py-20 px-6 md:px-16 lg:px-32 bg-black">
-      <div className="max-w-3xl mx-auto">
-        {/* Header Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="mb-20"
+      {/* Header Section — Outside max-w-3xl for full width line */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        viewport={{ once: true }}
+        className="mb-20 text-center"
+      >
+        <p
+          className="text-xs font-bold uppercase tracking-[0.2em] mb-4 orehack-liquid-text"
+          style={{ fontFamily: "'Outfit', sans-serif" }}
         >
-          <p
-            className="text-xs font-bold uppercase tracking-[0.2em] mb-4 orehack-liquid-text"
-            style={{ fontFamily: "'Outfit', sans-serif" }}
-          >
-            (FAQs)
-          </p>
-          <h2
-            className="text-3xl md:text-5xl font-black text-white mb-4 uppercase italic"
+          (TRUST THE BUILD)
+        </p>
+        <h2
+          className="text-3xl md:text-5xl font-black text-white m-0 uppercase flex flex-row items-baseline justify-center gap-4 md:gap-6 italic whitespace-nowrap"
+          style={{
+            fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
+            letterSpacing: "-0.04em",
+            textShadow: "0 0 60px rgba(124, 58, 237, 0.3)",
+          }}
+        >
+          <span>YOUR</span>
+          <span>QUESTIONS,</span>
+          <span
             style={{
-              fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
-              letterSpacing: "-0.04em",
-              textShadow: "0 0 60px rgba(124, 58, 237, 0.3)",
+              fontFamily: '"Playfair Display", serif',
+              color: "#7c3aed",
+              letterSpacing: "0.02em",
+              textShadow: "0 0 40px rgba(124, 58, 237, 0.8), 0 0 80px rgba(124, 58, 237, 0.4)",
             }}
           >
-            Your Questions, <span className="text-[#7c3aed]">Answered</span>
-          </h2>
-          <p 
-            className="text-white/60 text-base max-w-xl italic"
-            style={{ fontFamily: 'ui-serif, Georgia, serif' }}
-          >
-            Helping you understand our process and offerings at OreHack.
-          </p>
-        </motion.div>
+            ANSWERED
+          </span>
+        </h2>
 
+        <div style={{ position: "relative", marginTop: "2.5rem", height: "2px" }}>
+          <div style={{
+            width: "100%",
+            height: "1px",
+            background: "linear-gradient(to right, transparent, rgba(124,58,237,0.6), rgba(255,255,255,0.3), rgba(124,58,237,0.6), transparent)",
+          }} />
+          <div style={{
+            position: "absolute",
+            top: "-12px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "60%",
+            height: "24px",
+            background: "radial-gradient(ellipse at center, rgba(124,58,237,0.35) 0%, transparent 70%)",
+            filter: "blur(6px)",
+            pointerEvents: "none",
+          }} />
+        </div>
+
+        <p 
+          className="text-white/60 text-base max-w-xl mx-auto italic mt-8"
+          style={{ fontFamily: 'ui-serif, Georgia, serif' }}
+        >
+          Helping you understand our process and offerings at OreHack.
+        </p>
+      </motion.div>
+
+      <div className="max-w-3xl mx-auto">
         {/* Accordion List */}
         <div className="space-y-4">
           {faqs.map((faq, index) => (
