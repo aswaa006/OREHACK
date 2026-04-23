@@ -6,7 +6,7 @@ import { useTheme } from "@/context/ThemeContext";
 
 const NAV_SECTIONS = [
   { id: "home", label: "Home" },
-  { id: "how-it-works", label: "How It Works" },
+  { id: "how-it-works", label: "Empower" },
   { id: "about", label: "About" },
 ];
 
