@@ -1,9 +1,21 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useTheme } from "@/context/ThemeContext";
 
 const QuoteSection = () => {
+  const { isDayMode } = useTheme();
+
+  const sectionBg = isDayMode ? "#ffffff" : "#000000";
+  const quoteColor = isDayMode ? "#222222" : "#e4e4e7";
+
   return (
-    <section className="relative pt-12 pb-28 px-6 md:px-16 lg:px-32 bg-black overflow-hidden flex items-center justify-center min-h-[60vh]">
+    <section
+      className="relative pt-12 pb-28 px-6 md:px-16 lg:px-32 overflow-hidden flex items-center justify-center min-h-[60vh]"
+      style={{
+        background: sectionBg,
+        transition: "background 0.5s ease",
+      }}
+    >
       {/* Decorative gradient background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div 
@@ -30,14 +42,16 @@ const QuoteSection = () => {
           </span>
 
           <h2 
-            className="text-3xl md:text-5xl lg:text-6xl font-light italic leading-tight text-zinc-100"
+            className="text-3xl md:text-5xl lg:text-6xl font-light italic leading-tight"
             style={{ 
               fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
-              letterSpacing: "-0.02em"
+              letterSpacing: "-0.02em",
+              color: quoteColor,
+              transition: "color 0.4s ease",
             }}
           >
             Innovation is not just about building something new; <br className="hidden md:block" />
-            it’s about <span className="text-[#7c3aed] font-medium">redefining what’s possible</span>.
+            it's about <span className="text-[#7c3aed] font-medium">redefining what's possible</span>.
           </h2>
 
           <motion.div 
@@ -74,11 +88,12 @@ const QuoteSection = () => {
               gap: "10px",
               padding: "10px 24px",
               borderRadius: "50px",
-              background: "rgba(10, 0, 20, 0.7)",
+              background: isDayMode ? "rgba(240, 235, 255, 0.8)" : "rgba(10, 0, 20, 0.7)",
               border: "1px solid rgba(124,58,237,0.45)",
               backdropFilter: "blur(16px)",
               boxShadow: "0 0 24px rgba(124,58,237,0.2), inset 0 0 16px rgba(124,58,237,0.06)",
               overflow: "hidden",
+              transition: "background 0.4s ease",
             }}>
               {/* Shimmer sweep */}
               <div style={{

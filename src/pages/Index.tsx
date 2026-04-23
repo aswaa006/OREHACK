@@ -12,6 +12,7 @@ import TargetCursor from "@/components/TargetCursor";
 
 import LogoLoop from "@/components/LogoLoop";
 import { SiReact, SiNextdotjs, SiTypescript, SiTailwindcss, SiFramer, SiVite, SiSupabase, SiGithub } from "react-icons/si";
+import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 
 const techLogos = [
   { node: <SiReact />, title: "React", href: "https://react.dev" },
@@ -24,9 +25,17 @@ const techLogos = [
   { node: <SiGithub />, title: "GitHub", href: "https://github.com" },
 ];
 
-const Index = () => {
+const IndexContent = () => {
+  const { isDayMode } = useTheme();
+
   return (
-    <div className="min-h-screen text-foreground relative z-0" style={{ background: "#000000" }}>
+    <div
+      className="min-h-screen text-foreground relative z-0"
+      style={{
+        background: isDayMode ? "#ffffff" : "#000000",
+        transition: "background 0.5s ease",
+      }}
+    >
       <GlobalBackground />
       <TargetCursor
         targetSelector=".cursor-target"
@@ -37,20 +46,24 @@ const Index = () => {
       />
       <Navbar />
 
-
       <HeroSection />
 
       <WhatWeDo />
       <QuoteSection />
-      
-      <div style={{ padding: '48px 0', opacity: 0.8 }}>
-        <LogoLoop 
-          logos={techLogos} 
-          speed={50} 
-          logoHeight={48} 
-          gap={120} 
-          fadeOut={true} 
-          fadeOutColor="#000000"
+
+      <div style={{ 
+        padding: '48px 0', 
+        opacity: 0.8,
+        color: isDayMode ? "#000000" : "#ffffff",
+        transition: "color 0.4s ease"
+      }}>
+        <LogoLoop
+          logos={techLogos}
+          speed={50}
+          logoHeight={48}
+          gap={120}
+          fadeOut={true}
+          fadeOutColor={isDayMode ? "#ffffff" : "#000000"}
           scaleOnHover={true}
         />
       </div>
@@ -60,6 +73,14 @@ const Index = () => {
       <FAQ />
       <Contact />
     </div>
+  );
+};
+
+const Index = () => {
+  return (
+    <ThemeProvider>
+      <IndexContent />
+    </ThemeProvider>
   );
 };
 

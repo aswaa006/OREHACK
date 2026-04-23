@@ -37,6 +37,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { gsap } from "gsap";
 import { motion } from "framer-motion";
+import { useTheme } from "@/context/ThemeContext";
 
 const logoSrc = "/oregent-logo.png";
 
@@ -63,8 +64,102 @@ const CSS = `
   margin-top: 100px;
   position: relative;
   overflow: hidden;
+  transition: background 0.4s ease, color 0.4s ease;
 }
-.og-about::before {
+.og-about.day-mode {
+  --bg:     #ffffff;
+  --card:   #f8f7ff;
+  --border: rgba(124, 58, 237, 0.1);
+  --text:   #000000;
+  --muted:  #6b7280;
+}
+.og-about.day-mode::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(124, 58, 237, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 58, 237, 0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+}
+.day-mode .og-search {
+  background: rgba(255,255,255,.9);
+  border: 1px solid rgba(124,58,237,.15);
+  box-shadow: 0 0 20px rgba(124,58,237,.05);
+}
+/* Enhanced Border Sweep for Day Mode */
+.day-mode .og-card::before {
+  background: conic-gradient(
+    from var(--border-angle, 0deg),
+    transparent 0%,
+    transparent 25%,
+    rgba(124, 58, 237, 0.8) 30%,
+    rgba(59, 130, 246, 0.9) 35%,
+    rgba(124, 58, 237, 0.8) 40%,
+    transparent 45%,
+    transparent 100%
+  ) !important;
+}
+.day-mode .og-orbit-center img,
+.day-mode .og-ls-logo,
+.day-mode .og-hero-badge img,
+.day-mode .og-brand-item img {
+  filter: none !important;
+}
+.day-mode .og-orbit-ring,
+.day-mode .og-ls-ring {
+  border-color: rgba(124, 58, 237, 0.15);
+}
+.day-mode .og-orbit-icon svg,
+.day-mode .og-brand-item svg,
+.day-mode .og-ls-word-orbit text {
+  stroke: rgba(124, 58, 237, 0.5);
+}
+.day-mode .og-orbit-word {
+  color: #7c3aed;
+  opacity: 0.6;
+}
+.day-mode .og-code {
+  color: #4b5563;
+}
+.day-mode .tag { color: #0550ae; }
+.day-mode .kw  { color: #cf222e; }
+.day-mode .str { color: #0a3069; }
+.day-mode .atr { color: #24292f; }
+.day-mode .cm  { color: #6e7781; }
+.day-mode .og-search-icon {
+  background: rgba(124, 58, 237, 0.05);
+  border-color: rgba(124, 58, 237, 0.1);
+}
+.day-mode .og-search-btn {
+  background: rgba(124, 58, 237, 0.08);
+  border-color: rgba(124, 58, 237, 0.15);
+}
+.day-mode .og-hero-label {
+  color: #7c3aed;
+  opacity: 0.8;
+}
+.day-mode .og-c-e {
+  --text: #ffffff;
+  --muted: rgba(255,255,255,0.6);
+  background: #000000 !important;
+}
+.day-mode .og-c-e .og-hero-title {
+  color: #ffffff;
+}
+.day-mode .og-c-e .og-hero-label {
+  color: rgba(255,255,255,0.7);
+}
+.day-mode .og-c-e .og-ls-logo,
+.day-mode .og-c-e .og-hero-badge img {
+  filter: brightness(0) invert(1) !important;
+}
+.day-mode .og-c-e .og-orbit-word {
+  color: #ffffff !important;
+  opacity: 0.4;
+}
+.og-about:not(.day-mode)::before {
   content: '';
   position: absolute; inset: 0;
   background-image:
@@ -126,9 +221,16 @@ const CSS = `
   overflow: hidden;
   position: relative;
   will-change: transform, opacity, filter;
-  transition: border-color .3s;
+  transition: border-color .3s, background 0.4s ease, box-shadow 0.4s ease;
+  box-shadow: 0 10px 40px rgba(124, 58, 237, 0.12), 0 0 20px rgba(124, 58, 237, 0.08);
 }
-.og-card:hover { border-color: rgba(255,255,255,.16); }
+.og-card:hover { 
+  border-color: rgba(124,58,237,.25); 
+  box-shadow: 0 15px 50px rgba(124, 58, 237, 0.22), 0 0 30px rgba(124, 58, 237, 0.15);
+}
+.og-about.day-mode .og-card {
+  box-shadow: 0 10px 40px rgba(124, 58, 237, 0.18), 0 0 25px rgba(124, 58, 237, 0.12) !important;
+}
 
 /* ═══════════════════════════════════════
    ANIMATED BORDER GLOW SWEEP
@@ -158,13 +260,12 @@ const CSS = `
   pointer-events: none;
   transition: opacity 0.6s;
 }
+.og-card::before {
+  opacity: 1 !important;
+  transition: opacity 1s 0.3s;
+}
 .og-anim .og-card::before {
   animation: borderSweep 4s linear infinite;
-  opacity: 0;
-}
-.og-anim .og-card.og-card-visible::before {
-  opacity: 1;
-  transition: opacity 1s 0.3s;
 }
 @property --border-angle {
   syntax: '<angle>';
@@ -273,9 +374,13 @@ const CSS = `
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
-  opacity: 1;
-  transition: opacity 0.3s ease;
+  opacity: 1 !important;
+  --glow-intensity: 0.4;
+  transition: --glow-intensity 0.3s ease;
   z-index: 12;
+}
+.og-card:hover {
+  --glow-intensity: 1 !important;
 }
 
 .og-card:hover {
@@ -300,6 +405,19 @@ const CSS = `
   opacity: 0;
   transform: translate(-50%, -50%);
   mix-blend-mode: screen;
+}
+.day-mode .global-spotlight {
+  mix-blend-mode: multiply;
+  background: radial-gradient(circle,
+    rgba(124, 58, 237, 0.12) 0%,
+    rgba(124, 58, 237, 0.06) 20%,
+    transparent 70%
+  );
+}
+.day-mode .og-card-glow {
+  mix-blend-mode: multiply;
+  background: radial-gradient(500px circle at var(--gx,50%) var(--gy,50%),
+    rgba(124, 58, 237, 0.08), transparent 40%);
 }
 
 .bento-section {
@@ -719,13 +837,15 @@ const GlobalSpotlight = ({
   disableAnimations = false,
   enabled = true,
   spotlightRadius = 300,
-  glowColor = '132, 0, 255'
+  glowColor = '132, 0, 255',
+  isDayMode = false
 }: {
   gridRef: React.RefObject<HTMLDivElement>;
   disableAnimations?: boolean;
   enabled?: boolean;
   spotlightRadius?: number;
   glowColor?: string;
+  isDayMode?: boolean;
 }) => {
   const spotlightRef = useRef<HTMLDivElement | null>(null);
 
@@ -733,7 +853,7 @@ const GlobalSpotlight = ({
     if (disableAnimations || !gridRef?.current || !enabled) return;
 
     const spotlight = document.createElement('div');
-    spotlight.className = 'global-spotlight';
+    spotlight.className = `global-spotlight ${isDayMode ? 'day-mode' : ''}`;
     document.body.appendChild(spotlight);
     spotlightRef.current = spotlight;
 
@@ -905,6 +1025,8 @@ function BentoCard({
 }
 
 export default function AboutOregent() {
+  const { isDayMode } = useTheme();
+  const [isRevealed, setIsRevealed] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
@@ -1101,10 +1223,10 @@ export default function AboutOregent() {
      JSX
      ═══════════════════════════════════════════ */
   return (
-    <div className="og-about" ref={sectionRef} id="about">
+    <div className={`og-about ${isDayMode ? 'day-mode' : ''}`} ref={sectionRef} id="about">
       <style>{CSS}</style>
       <div className="og-wrap">
-        <GlobalSpotlight gridRef={gridRef} />
+        <GlobalSpotlight gridRef={gridRef} isDayMode={isDayMode} />
         <div ref={triggerRef} style={{ position: 'absolute', top: '400px', left: 0, width: '1px', height: '1px' }} />
 
         {/* ── Header: Eyebrow + WHO WE ARE ── */}
@@ -1122,11 +1244,11 @@ export default function AboutOregent() {
             (TRUST THE BUILD)
           </p>
           <h2
-            className="text-4xl md:text-7xl font-black leading-none text-white m-0 uppercase flex flex-row flex-wrap items-baseline justify-center gap-4 md:gap-6 italic"
+            className={`text-4xl md:text-7xl font-black leading-none ${isDayMode ? 'text-black' : 'text-white'} m-0 uppercase flex flex-row flex-wrap items-baseline justify-center gap-4 md:gap-6 italic`}
             style={{
               fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
               letterSpacing: "-0.04em",
-              textShadow: "0 0 60px rgba(124, 58, 237, 0.45), 0 0 120px rgba(124, 58, 237, 0.2)",
+              textShadow: isDayMode ? "none" : "0 0 60px rgba(124, 58, 237, 0.45), 0 0 120px rgba(124, 58, 237, 0.2)",
             }}
           >
             <span>WHO</span>

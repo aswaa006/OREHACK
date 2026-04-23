@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import emailjs from "@emailjs/browser";
+import { useTheme } from "@/context/ThemeContext";
 
 // ✅ Fill in your EmailJS credentials below
 const EMAILJS_SERVICE_ID = "service_2ao7hsi";   // e.g. "service_abc123"
@@ -130,15 +131,18 @@ const FloatingOrb = ({ delay, size, x, y, color }: { delay: number; size: number
   />
 );
 
-const GridLine = ({ direction, position, delay }: { direction: "h" | "v"; position: string; delay: number }) => (
-  <motion.div
-    className={`absolute ${direction === "h" ? "h-px w-full left-0" : "w-px h-full top-0"} bg-gradient-to-r from-transparent via-primary/20 to-transparent`}
-    style={direction === "h" ? { top: position } : { left: position }}
-    initial={{ opacity: 0, scale: 0 }}
-    animate={{ opacity: [0, 0.5, 0], scale: 1 }}
-    transition={{ duration: 4, repeat: Infinity, delay, ease: "easeInOut" }}
-  />
-);
+const GridLine = ({ vertical = false, color = "bg-primary/5", isHidden = false }) => {
+  if (isHidden) return null;
+  return (
+    <div 
+      className={`absolute ${vertical ? "w-px h-full" : "h-px w-full"} ${color}`}
+      style={{
+        left: vertical ? `${Math.random() * 100}%` : 0,
+        top: vertical ? 0 : `${Math.random() * 100}%`,
+      }}
+    />
+  );
+};
 
 const Contact = () => {
   const ref = useRef<HTMLElement>(null);
@@ -149,6 +153,7 @@ const Contact = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string>("");
+  const { isDayMode } = useTheme();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -184,11 +189,37 @@ const Contact = () => {
     setEmailError(ok ? "" : "Please enter a valid email address.");
   };
 
+  // Theme-aware colors
+  const headingColor = isDayMode ? "#000000" : "#ffffff";
+  const subtitleColor = isDayMode ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.6)";
+  const cardBg = isDayMode ? "#f8f8f8" : "hsl(0 0% 4%)";
+  const cardBorder = isDayMode ? "1px solid rgba(124,58,237,0.3)" : "1px solid rgba(124,58,237,0.7)";
+  const formHeadingColor = isDayMode ? "#000000" : "hsl(220 14% 96%)";
+  const formSubtextColor = isDayMode ? "#666666" : "hsl(218 11% 65%)";
+  const inputBg = isDayMode ? "rgba(245,245,245,0.8)" : "rgba(0,0,0,0.5)";
+  const inputBorder = isDayMode ? "#e0e0e0" : "hsl(0 0% 10%)";
+  const inputText = isDayMode ? "#000000" : "hsl(220 14% 96%)";
+  const inputPlaceholder = isDayMode ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.3)";
+  const labelColor = isDayMode ? "#333333" : "hsl(220 14% 96%)";
+  const footerBorderColor = isDayMode ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.05)";
+  const footerTextColor = isDayMode ? "#333333" : "hsl(220 14% 96%)";
+  const footerMutedColor = isDayMode ? "#888888" : "hsl(218 11% 65%)";
+  const footerLinkHover = isDayMode ? "#7c3aed" : "#c4b5fd";
+  const socialCardBg = isDayMode ? "rgba(245,245,245,0.8)" : undefined;
+  const socialCardBorder = isDayMode ? "1px solid rgba(124,58,237,0.2)" : undefined;
+  const infoValueColor = isDayMode ? "#000000" : "hsl(220 14% 96%)";
+  const infoLabelColor = isDayMode ? "#888888" : "hsl(218 11% 65%)";
+  const ctaBannerBg = isDayMode ? "linear-gradient(135deg, rgba(124,58,237,0.05), rgba(245,245,245,0.9), rgba(236,72,153,0.03))" : undefined;
+  const ctaTitleColor = isDayMode ? "#000000" : "hsl(220 14% 96%)";
+  const ctaDescColor = isDayMode ? "#666666" : "hsl(218 11% 65%)";
+  const connectTitleColor = isDayMode ? "#000000" : "hsl(220 14% 96%)";
+
   return (
     <section
       id="contact"
       ref={ref}
       className="relative pt-20 pb-0 overflow-hidden"
+      style={{ transition: "background 0.5s ease" }}
     >
       {/* Animated background */}
       <div className="absolute inset-0 grid-bg opacity-20" />
@@ -197,11 +228,10 @@ const Contact = () => {
       <FloatingOrb delay={4} size={250} x="50%" y="10%" color="bg-blue-500/10" />
       <FloatingOrb delay={3} size={200} x="80%" y="15%" color="bg-indigo-500/10" />
 
-      {/* Animated grid lines */}
-      <GridLine direction="h" position="15%" delay={0} />
-      <GridLine direction="h" position="85%" delay={2} />
-      <GridLine direction="v" position="10%" delay={1} />
-      <GridLine direction="v" position="90%" delay={3} />
+      {/* Grid lines decoration */}
+      <GridLine vertical color="bg-primary/10" isHidden={isDayMode} />
+      <GridLine vertical color="bg-primary/5" isHidden={isDayMode} />
+      <GridLine color="bg-primary/10" isHidden={isDayMode} />
 
       {/* Perspective container for 3D feel */}
       <div className="relative z-10 container mx-auto px-6" style={{ perspective: "1200px" }}>
@@ -223,11 +253,13 @@ const Contact = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.7, delay: 0.3 }}
-            className="text-4xl md:text-7xl font-black leading-none text-white m-0 uppercase flex flex-row flex-wrap items-baseline justify-center gap-4 md:gap-6 italic"
+            className="text-4xl md:text-7xl font-black leading-none m-0 uppercase flex flex-row flex-wrap items-baseline justify-center gap-4 md:gap-6 italic"
             style={{
               fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
               letterSpacing: "-0.04em",
               textShadow: "0 0 60px rgba(124, 58, 237, 0.45), 0 0 120px rgba(124, 58, 237, 0.2)",
+              color: headingColor,
+              transition: "color 0.4s ease",
             }}
           >
             <span>GET</span>
@@ -249,7 +281,7 @@ const Contact = () => {
             <div style={{
               width: "100%",
               height: "1px",
-              background: "linear-gradient(to right, transparent, rgba(124,58,237,0.6), rgba(255,255,255,0.3), rgba(124,58,237,0.6), transparent)",
+              background: `linear-gradient(to right, transparent, rgba(124,58,237,0.6), ${isDayMode ? "rgba(124,58,237,0.8)" : "rgba(255,255,255,0.3)"}, rgba(124,58,237,0.6), transparent)`,
             }} />
             <div style={{
               position: "absolute",
@@ -258,8 +290,8 @@ const Contact = () => {
               transform: "translateX(-50%)",
               width: "60%",
               height: "24px",
-              background: "radial-gradient(ellipse at center, rgba(124,58,237,0.35) 0%, transparent 70%)",
-              filter: "blur(6px)",
+              background: `radial-gradient(ellipse at center, rgba(124,58,237, ${isDayMode ? "0.2" : "0.35"}) 0%, transparent 70%)`,
+              filter: isDayMode ? "blur(4px)" : "blur(6px)",
               pointerEvents: "none",
             }} />
           </div>
@@ -268,8 +300,12 @@ const Contact = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.7, delay: 0.4 }}
-            className="text-white/60 text-lg max-w-xl mx-auto mt-6 italic"
-            style={{ fontFamily: 'ui-serif, Georgia, serif' }}
+            className="text-lg max-w-xl mx-auto mt-6 italic"
+            style={{
+              fontFamily: 'ui-serif, Georgia, serif',
+              color: subtitleColor,
+              transition: "color 0.4s ease",
+            }}
           >
             Have a question, idea, or want to collaborate? Reach out — we'd love to hear from you.
           </motion.p>
@@ -286,9 +322,23 @@ const Contact = () => {
             {/* Glow behind the card */}
             <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-pink-500/10 to-purple-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
-            <div className="relative surface-elevated rounded-2xl p-8 md:p-10 border border-border/50 hover:border-primary/30 transition-all duration-500">
-              <h3 className="text-2xl font-bold text-foreground mb-2">Send a Message</h3>
-              <p className="text-muted-foreground text-sm mb-8">We'll get back to you within 24 hours.</p>
+            <div
+              className="relative rounded-2xl p-8 md:p-10 transition-all duration-500"
+              style={{
+                background: cardBg,
+                border: cardBorder,
+                transition: "background 0.4s ease, border 0.4s ease",
+              }}
+            >
+              <h3
+                className="text-2xl font-bold mb-2"
+                style={{ color: formHeadingColor, transition: "color 0.4s ease" }}
+              >
+                Send a Message
+              </h3>
+              <p className="text-sm mb-8" style={{ color: formSubtextColor, transition: "color 0.4s ease" }}>
+                We'll get back to you within 24 hours.
+              </p>
 
               <AnimatePresence mode="wait">
                 {submitted ? (
@@ -316,8 +366,10 @@ const Contact = () => {
                         />
                       </svg>
                     </motion.div>
-                    <h4 className="text-xl font-bold text-foreground mb-2">Message Sent! 🎉</h4>
-                    <p className="text-muted-foreground text-sm">We'll be in touch at <span className="text-primary font-medium">contact@oregent.com</span> soon.</p>
+                    <h4 className="text-xl font-bold mb-2" style={{ color: formHeadingColor }}>Message Sent! 🎉</h4>
+                    <p className="text-sm" style={{ color: formSubtextColor }}>
+                      We'll be in touch at <span className="text-primary font-medium">contact@oregent.com</span> soon.
+                    </p>
                   </motion.div>
                 ) : (
                   <motion.form
@@ -334,7 +386,7 @@ const Contact = () => {
                       transition={{ duration: 0.5, delay: 0.5 }}
                       className="relative"
                     >
-                      <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">Name</label>
+                      <label htmlFor="name" className="block text-sm font-medium mb-2" style={{ color: labelColor }}>Name</label>
                       <div className="relative">
                         <input
                           id="name"
@@ -345,7 +397,13 @@ const Contact = () => {
                           onFocus={() => setFocused("name")}
                           onBlur={() => setFocused(null)}
                           required
-                          className="w-full px-4 py-3 bg-background/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 transition-all duration-300"
+                          className="w-full px-4 py-3 rounded-xl focus:outline-none focus:border-primary/50 transition-all duration-300"
+                          style={{
+                            background: inputBg,
+                            border: `1px solid ${inputBorder}`,
+                            color: inputText,
+                            transition: "background 0.4s ease, border-color 0.4s ease, color 0.4s ease",
+                          }}
                         />
                         <motion.div
                           className="absolute inset-0 rounded-xl border-2 border-primary/50 pointer-events-none"
@@ -363,7 +421,7 @@ const Contact = () => {
                       transition={{ duration: 0.5, delay: 0.6 }}
                       className="relative"
                     >
-                      <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">Email</label>
+                      <label htmlFor="email" className="block text-sm font-medium mb-2" style={{ color: labelColor }}>Email</label>
                       <div className="relative">
                         <input
                           id="email"
@@ -377,10 +435,13 @@ const Contact = () => {
                           onFocus={() => setFocused("email")}
                           onBlur={() => setFocused(null)}
                           required
-                          className={`w-full px-4 py-3 bg-background/50 border rounded-xl text-foreground placeholder:text-muted-foreground/50 focus:outline-none transition-all duration-300 ${emailError
-                              ? "border-red-500/70 focus:border-red-500"
-                              : "border-border focus:border-primary/50"
-                            }`}
+                          className="w-full px-4 py-3 rounded-xl focus:outline-none transition-all duration-300"
+                          style={{
+                            background: inputBg,
+                            border: `1px solid ${emailError ? "rgba(239,68,68,0.7)" : inputBorder}`,
+                            color: inputText,
+                            transition: "background 0.4s ease, border-color 0.4s ease, color 0.4s ease",
+                          }}
                         />
                         <motion.div
                           className={`absolute inset-0 rounded-xl border-2 pointer-events-none ${emailError ? "border-red-500/40" : "border-primary/50"}`}
@@ -406,7 +467,7 @@ const Contact = () => {
                       animate={isInView ? { opacity: 1, x: 0 } : {}}
                       transition={{ duration: 0.5, delay: 0.7 }}
                     >
-                      <label htmlFor="message" className="block text-sm font-medium text-foreground mb-2">
+                      <label htmlFor="message" className="block text-sm font-medium mb-2" style={{ color: labelColor }}>
                         Message
                       </label>
                       <div className="relative">
@@ -419,7 +480,13 @@ const Contact = () => {
                           onFocus={() => setFocused("message")}
                           onBlur={() => setFocused(null)}
                           required
-                          className="w-full px-4 py-3 bg-background/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 transition-all duration-300 resize-none"
+                          className="w-full px-4 py-3 rounded-xl focus:outline-none focus:border-primary/50 transition-all duration-300 resize-none"
+                          style={{
+                            background: inputBg,
+                            border: `1px solid ${inputBorder}`,
+                            color: inputText,
+                            transition: "background 0.4s ease, border-color 0.4s ease, color 0.4s ease",
+                          }}
                         />
                         <motion.div
                           className="absolute inset-0 rounded-xl border-2 border-primary/50 pointer-events-none"
@@ -527,15 +594,20 @@ const Contact = () => {
                   key={i}
                   variants={itemVariants}
                   whileHover={{ y: -4, scale: 1.02 }}
-                  className="surface-elevated rounded-xl p-5 border border-border/50 hover:border-primary/30 transition-all duration-300 group"
+                  className="rounded-xl p-5 transition-all duration-300 group"
+                  style={{
+                    background: cardBg,
+                    border: cardBorder,
+                    transition: "background 0.4s ease, border 0.4s ease",
+                  }}
                 >
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary/20 transition-colors">
                       {info.icon}
                     </div>
-                    <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{info.label}</span>
+                    <span className="text-xs uppercase tracking-wider font-medium" style={{ color: infoLabelColor }}>{info.label}</span>
                   </div>
-                  <p className="text-foreground font-semibold pl-12">{info.value}</p>
+                  <p className="font-semibold pl-12" style={{ color: infoValueColor }}>{info.value}</p>
                 </motion.div>
               ))}
             </motion.div>
@@ -546,7 +618,8 @@ const Contact = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.6, delay: 0.6 }}
-                className="text-lg font-semibold text-foreground mb-4"
+                className="text-lg font-semibold mb-4"
+                style={{ color: connectTitleColor, transition: "color 0.4s ease" }}
               >
                 Connect with us
               </motion.h3>
@@ -570,8 +643,12 @@ const Contact = () => {
                       rotateY: 5,
                     }}
                     whileTap={{ scale: 0.95 }}
-                    className={`group relative flex flex-col items-center gap-3 p-5 rounded-xl border ${social.border} ${social.bg} ${social.hoverBorder} transition-all duration-300 shadow-lg shadow-transparent ${social.glow}`}
-                    style={{ transformStyle: "preserve-3d" }}
+                    className={`group relative flex flex-col items-center gap-3 p-5 rounded-xl transition-all duration-300 shadow-lg shadow-transparent ${social.glow}`}
+                    style={{
+                      transformStyle: "preserve-3d",
+                      background: socialCardBg,
+                      border: socialCardBorder || `1px solid rgba(124,58,237,0.7)`,
+                    }}
                   >
                     {/* Animated shine */}
                     <div className="absolute inset-0 rounded-xl overflow-hidden">
@@ -583,12 +660,21 @@ const Contact = () => {
                     </div>
 
                     <div className={`relative z-10 w-10 h-10 rounded-lg bg-gradient-to-br ${social.color} p-[1px]`}>
-                      <div className="w-full h-full rounded-xl bg-card flex items-center justify-center text-foreground group-hover:bg-transparent group-hover:text-white transition-all duration-300">
+                      <div
+                        className="w-full h-full rounded-xl flex items-center justify-center group-hover:bg-transparent group-hover:text-white transition-all duration-300"
+                        style={{
+                          background: cardBg,
+                          color: isDayMode ? "#333" : "hsl(220 14% 96%)",
+                        }}
+                      >
                         {social.icon}
                       </div>
                     </div>
 
-                    <span className="relative z-10 text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                    <span
+                      className="relative z-10 text-sm font-medium transition-colors"
+                      style={{ color: isDayMode ? "#666" : "hsl(218 11% 65%)" }}
+                    >
                       {social.name}
                     </span>
                   </motion.a>
@@ -602,20 +688,29 @@ const Contact = () => {
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.7, delay: 0.9 }}
               whileHover={{ scale: 1.01 }}
-              className="relative overflow-hidden rounded-2xl p-6 md:p-8 border border-primary/20"
+              className="relative overflow-hidden rounded-2xl p-6 md:p-8"
+              style={{
+                border: cardBorder,
+                transition: "border 0.4s ease",
+              }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-card to-pink-500/5" />
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: ctaBannerBg || "linear-gradient(135deg, rgba(124,58,237,0.1), hsl(0 0% 4%), rgba(236,72,153,0.05))",
+                }}
+              />
               <motion.div
                 className="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-[60px]"
                 animate={{ scale: [1, 1.3, 1], rotate: [0, 90, 0] }}
                 transition={{ duration: 10, repeat: Infinity }}
               />
               <div className="relative z-10">
-                <h4 className="text-xl font-bold text-foreground mb-2">
+                <h4 className="text-xl font-bold mb-2" style={{ color: ctaTitleColor }}>
                   Ready to build something{" "}
                   <span className="text-gradient-primary">extraordinary</span>?
                 </h4>
-                <p className="text-muted-foreground text-sm leading-relaxed">
+                <p className="text-sm leading-relaxed" style={{ color: ctaDescColor }}>
                   Join hackers worldwide competing on Orehack — powered by Oregent's intelligent evaluation system.
                 </p>
               </div>
@@ -625,13 +720,23 @@ const Contact = () => {
       </div>
 
       {/* ── Footer (embedded to avoid spacing gap) ─────────────────── */}
-      <div className="relative z-10 border-t border-border/50 mt-20 pt-16 pb-0 overflow-hidden text-foreground">
+      <div
+        className="relative z-10 mt-20 pt-16 pb-0 overflow-hidden"
+        style={{
+          borderTop: `1px solid ${footerBorderColor}`,
+          color: footerTextColor,
+          transition: "border-color 0.4s ease, color 0.4s ease",
+        }}
+      >
         <div className="container mx-auto px-6">
           {/* Top section: Navigation + Social */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
             {/* Navigation */}
             <div>
-              <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-6">
+              <h4
+                className="text-xs font-semibold uppercase tracking-[0.2em] mb-6"
+                style={{ color: footerMutedColor }}
+              >
                 Navigation
               </h4>
               <ul className="space-y-3">
@@ -647,8 +752,13 @@ const Contact = () => {
                         const el = document.getElementById(link.id);
                         if (el) el.scrollIntoView({ behavior: "smooth" });
                       }}
-                      style={{ transition: "all 0.3s ease" }}
-                      className="text-base text-foreground/80 hover:text-[#c4b5fd]"
+                      style={{
+                        transition: "all 0.3s ease",
+                        color: isDayMode ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.8)",
+                      }}
+                      className="text-base"
+                      onMouseEnter={(e) => (e.currentTarget.style.color = footerLinkHover)}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = isDayMode ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.8)")}
                     >
                       {link.label}
                     </button>
@@ -659,7 +769,10 @@ const Contact = () => {
 
             {/* Social */}
             <div>
-              <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-6">
+              <h4
+                className="text-xs font-semibold uppercase tracking-[0.2em] mb-6"
+                style={{ color: footerMutedColor }}
+              >
                 Social
               </h4>
               <ul className="space-y-3">
@@ -674,8 +787,13 @@ const Contact = () => {
                       href={link.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ transition: "all 0.3s ease" }}
-                      className="text-base text-foreground/80 hover:text-[#c4b5fd]"
+                      style={{
+                        transition: "all 0.3s ease",
+                        color: isDayMode ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.8)",
+                      }}
+                      className="text-base"
+                      onMouseEnter={(e) => (e.currentTarget.style.color = footerLinkHover)}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = isDayMode ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.8)")}
                     >
                       {link.label}
                     </a>
@@ -687,10 +805,10 @@ const Contact = () => {
             {/* Branding column */}
             <div className="flex flex-col justify-between">
               <div>
-                <span className="text-xl font-bold tracking-tight text-foreground">
+                <span className="text-xl font-bold tracking-tight" style={{ color: footerTextColor }}>
                   Ore<span className="text-gradient-primary">hack</span>
                 </span>
-                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                <p className="text-sm mt-2 leading-relaxed" style={{ color: footerMutedColor }}>
                   A Controlled Technical Evaluation System — engineered by Oregent.
                 </p>
               </div>
@@ -698,8 +816,11 @@ const Contact = () => {
           </div>
 
           {/* Divider + copyright bar */}
-          <div className="border-t border-border/50 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-muted-foreground">
+          <div
+            className="py-6 flex flex-col md:flex-row items-center justify-between gap-4"
+            style={{ borderTop: `1px solid ${footerBorderColor}` }}
+          >
+            <p className="text-sm" style={{ color: footerMutedColor }}>
               © {new Date().getFullYear()} Oregent. All rights reserved.
             </p>
             <a

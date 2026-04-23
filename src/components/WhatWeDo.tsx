@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "@/context/ThemeContext";
 
 const items = [
   {
@@ -37,6 +38,7 @@ const items = [
 const WhatWeDo = () => {
   const [active, setActive] = useState(0);
   const sectionRef = useRef<HTMLDivElement>(null);
+  const { isDayMode } = useTheme();
 
   const goNext = () => setActive((prev) => Math.min(prev + 1, items.length - 1));
   const goPrev = () => setActive((prev) => Math.max(prev - 1, 0));
@@ -51,11 +53,9 @@ const WhatWeDo = () => {
       const sectionHeight = section.offsetHeight;
       const viewportHeight = window.innerHeight;
 
-      // How far we've scrolled into the section (0 = top just entered, 1 = bottom leaving)
       const scrolled = -rect.top / (sectionHeight - viewportHeight);
       const clamped = Math.max(0, Math.min(1, scrolled));
 
-      // Map scroll progress to item index
       const newIndex = Math.min(
         items.length - 1,
         Math.floor(clamped * items.length)
@@ -68,22 +68,40 @@ const WhatWeDo = () => {
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll(); // initial check
+    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const sectionBg = isDayMode ? "#ffffff" : "#000000";
+  const headingColor = isDayMode ? "#000000" : "#ffffff";
+  const numColor = isDayMode ? "#000000" : "#ffffff";
+  const descColor = isDayMode ? "#333333" : "#e4e4e7";
+  const placeholderBg = isDayMode
+    ? "linear-gradient(135deg, #f5f5f5 0%, #ececec 100%)"
+    : "linear-gradient(135deg, #0d0d0d 0%, #111 100%)";
+  const placeholderBorder = isDayMode ? "1px dashed #ccc" : "1px dashed #222";
+  const placeholderTextColor = isDayMode ? "#bbb" : "#333";
+  const dotInactiveBg = isDayMode ? "#ccc" : "#333";
+  const arrowBorderClass = isDayMode
+    ? "border-[#ccc] hover:border-[#7c3aed] hover:bg-[#7c3aed]/10"
+    : "border-[#333] hover:border-[#7c3aed] hover:bg-[#7c3aed]/10";
+  const arrowTextClass = isDayMode
+    ? "text-[#999] group-hover:text-[#7c3aed]"
+    : "text-[#888] group-hover:text-[#7c3aed]";
 
   return (
     <section
       ref={sectionRef}
       id="what-we-do"
-      className="relative z-10 bg-black"
+      className="relative z-10"
       style={{
-        // Substantial scroll distance for smooth transitions
+        background: sectionBg,
         height: `${items.length * 85}vh`,
-        marginTop: "40px",
+        marginTop: "0px",
+        transition: "background 0.5s ease",
       }}
     >
-      {/* Sticky inner container — stays in viewport while scrolling */}
+      {/* Sticky inner container */}
       <div
         className="sticky top-0 flex flex-col justify-start pt-24 pb-16 px-6 md:px-16 lg:px-32"
         style={{ minHeight: "100vh" }}
@@ -103,11 +121,13 @@ const WhatWeDo = () => {
             (TRUST THE BUILD)
           </p>
           <h2
-            className="text-4xl md:text-7xl font-black leading-none text-white m-0 uppercase flex flex-row flex-wrap items-baseline justify-center gap-4 md:gap-6 italic"
+            className="text-4xl md:text-7xl font-black leading-none m-0 uppercase flex flex-row flex-wrap items-baseline justify-center gap-4 md:gap-6 italic"
             style={{
               fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
               letterSpacing: "-0.04em",
               textShadow: "0 0 60px rgba(124, 58, 237, 0.45), 0 0 120px rgba(124, 58, 237, 0.2)",
+              color: headingColor,
+              transition: "color 0.4s ease",
             }}
           >
             <span>WHAT</span>
@@ -129,7 +149,7 @@ const WhatWeDo = () => {
             <div style={{
               width: "100%",
               height: "1px",
-              background: "linear-gradient(to right, transparent, rgba(124,58,237,0.6), rgba(255,255,255,0.3), rgba(124,58,237,0.6), transparent)",
+              background: `linear-gradient(to right, transparent, rgba(124,58,237,0.6), ${isDayMode ? "rgba(124,58,237,0.8)" : "rgba(255,255,255,0.3)"}, rgba(124,58,237,0.6), transparent)`,
             }} />
             <div style={{
               position: "absolute",
@@ -138,8 +158,8 @@ const WhatWeDo = () => {
               transform: "translateX(-50%)",
               width: "60%",
               height: "24px",
-              background: "radial-gradient(ellipse at center, rgba(124,58,237,0.35) 0%, transparent 70%)",
-              filter: "blur(6px)",
+              background: `radial-gradient(ellipse at center, rgba(124,58,237, ${isDayMode ? "0.2" : "0.35"}) 0%, transparent 70%)`,
+              filter: isDayMode ? "blur(4px)" : "blur(6px)",
               pointerEvents: "none",
             }} />
           </div>
@@ -169,7 +189,7 @@ const WhatWeDo = () => {
                       letterSpacing: "0.08em",
                     }}
                   >
-                    <span style={{ color: "#ffffff" }}>{items[active].num}</span>
+                    <span style={{ color: numColor, transition: "color 0.4s ease" }}>{items[active].num}</span>
                     <span style={{ color: "#7c3aed" }}> / 0{items.length}</span>
                   </span>
 
@@ -197,9 +217,10 @@ const WhatWeDo = () => {
                       fontWeight: 300,
                       fontStyle: "italic",
                       lineHeight: 1.8,
-                      color: "#e4e4e7",
+                      color: descColor,
                       letterSpacing: "0.01em",
                       maxWidth: "540px",
+                      transition: "color 0.4s ease",
                     }}
                   >
                     {items[active].desc}
@@ -213,7 +234,7 @@ const WhatWeDo = () => {
               <button
                 onClick={goPrev}
                 aria-label="Previous item"
-                className="group flex items-center justify-center w-12 h-12 rounded-full border border-[#333] transition-all duration-300 hover:border-[#7c3aed] hover:bg-[#7c3aed]/10"
+                className={`group flex items-center justify-center w-12 h-12 rounded-full border transition-all duration-300 ${arrowBorderClass}`}
               >
                 <svg
                   width="20"
@@ -224,7 +245,7 @@ const WhatWeDo = () => {
                   strokeWidth={1.5}
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="text-[#888] group-hover:text-[#7c3aed] transition-colors duration-300"
+                  className={`transition-colors duration-300 ${arrowTextClass}`}
                 >
                   <path d="M19 12H5" />
                   <path d="M12 19l-7-7 7-7" />
@@ -243,7 +264,7 @@ const WhatWeDo = () => {
                       width: i === active ? "24px" : "6px",
                       height: "6px",
                       borderRadius: "3px",
-                      background: i === active ? "#7c3aed" : "#333",
+                      background: i === active ? "#7c3aed" : dotInactiveBg,
                     }}
                   />
                 ))}
@@ -252,7 +273,7 @@ const WhatWeDo = () => {
               <button
                 onClick={goNext}
                 aria-label="Next item"
-                className="group flex items-center justify-center w-12 h-12 rounded-full border border-[#333] transition-all duration-300 hover:border-[#7c3aed] hover:bg-[#7c3aed]/10"
+                className={`group flex items-center justify-center w-12 h-12 rounded-full border transition-all duration-300 ${arrowBorderClass}`}
               >
                 <svg
                   width="20"
@@ -263,7 +284,7 @@ const WhatWeDo = () => {
                   strokeWidth={1.5}
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="text-[#888] group-hover:text-[#7c3aed] transition-colors duration-300"
+                  className={`transition-colors duration-300 ${arrowTextClass}`}
                 >
                   <path d="M5 12h14" />
                   <path d="M12 5l7 7-7 7" />
@@ -283,8 +304,8 @@ const WhatWeDo = () => {
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 className="w-full h-full max-h-[460px] rounded-2xl flex items-center justify-center overflow-hidden"
                 style={{
-                  background: items[active].img ? "transparent" : "linear-gradient(135deg, #0d0d0d 0%, #111 100%)",
-                  border: items[active].img ? "none" : "1px dashed #222",
+                  background: items[active].img ? "transparent" : placeholderBg,
+                  border: items[active].img ? "none" : placeholderBorder,
                   minHeight: "360px",
                 }}
               >
@@ -299,7 +320,7 @@ const WhatWeDo = () => {
                     style={{
                       fontFamily: "'Outfit', sans-serif",
                       fontSize: "0.8rem",
-                      color: "#333",
+                      color: placeholderTextColor,
                       letterSpacing: "0.1em",
                       textTransform: "uppercase",
                     }}

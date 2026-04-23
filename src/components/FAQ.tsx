@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Minus } from "lucide-react";
+import { useTheme } from "@/context/ThemeContext";
 
 interface FAQItem {
   question: string;
@@ -36,14 +37,30 @@ const faqs: FAQItem[] = [
 
 const FAQ = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const { isDayMode } = useTheme();
 
   const toggleFAQ = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
+  const sectionBg = isDayMode ? "#ffffff" : "#000000";
+  const headingColor = isDayMode ? "#000000" : "#ffffff";
+  const questionColor = isDayMode ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.9)";
+  const questionHoverColor = isDayMode ? "#000000" : "#ffffff";
+  const answerColor = isDayMode ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.5)";
+  const subtitleColor = isDayMode ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.6)";
+  const borderColor = isDayMode ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.1)";
+  const iconColor = isDayMode ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.3)";
+
   return (
-    <section className="relative z-10 py-20 px-6 md:px-16 lg:px-32 bg-black">
-      {/* Header Section — Outside max-w-3xl for full width line */}
+    <section
+      className="relative z-10 py-20 px-6 md:px-16 lg:px-32"
+      style={{
+        background: sectionBg,
+        transition: "background 0.5s ease",
+      }}
+    >
+      {/* Header Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -58,11 +75,13 @@ const FAQ = () => {
           (TRUST THE BUILD)
         </p>
         <h2
-          className="text-3xl md:text-5xl font-black text-white m-0 uppercase flex flex-row items-baseline justify-center gap-4 md:gap-6 italic whitespace-nowrap"
+          className="text-3xl md:text-5xl font-black m-0 uppercase flex flex-row items-baseline justify-center gap-4 md:gap-6 italic whitespace-nowrap"
           style={{
             fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
             letterSpacing: "-0.04em",
             textShadow: "0 0 60px rgba(124, 58, 237, 0.3)",
+            color: headingColor,
+            transition: "color 0.4s ease",
           }}
         >
           <span>YOUR</span>
@@ -83,7 +102,7 @@ const FAQ = () => {
           <div style={{
             width: "100%",
             height: "1px",
-            background: "linear-gradient(to right, transparent, rgba(124,58,237,0.6), rgba(255,255,255,0.3), rgba(124,58,237,0.6), transparent)",
+            background: `linear-gradient(to right, transparent, rgba(124,58,237,0.6), ${isDayMode ? "rgba(124,58,237,0.8)" : "rgba(255,255,255,0.3)"}, rgba(124,58,237,0.6), transparent)`,
           }} />
           <div style={{
             position: "absolute",
@@ -92,15 +111,19 @@ const FAQ = () => {
             transform: "translateX(-50%)",
             width: "60%",
             height: "24px",
-            background: "radial-gradient(ellipse at center, rgba(124,58,237,0.35) 0%, transparent 70%)",
-            filter: "blur(6px)",
+            background: `radial-gradient(ellipse at center, rgba(124,58,237, ${isDayMode ? "0.2" : "0.35"}) 0%, transparent 70%)`,
+            filter: isDayMode ? "blur(4px)" : "blur(6px)",
             pointerEvents: "none",
           }} />
         </div>
 
         <p 
-          className="text-white/60 text-base max-w-xl mx-auto italic mt-8"
-          style={{ fontFamily: 'ui-serif, Georgia, serif' }}
+          className="text-base max-w-xl mx-auto italic mt-8"
+          style={{
+            fontFamily: 'ui-serif, Georgia, serif',
+            color: subtitleColor,
+            transition: "color 0.4s ease",
+          }}
         >
           Helping you understand our process and offerings at OreHack.
         </p>
@@ -116,21 +139,34 @@ const FAQ = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               viewport={{ once: true }}
-              className="border-b border-white/10"
+              style={{ borderBottom: `1px solid ${borderColor}`, transition: "border-color 0.4s ease" }}
             >
               <button
                 onClick={() => toggleFAQ(index)}
                 className="w-full py-6 flex items-center justify-between text-left group transition-all duration-300"
               >
                 <span 
-                  className={`text-lg md:text-xl font-medium transition-colors duration-300 ${
-                    openIndex === index ? "text-[#7c3aed]" : "text-white/90 hover:text-white"
-                  }`}
-                  style={{ fontFamily: "'Outfit', sans-serif" }}
+                  className="text-lg md:text-xl font-medium transition-colors duration-300"
+                  style={{
+                    fontFamily: "'Outfit', sans-serif",
+                    color: openIndex === index ? "#7c3aed" : questionColor,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (openIndex !== index) (e.currentTarget.style.color = questionHoverColor);
+                  }}
+                  onMouseLeave={(e) => {
+                    if (openIndex !== index) (e.currentTarget.style.color = questionColor);
+                  }}
                 >
                   {faq.question}
                 </span>
-                <div className={`transition-transform duration-500 scale-125 ${openIndex === index ? "rotate-180 text-[#7c3aed]" : "text-white/30"}`}>
+                <div
+                  className="transition-transform duration-500 scale-125"
+                  style={{
+                    color: openIndex === index ? "#7c3aed" : iconColor,
+                    transform: openIndex === index ? "rotate(180deg)" : "none",
+                  }}
+                >
                   {openIndex === index ? <Minus size={20} /> : <Plus size={20} />}
                 </div>
               </button>
@@ -145,8 +181,12 @@ const FAQ = () => {
                     className="overflow-hidden"
                   >
                     <p 
-                      className="pb-6 text-white/50 text-base leading-relaxed italic max-w-2xl"
-                      style={{ fontFamily: 'ui-serif, Georgia, serif' }}
+                      className="pb-6 text-base leading-relaxed italic max-w-2xl"
+                      style={{
+                        fontFamily: 'ui-serif, Georgia, serif',
+                        color: answerColor,
+                        transition: "color 0.4s ease",
+                      }}
                     >
                       {faq.answer}
                     </p>
