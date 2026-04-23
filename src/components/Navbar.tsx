@@ -221,17 +221,14 @@ const Navbar = () => {
             background: "none",
             border: isDayMode ? "1.5px solid rgba(0,0,0,0.18)" : "1.5px solid rgba(255,255,255,0.18)",
             borderRadius: "50px",
-            padding: "6px 14px",
-            cursor: "pointer",
+            width: "36px",
+            height: "36px",
             display: "flex",
             alignItems: "center",
-            gap: "7px",
-            fontSize: "0.78rem",
-            fontFamily: "'Outfit', sans-serif",
-            fontWeight: 600,
+            justifyContent: "center",
+            cursor: "pointer",
             color: isDayMode ? "#000000" : "#ffffff",
             transition: "all 0.3s ease",
-            letterSpacing: "0.04em",
           }}
         >
           <AnimatePresence mode="wait" initial={false}>
@@ -264,7 +261,6 @@ const Navbar = () => {
               )}
             </motion.span>
           </AnimatePresence>
-          {isDayMode ? "Day" : "Night"}
         </button>
 
         {/* JOIN US CTA Button */}
