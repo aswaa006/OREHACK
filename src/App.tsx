@@ -54,7 +54,7 @@ function LogoBackgroundWatermark({ imgRef, hidden }: { imgRef: React.RefObject<H
 
 const WatermarkManager = ({ logoRef }: { logoRef: React.RefObject<HTMLImageElement> }) => {
   const location = useLocation();
-  const isLandingPage = location.pathname === "/";
+  const isLandingPage = location.pathname === "/" || location.pathname.startsWith("/event/");
 
   useEffect(() => {
     const handleScroll = () => {
