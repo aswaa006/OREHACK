@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { resolveHackathonBySlug } from "@/lib/event-db";
-import { sha256Hex } from "@/lib/password-utils";
 import { supabase } from "@/lib/supabase";
 
 const ADMIN_SESSION_KEY = "orehack_origin_admin_auth";
@@ -21,7 +20,6 @@ type SubmissionRecord = {
   Tech_Scores: number | null;
   Innov_Scores: number | null;
   Completeness_Scores: number | null;
-  password: string;
 };
 
 type HackathonRef = {
@@ -50,8 +48,6 @@ type TeamRow = {
   id: string;
   team_code: string | null;
   team_name: string | null;
-  password_hash: string | null;
-  password_legacy: string | null;
 };
 
 type ScoreRow = {
@@ -75,7 +71,6 @@ const emptyForm: SubmissionRecord = {
   Tech_Scores: null,
   Innov_Scores: null,
   Completeness_Scores: null,
-  password: "",
 };
 
 const toNumberOrNull = (value: unknown) => {
@@ -173,7 +168,7 @@ const OriginStage4 = () => {
       teamIds.length > 0
         ? supabase
             .from("teams")
-            .select("id, team_code, team_name, password_hash, password_legacy")
+            .select("id, team_code, team_name")
             .in("id", teamIds)
             .returns<TeamRow[]>()
         : Promise.resolve({ data: [], error: null }),
@@ -222,7 +217,6 @@ const OriginStage4 = () => {
         Innov_Scores: toNumberOrNull(score?.innovation_score) ?? toNumberOrNull(row.Innov_Scores),
         Completeness_Scores:
           toNumberOrNull(score?.completeness_score) ?? toNumberOrNull(row.Completeness_Scores),
-        password: (team?.password_legacy || team?.password_hash || "").trim(),
       };
     });
 
@@ -325,7 +319,6 @@ const OriginStage4 = () => {
       currentTeamDbId: string | null;
       teamCode: string;
       teamName: string;
-      password: string;
     }) => {
       if (!managedHackathon) {
         throw new Error("No managed hackathon selected.");
@@ -333,14 +326,13 @@ const OriginStage4 = () => {
 
       const teamCode = input.teamCode.trim();
       const teamName = input.teamName.trim();
-      const password = input.password.trim();
-      const passwordHash = password ? await sha256Hex(password) : null;
-
-      const payload = {
+      const payload: {
         team_code: teamCode,
         team_name: teamName,
-        password_legacy: password || null,
-        password_hash: passwordHash,
+        is_active: true,
+      } = {
+        team_code: teamCode,
+        team_name: teamName,
         is_active: true,
       };
 
@@ -416,7 +408,6 @@ const OriginStage4 = () => {
         currentTeamDbId: editForm.teamDbId,
         teamCode: editForm.teamID,
         teamName: editForm.Team_Name,
-        password: editForm.password,
       });
 
       const submissionPatch = {
@@ -492,7 +483,6 @@ const OriginStage4 = () => {
         currentTeamDbId: null,
         teamCode: newForm.teamID,
         teamName: newForm.Team_Name,
-        password: newForm.password,
       });
 
       const { data: insertedSubmission, error: insertError } = await supabase
@@ -644,12 +634,6 @@ const OriginStage4 = () => {
               placeholder="Team Name"
               className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
             />
-            <input
-              value={newForm.password}
-              onChange={(e) => onNewChange("password", e.target.value)}
-              placeholder="Password"
-              className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
-            />
             <select
               value={newForm.Progress}
               onChange={(e) => onNewChange("Progress", e.target.value)}
@@ -693,7 +677,6 @@ const OriginStage4 = () => {
                   <th className="w-[100px] px-4 py-3 text-right">Innovation</th>
                   <th className="w-[120px] px-4 py-3 text-right">Completeness</th>
                   <th className="w-[110px] px-4 py-3 text-right">Total</th>
-                  <th className="w-[150px] px-4 py-3">Password</th>
                   <th className="min-w-[300px] px-4 py-3">Problem Statement</th>
                   <th className="w-[120px] px-4 py-3 text-right">Actions</th>
                 </tr>
@@ -701,7 +684,7 @@ const OriginStage4 = () => {
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan={11} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    <td colSpan={10} className="px-4 py-8 text-center text-sm text-muted-foreground">
                       Loading submissions...
                     </td>
                   </tr>
@@ -812,19 +795,6 @@ const OriginStage4 = () => {
                       </td>
                       <td className="px-4 py-3">
                         {isEditing ? (
-                          <input
-                            value={editForm.password}
-                            onChange={(e) => onEditChange("password", e.target.value)}
-                            className="w-full rounded border border-border bg-background px-2 py-1"
-                          />
-                        ) : (
-                          <div className="w-[130px] truncate font-mono text-[10px]" title={row.password}>
-                            {row.password || "-"}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        {isEditing ? (
                           <textarea
                             value={editForm.Problem_Statement}
                             onChange={(e) => onEditChange("Problem_Statement", e.target.value)}
@@ -877,7 +847,7 @@ const OriginStage4 = () => {
 
                 {!loading && sortedSubmissions.length === 0 && (
                   <tr>
-                    <td colSpan={11} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    <td colSpan={10} className="px-4 py-8 text-center text-sm text-muted-foreground">
                       No submissions found.
                     </td>
                   </tr>

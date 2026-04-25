@@ -1,19 +1,20 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Shuffle from "./Shuffle";
+import { useTheme } from "@/context/ThemeContext";
 
 const NAV_SECTIONS = [
   { id: "home", label: "Home" },
-  { id: "how-it-works", label: "How It Works" },
+  { id: "how-it-works", label: "Empower" },
   { id: "about", label: "About" },
-  { id: "contact", label: "Contact" },
 ];
 
 const Navbar = () => {
   const [activeSection, setActiveSection] = useState<string>("");
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const { isDayMode, toggleTheme } = useTheme();
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,18 +27,14 @@ const Navbar = () => {
   useEffect(() => {
     const handleScrollVisibility = () => {
       const currentScrollY = window.scrollY;
-      const heroHeight = window.innerHeight - 100; // Buffer for hero section
+      const heroHeight = window.innerHeight - 100;
 
-      // Always visible at the top (Hero section)
       if (currentScrollY <= heroHeight) {
         setIsVisible(true);
       } else {
-        // Scroll direction detection
         if (currentScrollY > lastScrollY) {
-          // Scrolling down
           setIsVisible(false);
         } else {
-          // Scrolling up
           setIsVisible(true);
         }
       }
@@ -96,13 +93,23 @@ const Navbar = () => {
     if (el) el.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Day mode colours
+  const navBg = isDayMode ? "#ffffff" : "#000000";
+  const activeLinkColor = isDayMode ? "#000000" : "#ffffff";
+  const inactiveLinkColor = isDayMode ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.5)";
+  const inactiveLinkHover = isDayMode ? "rgba(0,0,0,0.8)" : "rgba(255,255,255,0.85)";
+
+  // JOIN US / CTA – night: white bg + black text; day: black bg + white text
+  const ctaBg = isDayMode ? "#000000" : "#ffffff";
+  const ctaText = isDayMode ? "#ffffff" : "#000000";
+
   return (
     <motion.nav
       initial={{ y: 0 }}
       animate={{ y: isVisible ? 0 : -100 }}
       transition={{
         duration: 0.4,
-        ease: [0.22, 1, 0.36, 1] // Smooth transition
+        ease: [0.22, 1, 0.36, 1],
       }}
       style={{
         position: "fixed",
@@ -115,7 +122,8 @@ const Navbar = () => {
         justifyContent: "space-between",
         padding: "0 140px",
         height: "100px",
-        background: "#000000",
+        background: navBg,
+        transition: "background 0.4s ease",
       }}
     >
       {/* ── LEFT: OREHACK wordmark ── */}
@@ -128,9 +136,7 @@ const Navbar = () => {
           alignItems: "center",
         }}
       >
-        <div
-          style={{ display: "inline-block" }}
-        >
+        <div style={{ display: "inline-block" }}>
           <span
             className="text-2xl font-bold tracking-[0.05em] orehack-liquid-text"
             style={{
@@ -139,7 +145,7 @@ const Navbar = () => {
               fontWeight: 600,
               letterSpacing: "-0.05em",
               lineHeight: "2.4rem",
-              fontSize: "2rem"
+              fontSize: "2rem",
             }}
           >
             OREHACK ++
@@ -147,7 +153,7 @@ const Navbar = () => {
         </div>
       </Link>
 
-      {/* ── RIGHT: Nav links ── */}
+      {/* ── RIGHT: Nav links + theme toggle ── */}
       <div
         style={{
           display: "flex",
@@ -172,20 +178,18 @@ const Navbar = () => {
                 lineHeight: "1.4rem",
                 fontStyle: "normal",
                 textTransform: "none",
-                color: isActive ? "#ffffff" : "rgba(255,255,255,0.5)",
+                color: isActive ? activeLinkColor : inactiveLinkColor,
                 position: "relative",
                 transition: "color 0.2s ease",
                 outline: "none",
               }}
               onMouseEnter={(e) => {
                 if (!isActive)
-                  (e.currentTarget as HTMLButtonElement).style.color =
-                    "rgba(255,255,255,0.85)";
+                  (e.currentTarget as HTMLButtonElement).style.color = inactiveLinkHover;
               }}
               onMouseLeave={(e) => {
                 if (!isActive)
-                  (e.currentTarget as HTMLButtonElement).style.color =
-                    "rgba(255,255,255,0.5)";
+                  (e.currentTarget as HTMLButtonElement).style.color = inactiveLinkColor;
               }}
             >
               {label}
@@ -206,18 +210,71 @@ const Navbar = () => {
             </button>
           );
         })}
-        
+
+        {/* ── Theme Toggle Button ── */}
+        <button
+          id="theme-toggle-btn"
+          onClick={toggleTheme}
+          aria-label={isDayMode ? "Switch to Night mode" : "Switch to Day mode"}
+          style={{
+            background: "none",
+            border: isDayMode ? "1.5px solid rgba(0,0,0,0.18)" : "1.5px solid rgba(255,255,255,0.18)",
+            borderRadius: "50px",
+            width: "36px",
+            height: "36px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            color: isDayMode ? "#000000" : "#ffffff",
+            transition: "all 0.3s ease",
+          }}
+        >
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={isDayMode ? "sun" : "moon"}
+              initial={{ opacity: 0, rotate: -30, scale: 0.7 }}
+              animate={{ opacity: 1, rotate: 0, scale: 1 }}
+              exit={{ opacity: 0, rotate: 30, scale: 0.7 }}
+              transition={{ duration: 0.25 }}
+              style={{ display: "flex", alignItems: "center" }}
+            >
+              {isDayMode ? (
+                /* Sun icon */
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="5" />
+                  <line x1="12" y1="1" x2="12" y2="3" />
+                  <line x1="12" y1="21" x2="12" y2="23" />
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                  <line x1="1" y1="12" x2="3" y2="12" />
+                  <line x1="21" y1="12" x2="23" y2="12" />
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+              ) : (
+                /* Moon icon */
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                </svg>
+              )}
+            </motion.span>
+          </AnimatePresence>
+        </button>
+
         {/* JOIN US CTA Button */}
         <button
           className="group relative inline-flex items-center gap-2 px-5 py-1.5 rounded-full overflow-hidden transition-all duration-300 hover:scale-[1.05] hover:shadow-lg active:scale-[0.98]"
+          onClick={() => handleNavClick("contact")}
           style={{
-            background: "#ffffff",
-            color: "#000000",
+            background: ctaBg,
+            color: ctaText,
             fontFamily: "'Outfit', 'Inter', sans-serif",
             fontSize: "0.85rem",
             fontWeight: 700,
             border: "none",
-            cursor: "pointer"
+            cursor: "pointer",
+            transition: "background 0.4s ease, color 0.4s ease",
           }}
         >
           <span className="relative z-10 flex items-center gap-1.5">

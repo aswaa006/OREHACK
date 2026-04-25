@@ -1,3 +1,4 @@
+import { useTheme } from "../context/ThemeContext";
 import './CurvedLoop.css';
 
 const MARQUEE_TEXT =
@@ -12,9 +13,12 @@ const CurvedLoop = ({
   className = '',
   direction = 'left',
 }) => {
+  const { isDayMode } = useTheme();
   // animation duration — lower speed = faster (matches original API roughly)
   const duration = Math.max(10, 80 / speed);
   const animName = direction === 'right' ? 'marquee-right' : 'marquee-left';
+
+  const defaultColor = isDayMode ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.65)';
 
   // Helper to render text with colored stars
   const renderTextWithPurpleStars = (text) => {
@@ -39,7 +43,11 @@ const CurvedLoop = ({
         }}
       >
         {Array(REPEAT).fill(marqueeText).map((t, i) => (
-          <span key={i} className={`curved-loop-item ${className}`}>
+          <span 
+            key={i} 
+            className={`curved-loop-item ${className}`}
+            style={{ color: defaultColor, transition: 'color 0.4s ease' }}
+          >
             {renderTextWithPurpleStars(t)}
           </span>
         ))}

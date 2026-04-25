@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import "../components/Stepper.css";
 import { supabase } from "@/lib/supabase";
 import { useEvent } from "@/context/EventContext";
+import { uploadSubmissionArtifact } from "@/lib/storage";
 
 type Phase = "form" | "processing" | "done";
 
@@ -66,6 +67,8 @@ const SubmissionPage = () => {
   );
   const [repoUrl, setRepoUrl] = useState("");
   const [problemStatement, setProblemStatement] = useState("");
+  const [artifactFile, setArtifactFile] = useState<File | null>(null);
+  const [artifactStatus, setArtifactStatus] = useState("");
   const [phase, setPhase] = useState<Phase>("form");
   const [currentStep, setCurrentStep] = useState(0);
   const [error, setError] = useState("");
@@ -93,7 +96,13 @@ const SubmissionPage = () => {
       setError("Team ID is missing. Please login again.");
       return;
     }
+    if (artifactFile && artifactFile.size > 25 * 1024 * 1024) {
+      setError("Artifact file must be 25MB or smaller.");
+      return;
+    }
+
     setError("");
+    setArtifactStatus("");
     setSubmitting(true);
     setPhase("processing");
 
@@ -107,15 +116,47 @@ const SubmissionPage = () => {
       Progress: "queued",
     };
 
-    let { error: submissionError } = await supabase
+    const { data: submissionRow, error: submissionError } = await supabase
       .from("submissions")
-      .upsert(submissionPayload, { onConflict: effectiveSession?.teamDbId ? "team_id" : "teamID" });
+      .upsert(submissionPayload, { onConflict: effectiveSession?.teamDbId ? "team_id" : "teamID" })
+      .select("id")
+      .single<{ id: string }>();
 
-    if (submissionError) {
+    if (submissionError || !submissionRow) {
       setError(submissionError.message || "Submission failed. Please try again.");
       setPhase("form");
       setSubmitting(false);
       return;
+    }
+
+    if (artifactFile) {
+      try {
+        const uploaded = await uploadSubmissionArtifact({
+          hackathonSlug: effectiveHackathonId,
+          teamId,
+          file: artifactFile,
+        });
+
+        const artifactMetaRes = await supabase
+          .from("submissions")
+          .update({
+            artifact_url: uploaded.publicUrl,
+            artifact_path: uploaded.path,
+          })
+          .eq("id", submissionRow.id);
+
+        if (artifactMetaRes.error) {
+          console.warn("Artifact uploaded but metadata columns are unavailable:", artifactMetaRes.error.message);
+          setArtifactStatus("Artifact uploaded to storage. Metadata columns are missing in submissions table.");
+        } else {
+          setArtifactStatus("Artifact uploaded successfully.");
+        }
+      } catch (artifactError) {
+        setError(artifactError instanceof Error ? artifactError.message : "Artifact upload failed.");
+        setPhase("form");
+        setSubmitting(false);
+        return;
+      }
     }
 
     for (let i = 0; i < processingSteps.length; i++) {
@@ -250,6 +291,21 @@ const SubmissionPage = () => {
                     className="w-full resize-none rounded-xl border border-border bg-background/70 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/70 outline-none transition-all duration-300 focus:border-primary/60 focus:bg-background focus:shadow-[0_0_0_4px_hsl(var(--primary)/0.12)]"
                     placeholder="Describe your problem statement..."
                   />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                    Artifact File <span className="text-muted-foreground/60">(Optional, max 25MB)</span>
+                  </label>
+                  <input
+                    type="file"
+                    onChange={(e) => setArtifactFile(e.target.files?.[0] || null)}
+                    className="w-full rounded-xl border border-border bg-background/70 px-4 py-3 text-sm text-foreground file:mr-3 file:rounded-md file:border file:border-border file:bg-card file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-foreground"
+                    accept=".zip,.rar,.7z,.pdf,.ppt,.pptx,.doc,.docx,.txt,.md,image/*"
+                  />
+                  {artifactFile && (
+                    <p className="mt-1 text-xs text-muted-foreground">Selected: {artifactFile.name}</p>
+                  )}
                 </div>
 
                 {error && <p className="text-xs text-destructive">{error}</p>}
@@ -415,6 +471,9 @@ const SubmissionPage = () => {
                 <p className="text-xs text-foreground/90">What happens next:</p>
                 <p className="mt-1 text-xs text-muted-foreground">Your repository will be cloned, validated, and scored by the evaluation engine. Results appear on leaderboard after processing.</p>
               </div>
+              {artifactStatus && (
+                <p className="mx-auto mt-4 max-w-sm text-xs text-muted-foreground">{artifactStatus}</p>
+              )}
               </div>
             </motion.div>
           )}
