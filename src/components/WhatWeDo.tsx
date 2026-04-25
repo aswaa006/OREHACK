@@ -19,19 +19,19 @@ const items = [
     num: "03",
     title: "Drive Students from Learning\nto Real Execution",
     desc: "OreHack bridges the gap between academic learning and real-world application. Learning matters only when it leads to execution. Through structured pathways from ideation to implementation, students gain hands-on experience and evolve into confident builders ready for real challenges.",
-    img: "",
+    img: "/www4.jpg",
   },
   {
     num: "04",
     title: "Hackathon-as-a-Service\n(HaaS)",
     desc: "OreHack delivers a complete, ready-to-deploy innovation ecosystem for institutions. Innovation, delivered as a service. By integrating training, execution, and evaluation into a unified platform, institutions can seamlessly adopt and scale innovation programs with confidence.",
-    img: "",
+    img: "/www5.jpg",
   },
   {
     num: "05",
     title: "Power Fair & Efficient\nHackathon Evaluations",
     desc: "OreHack ensures every submission is assessed with precision, consistency, and complete transparency. Fairness is not optional — it is engineered. By standardizing evaluation frameworks and eliminating bias, the platform delivers accurate and timely outcomes.",
-    img: "",
+    img: "/www6.jpg",
   },
 ];
 
