@@ -7,7 +7,6 @@ const NAV_SECTIONS = [
   { id: "home", label: "Home" },
   { id: "how-it-works", label: "How It Works" },
   { id: "about", label: "About" },
-  { id: "contact", label: "Contact" },
 ];
 
 const Navbar = () => {
@@ -209,6 +208,7 @@ const Navbar = () => {
         
         {/* JOIN US CTA Button */}
         <button
+          onClick={() => handleNavClick("contact")}
           className="group relative inline-flex items-center gap-2 px-5 py-1.5 rounded-full overflow-hidden transition-all duration-300 hover:scale-[1.05] hover:shadow-lg active:scale-[0.98]"
           style={{
             background: "#ffffff",
