@@ -246,12 +246,6 @@ const WaitingRoom: React.FC = () => {
 
   const baseEvent = eventId ?? "origin-2k25";
 
-  /* Route guards */
-  if (!isAuthenticated)   return <Navigate to={`/event/${baseEvent}/login`} replace />;
-  if (!hasAcceptedRules)  return <Navigate to={`/event/${baseEvent}/rules`}  replace />;
-  // Admin skipped the waiting room — go straight to stage-2
-  if (!waitingRoomEnabled) return <Navigate to={`/event/${baseEvent}/stage-2`} replace />;
-
   /* Auto-transition when stage1Active flips true */
   useEffect(() => {
     if (stage1Active) {
@@ -265,6 +259,12 @@ const WaitingRoom: React.FC = () => {
   const simulateStage1 = useCallback(() => {
     setStage1Active(true);
   }, [setStage1Active]);
+
+  /* Route guards */
+  if (!isAuthenticated)   return <Navigate to={`/event/${baseEvent}/login`} replace />;
+  if (!hasAcceptedRules)  return <Navigate to={`/event/${baseEvent}/rules`}  replace />;
+  // Admin skipped the waiting room — go straight to stage-2
+  if (!waitingRoomEnabled) return <Navigate to={`/event/${baseEvent}/stage-2`} replace />;
 
   return (
     <PageTransition>

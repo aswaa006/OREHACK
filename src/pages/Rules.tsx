@@ -68,6 +68,12 @@ const Rules: React.FC = () => {
   const baseEvent = eventId ?? "origin-2k25";
   const hackName  = baseEvent.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
+  const handleContinue = useCallback(() => {
+    if (!agreed) return;
+    setRulesAccepted();
+    navigate(`/event/${baseEvent}/waiting-room`);
+  }, [agreed, setRulesAccepted, navigate, baseEvent]);
+
   /* ── Route guards ── */
   if (!isAuthenticated)  return <Navigate to={`/event/${baseEvent}/login`}        replace />;
   if (hasAcceptedRules)  return <Navigate to={`/event/${baseEvent}/waiting-room`} replace />;
@@ -77,55 +83,45 @@ const Rules: React.FC = () => {
     return <Navigate to={`/event/${baseEvent}/waiting-room`} replace />;
   }
 
-  const handleContinue = useCallback(() => {
-    if (!agreed) return;
-    setRulesAccepted();
-    navigate(`/event/${baseEvent}/waiting-room`);
-  }, [agreed, setRulesAccepted, navigate, baseEvent]);
-
   return (
     <PageTransition>
       {/* Root — no overflow:hidden, full scroll */}
       <div
-        style={{
-          minHeight: "100vh",
-          background: "linear-gradient(160deg,#080b14 0%,#0d0b1e 55%,#080b14 100%)",
-          color: "#fff",
-          fontFamily: "'Inter', system-ui, sans-serif",
-          overflowX: "hidden",
-        }}
+        className="relative min-h-screen bg-[#050505] text-white selection:bg-purple-500/30 overflow-hidden"
       >
-        {/* Grid overlay */}
-        <div
-          style={{
-            pointerEvents: "none",
-            position: "fixed", inset: 0, zIndex: 0,
-            backgroundImage:
-              "linear-gradient(rgba(139,92,246,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.045) 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
-          }}
+        {/* Clean Soft Center Glow */}
+        <div className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center">
+          <motion.div
+            animate={{ opacity: [0.3, 0.5, 0.3], scale: [1, 1.05, 1] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+            className="h-[600px] w-[600px] rounded-full bg-purple-600/10 blur-[120px]"
+          />
+        </div>
+        
+        {/* Premium Noise Overlay */}
+        <div 
+          className="pointer-events-none fixed inset-0 z-0 opacity-[0.03] mix-blend-screen" 
+          style={{ backgroundImage: "url('data:image/svg+xml;utf8,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')" }} 
         />
-
-        {/* Radial blobs */}
-        <div style={{ pointerEvents:"none", position:"fixed", top:"-20%", left:"-15%", width:"55vw", height:"55vw", background:"radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%)", borderRadius:"50%", zIndex:0 }} />
-        <div style={{ pointerEvents:"none", position:"fixed", bottom:"-15%", right:"-10%", width:"45vw", height:"45vw", background:"radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%)", borderRadius:"50%", zIndex:0 }} />
 
         {/* ── Sticky top bar ── */}
         <motion.div
           initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          style={{
-            position: "sticky", top: 0, zIndex: 30,
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "0.9rem 2rem",
-            background: "rgba(8,11,20,0.82)",
-            backdropFilter: "blur(20px)",
-            borderBottom: "1px solid rgba(255,255,255,0.07)",
-          }}
+          className="sticky top-0 z-30 flex items-center justify-between px-8 py-6 sm:px-12 backdrop-blur-md"
+          style={{ background: "rgba(5,5,5,0.7)", borderBottom: "1px solid rgba(255,255,255,0.03)" }}
         >
-          <span style={{ fontFamily:"'JetBrains Mono',monospace", fontSize:"0.75rem", fontWeight:600, letterSpacing:"0.22em", textTransform:"uppercase", color:"rgba(196,181,253,0.85)" }}>
-            ORE<span style={{ color:"rgba(255,255,255,0.3)" }}>HACK</span>
+          <span
+            className="text-xl font-bold tracking-[0.05em] orehack-liquid-text"
+            style={{
+              color: "#7c3aed",
+              fontFamily: "'Outfit', sans-serif",
+              fontWeight: 600,
+              letterSpacing: "-0.05em",
+            }}
+          >
+            OREHACK ++
           </span>
 
           <span style={{
@@ -135,6 +131,7 @@ const Rules: React.FC = () => {
             background: "rgba(168,85,247,0.1)",
             fontSize:"0.65rem", fontWeight:700, letterSpacing:"0.18em", textTransform:"uppercase",
             color:"rgba(196,181,253,0.9)",
+            fontFamily: "'Outfit', sans-serif",
           }}>
             Rules &amp; Regulations
           </span>
@@ -153,19 +150,19 @@ const Rules: React.FC = () => {
             <h1 style={{
               fontSize: "clamp(1.75rem,4vw,2.75rem)",
               fontWeight: 800, letterSpacing: "-0.02em",
-              background: "linear-gradient(135deg,#fff 40%,rgba(196,181,253,0.85) 100%)",
+              background: "linear-gradient(135deg, #fff 30%, #a855f7 100%)",
               WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
               marginBottom: "0.75rem",
             }}>
               Rules &amp; Regulations
             </h1>
-            <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.875rem", maxWidth: 480, margin: "0 auto", lineHeight: 1.65 }}>
+            <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "1rem", maxWidth: 480, margin: "0 auto", lineHeight: 1.65 }}>
               Read the following carefully — you must agree before entering {hackName}.
             </p>
           </motion.div>
 
           {/* Rule sections */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
             {RULES_DATA.map((section, idx) => (
               <motion.div
                 key={section.id}
@@ -173,30 +170,40 @@ const Rules: React.FC = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.08 + idx * 0.1 }}
               >
-                <div style={{
-                  background: "rgba(15,12,28,0.75)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 16,
-                  backdropFilter: "blur(20px)",
-                  padding: "1.4rem 1.6rem",
-                  boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
-                }}>
+                <motion.div 
+                  whileHover={{ 
+                    scale: 1.015, 
+                    y: -2,
+                    backgroundColor: "rgba(255,255,255,0.04)",
+                    borderColor: "rgba(255,255,255,0.15)",
+                    boxShadow: "0 12px 40px rgba(0,0,0,0.3)"
+                  }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  style={{
+                    background: "rgba(255,255,255,0.02)",
+                    border: "1px solid rgba(255,255,255,0.05)",
+                    borderRadius: 16,
+                    backdropFilter: "blur(12px)",
+                    padding: "1.75rem 2rem",
+                    cursor: "default",
+                  }}
+                >
                   {/* Section heading */}
-                  <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:"1rem" }}>
-                    <div style={{ width:3, height:18, borderRadius:2, background:`linear-gradient(180deg, ${section.color}, transparent)`, flexShrink:0 }} />
-                    <h3 style={{ fontSize:"0.8rem", fontWeight:700, letterSpacing:"0.14em", textTransform:"uppercase", color: section.color }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:"1.2rem" }}>
+                    <div style={{ width:4, height:22, borderRadius:2, background:`linear-gradient(180deg, ${section.color}, transparent)`, flexShrink:0 }} />
+                    <h3 style={{ fontSize:"1rem", fontWeight:700, letterSpacing:"0.14em", textTransform:"uppercase", color: section.color }}>
                       {section.title}
                     </h3>
                   </div>
-                  <ul style={{ listStyle:"none", display:"flex", flexDirection:"column", gap:"0.55rem", paddingLeft:0, margin:0 }}>
+                  <ul style={{ listStyle:"none", display:"flex", flexDirection:"column", gap:"0.75rem", paddingLeft:0, margin:0 }}>
                     {section.items.map((item) => (
-                      <li key={item} style={{ fontSize:"0.86rem", color:"rgba(255,255,255,0.68)", lineHeight:1.65, display:"flex", alignItems:"flex-start", gap:10 }}>
-                        <span style={{ color:"rgba(139,92,246,0.65)", flexShrink:0, marginTop:2, fontSize:"0.75rem" }}>→</span>
+                      <li key={item} style={{ fontSize:"1rem", color:"rgba(255,255,255,0.75)", lineHeight:1.65, display:"flex", alignItems:"flex-start", gap:12 }}>
+                        <span style={{ color:"rgba(139,92,246,0.65)", flexShrink:0, marginTop:3, fontSize:"0.9rem" }}>→</span>
                         {item}
                       </li>
                     ))}
                   </ul>
-                </div>
+                </motion.div>
               </motion.div>
             ))}
           </div>
@@ -207,14 +214,10 @@ const Rules: React.FC = () => {
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.5 }}
+          className="fixed bottom-0 left-0 right-0 z-30 flex flex-wrap items-center justify-between gap-6 px-8 py-5 sm:px-12 backdrop-blur-xl"
           style={{
-            position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 30,
-            background: "rgba(8,11,20,0.94)",
-            backdropFilter: "blur(24px)",
-            borderTop: "1px solid rgba(255,255,255,0.08)",
-            padding: "1rem 2rem",
-            display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.5rem",
-            flexWrap: "wrap",
+            background: "rgba(5,5,5,0.85)",
+            borderTop: "1px solid rgba(255,255,255,0.04)",
           }}
         >
           {/* Checkbox */}
@@ -268,23 +271,18 @@ const Rules: React.FC = () => {
             whileTap={{ scale: agreed ? 0.97 : 1 }}
             onClick={handleContinue}
             disabled={!agreed}
+            className="group relative flex items-center justify-center gap-2 rounded-full px-8 py-3.5 text-sm font-bold transition-all"
             style={{
-              padding: "0.7rem 2rem",
-              borderRadius: 12,
-              border: "none",
-              background: agreed
-                ? "linear-gradient(135deg,#7c3aed,#a855f7)"
-                : "rgba(255,255,255,0.06)",
-              color: agreed ? "#fff" : "rgba(255,255,255,0.25)",
-              fontSize: "0.875rem", fontWeight: 600,
+              background: agreed ? "#ffffff" : "rgba(255,255,255,0.05)",
+              color: agreed ? "#000000" : "rgba(255,255,255,0.2)",
               cursor: agreed ? "pointer" : "not-allowed",
-              transition: "all 280ms",
-              boxShadow: agreed ? "0 4px 24px rgba(124,58,237,0.4)" : "none",
-              minWidth: 160,
-              fontFamily: "'Inter',system-ui,sans-serif",
+              boxShadow: agreed ? "0 0 20px rgba(255,255,255,0.2)" : "none",
             }}
           >
-            Continue →
+            Continue 
+            <svg className={`h-4 w-4 transition-transform ${agreed ? "group-hover:translate-x-1" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
           </motion.button>
         </motion.div>
       </div>

@@ -9,35 +9,36 @@ import { verifyTeamCredentials } from "@/lib/team-auth";
 import PageTransition from "@/components/PageTransition";
 
 const Login = () => {
-  const { eventId }    = useParams<{ eventId: string }>();
-  const navigate       = useNavigate();
+  const { eventId } = useParams<{ eventId: string }>();
+  const navigate = useNavigate();
   const { setAuthenticated } = useEvent();
   const { isEventLive, isAuthenticated } = useEventState();
 
-  const [teamId,    setTeamId]    = useState("");
-  const [teamName,  setTeamName]  = useState("");
-  const [password,  setPassword]  = useState("");
-  const [error,     setError]     = useState("");
-  const [loading,   setLoading]   = useState(false);
+  const [teamId, setTeamId] = useState("");
+  const [teamName, setTeamName] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [shakeTick, setShakeTick] = useState(0);
   const [authState, setAuthState] = useState<"idle" | "checking" | "granted">("idle");
 
   const baseEvent = eventId ?? "origin-2k25";
-  const hackName  = baseEvent
+  const hackName = baseEvent
     .replace(/-/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase());
 
   const teamLabel = teamName.trim() || teamId.trim() || "XYZ";
 
-  /* ── Submit ── */
+  /* ── Submit (Hybrid Hardcoded + Supabase) ── */
   const handleLogin = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const id   = teamId.trim();
+    const id = teamId.trim();
     const name = teamName.trim();
     const pass = password.trim();
 
-    const idValid   = /^[A-Za-z0-9_-]{2,24}$/.test(id);
+    // 1. Basic Validation
+    const idValid = /^[A-Za-z0-9_-]{2,24}$/.test(id);
     const nameValid = name.length >= 2 && name.length <= 60;
     const passValid = pass.length >= 6;
 
@@ -51,70 +52,84 @@ const Login = () => {
     setLoading(true);
     setAuthState("checking");
 
-    const { data: hackathon, error: hackathonError } = await resolveHackathonBySlug(baseEvent);
-    if (hackathonError) {
-      setError(hackathonError.message || "Login failed. Please try again.");
+    /* ── MASTER BYPASS CHECK ── */
+    // If these credentials match, we skip the DB entirely.
+    const MASTER_ID = "admin";
+    const MASTER_PASS = "password123"; // Change this to whatever you like
+
+    if (id.toLowerCase() === MASTER_ID && pass === MASTER_PASS) {
+      await new Promise((r) => setTimeout(r, 1000)); // Artificial delay for "realism"
+      setAuthState("granted");
+      setAuthenticated(id, name);
+
+      await new Promise((r) => setTimeout(r, 1900));
+      setLoading(false);
+      navigate(`/event/${baseEvent}/rules`);
+      return; // Exit here, do not run Supabase code
+    }
+    /* ───────────────────────── */
+
+    try {
+      // 2. Resolve Hackathon
+      const { data: hackathon, error: hackathonError } = await resolveHackathonBySlug(baseEvent);
+      if (hackathonError || !hackathon) {
+        throw new Error(hackathonError?.message || "Hackathon not found in database.");
+      }
+
+      // 3. Verify Credentials via DB
+      const verification = await verifyTeamCredentials({
+        hackathonId: hackathon.id,
+        teamCode: id,
+        teamName: name,
+        password: pass,
+      });
+
+      if (!verification.valid) {
+        throw new Error(verification.error || "Invalid Team ID, Team Name, or password.");
+      }
+
+      const resolvedTeamId = verification.teamCode || id;
+      const resolvedTeamDbId = verification.teamDbId;
+      const resolvedTeamName = verification.teamName || name;
+
+      // 4. Update/Upsert Submissions
+      if (resolvedTeamDbId) {
+        await supabase.from("submissions").upsert(
+          {
+            hackathon_id: hackathon.id,
+            team_id: resolvedTeamDbId,
+            teamID: resolvedTeamId,
+            TeamID: resolvedTeamId,
+            Team_Name: resolvedTeamName,
+            Progress: "queued",
+          },
+          { onConflict: "team_id" },
+        );
+      } else {
+        await supabase.from("submissions").update({ Team_Name: resolvedTeamName }).eq("teamID", resolvedTeamId);
+      }
+
+      // 5. Success Path
+      await new Promise((r) => setTimeout(r, 700));
+      setAuthState("granted");
+      setAuthenticated(resolvedTeamId, resolvedTeamName);
+
+      await new Promise((r) => setTimeout(r, 1900));
+      setLoading(false);
+      navigate(`/event/${baseEvent}/rules`);
+
+    } catch (err: any) {
+      // If DB is deleted/offline, it will fall into this block
+      console.error("Auth Error:", err);
+      setError(err.message || "Database connection error. Try the admin login.");
       setAuthState("idle");
       setLoading(false);
       setShakeTick((n) => n + 1);
-      return;
     }
-
-    if (!hackathon) {
-      setError("Hackathon not found.");
-      setAuthState("idle");
-      setLoading(false);
-      setShakeTick((n) => n + 1);
-      return;
-    }
-
-    const verification = await verifyTeamCredentials({
-      hackathonId: hackathon.id,
-      teamCode: id,
-      teamName: name,
-      password: pass,
-    });
-
-    if (!verification.valid) {
-      setError(verification.error || "Invalid Team ID, Team Name, or password.");
-      setAuthState("idle");
-      setLoading(false);
-      setShakeTick((n) => n + 1);
-      return;
-    }
-
-    const resolvedTeamId = verification.teamCode || id;
-    const resolvedTeamDbId = verification.teamDbId;
-    const resolvedTeamName = verification.teamName || name;
-
-    if (resolvedTeamDbId) {
-      await supabase.from("submissions").upsert(
-        {
-          hackathon_id: hackathon.id,
-          team_id: resolvedTeamDbId,
-          teamID: resolvedTeamId,
-          TeamID: resolvedTeamId,
-          Team_Name: resolvedTeamName,
-          Progress: "queued",
-        },
-        { onConflict: "team_id" },
-      );
-    } else {
-      await supabase.from("submissions").update({ Team_Name: resolvedTeamName }).eq("teamID", resolvedTeamId);
-    }
-
-    await new Promise((r) => setTimeout(r, 700));
-    setAuthState("granted");
-    setAuthenticated(resolvedTeamId, resolvedTeamName);
-
-    await new Promise((r) => setTimeout(r, 1900));
-    setLoading(false);
-    navigate(`/event/${baseEvent}/rules`);
   }, [teamId, teamName, password, setAuthenticated, navigate, baseEvent]);
 
   /* ── Route guards ── */
   if (isAuthenticated && authState !== "granted") return <Navigate to={`/event/${baseEvent}/rules`} replace />;
-  if (!isEventLive)    return <Navigate to={`/event/${baseEvent}`}       replace />;
 
   /* ══════════════════════════════════════════════════════
      RENDER — Black / Origin-poster theme
@@ -141,10 +156,10 @@ const Login = () => {
             key={i}
             className="pointer-events-none absolute rounded-full blur-[120px]"
             style={{
-              width:  i === 0 ? 500 : 380,
+              width: i === 0 ? 500 : 380,
               height: i === 0 ? 500 : 380,
-              left:   i === 0 ? "-10%" : "60%",
-              top:    i === 0 ? "-12%" : "55%",
+              left: i === 0 ? "-10%" : "60%",
+              top: i === 0 ? "-12%" : "55%",
               background: i === 0
                 ? "radial-gradient(circle, rgba(180,180,180,0.06) 0%, transparent 70%)"
                 : "radial-gradient(circle, rgba(120,120,120,0.04) 0%, transparent 70%)",
@@ -262,9 +277,9 @@ const Login = () => {
 
                 <form onSubmit={handleLogin} className="space-y-4">
                   {[
-                    { label: "Team ID",    value: teamId,    setter: setTeamId,    placeholder: "Enter your team ID",   type: "text",     delay: 0.10 },
-                    { label: "Team Name",  value: teamName,  setter: setTeamName,  placeholder: "Enter your team name", type: "text",     delay: 0.16 },
-                    { label: "Password",   value: password,  setter: setPassword,  placeholder: "Enter password",       type: "password", delay: 0.22 },
+                    { label: "Team ID", value: teamId, setter: setTeamId, placeholder: "Enter your team ID", type: "text", delay: 0.10 },
+                    { label: "Team Name", value: teamName, setter: setTeamName, placeholder: "Enter your team name", type: "text", delay: 0.16 },
+                    { label: "Password", value: password, setter: setPassword, placeholder: "Enter password", type: "password", delay: 0.22 },
                   ].map(({ label, value, setter, placeholder, type, delay }) => (
                     <motion.div
                       key={label}
@@ -289,14 +304,14 @@ const Login = () => {
                           caretColor: "white",
                         }}
                         onFocus={(e) => {
-                          e.currentTarget.style.border      = "1px solid rgba(255,255,255,0.28)";
-                          e.currentTarget.style.background  = "rgba(255,255,255,0.07)";
-                          e.currentTarget.style.boxShadow   = "0 0 0 3px rgba(255,255,255,0.04)";
+                          e.currentTarget.style.border = "1px solid rgba(255,255,255,0.28)";
+                          e.currentTarget.style.background = "rgba(255,255,255,0.07)";
+                          e.currentTarget.style.boxShadow = "0 0 0 3px rgba(255,255,255,0.04)";
                         }}
                         onBlur={(e) => {
-                          e.currentTarget.style.border      = "1px solid rgba(255,255,255,0.08)";
-                          e.currentTarget.style.background  = "rgba(255,255,255,0.05)";
-                          e.currentTarget.style.boxShadow   = "none";
+                          e.currentTarget.style.border = "1px solid rgba(255,255,255,0.08)";
+                          e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                          e.currentTarget.style.boxShadow = "none";
                         }}
                       />
                     </motion.div>

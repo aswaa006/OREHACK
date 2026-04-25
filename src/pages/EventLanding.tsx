@@ -123,12 +123,15 @@ const EventLanding: React.FC = () => {
                   <CountdownTimer currentTime={currentTime} targetTime={eventStartTime} onComplete={handleGoLive} />
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <svg className="h-4 w-4 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                <button
+                  onClick={handleLogin}
+                  className="group relative flex items-center justify-center gap-3 rounded-full border border-white/20 bg-transparent px-10 py-4 text-sm font-bold text-white transition-all hover:bg-white/10 active:scale-95 sm:px-12 sm:py-4"
+                >
+                  Early Login (Waiting Room)
+                  <svg className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
-                  <span className="text-[0.65rem] font-bold tracking-[0.15em] text-white/30 uppercase">Login unlocks when event goes live</span>
-                </div>
+                </button>
               </motion.div>
             )}
           </AnimatePresence>
