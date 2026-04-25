@@ -57,6 +57,7 @@ const App = () => {
       syncTouchLerp: 0.06,
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     lenis.on('scroll', (e: any) => {
       const el = logoRef.current;
       if (el) {
@@ -114,31 +115,16 @@ const App = () => {
       }
     });
 
+    let animationFrameId: number;
     const raf = (time: number) => {
       lenis.raf(time);
-      requestAnimationFrame(raf);
+      animationFrameId = requestAnimationFrame(raf);
     };
-    requestAnimationFrame(raf);
+    animationFrameId = requestAnimationFrame(raf);
 
-    return () => lenis.destroy();
-  }, [isRevealed]);
-
-  // Listen for the "Enter Portal" turbo event fired from ActiveHackathons
-  useEffect(() => {
-    let resetTimer: ReturnType<typeof setTimeout>;
-    const onTurbo = () => {
-      if (!logoRef.current) return;
-      logoRef.current.classList.add('site-logo-bg--turbo');
-      clearTimeout(resetTimer);
-      // Revert to slow spin after 4 s (enough time to navigate away)
-      resetTimer = setTimeout(() => {
-        logoRef.current?.classList.remove('site-logo-bg--turbo');
-      }, 4000);
-    };
-    window.addEventListener('logoTurbo', onTurbo);
     return () => {
-      window.removeEventListener('logoTurbo', onTurbo);
-      clearTimeout(resetTimer);
+      cancelAnimationFrame(animationFrameId);
+      lenis.destroy();
     };
   }, []);
 
