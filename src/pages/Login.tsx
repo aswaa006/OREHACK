@@ -29,10 +29,6 @@ const Login = () => {
 
   const teamLabel = teamName.trim() || teamId.trim() || "XYZ";
 
-  /* ── Route guards ── */
-  if (isAuthenticated && authState !== "granted") return <Navigate to={`/event/${baseEvent}/rules`} replace />;
-  if (!isEventLive)    return <Navigate to={`/event/${baseEvent}`}       replace />;
-
   /* ── Submit ── */
   const handleLogin = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +95,6 @@ const Login = () => {
           teamID: resolvedTeamId,
           TeamID: resolvedTeamId,
           Team_Name: resolvedTeamName,
-          password: pass,
           Progress: "queued",
         },
         { onConflict: "team_id" },
@@ -116,6 +111,10 @@ const Login = () => {
     setLoading(false);
     navigate(`/event/${baseEvent}/rules`);
   }, [teamId, teamName, password, setAuthenticated, navigate, baseEvent]);
+
+  /* ── Route guards ── */
+  if (isAuthenticated && authState !== "granted") return <Navigate to={`/event/${baseEvent}/rules`} replace />;
+  if (!isEventLive)    return <Navigate to={`/event/${baseEvent}`}       replace />;
 
   /* ══════════════════════════════════════════════════════
      RENDER — Black / Origin-poster theme

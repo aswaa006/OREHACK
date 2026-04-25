@@ -51,7 +51,16 @@
     --sidebar-accent-foreground: 220 14% 96%;
     --sidebar-border: 0 0% 10%;
     --sidebar-ring: 263 84% 58%;
+    --liquid-primary: #ffffff;
   }
+}
+
+.day-mode {
+  --liquid-primary: #000000;
+}
+
+.day-mode .grid-bg {
+  display: none !important;
 }
 
 html.lenis,
@@ -3265,7 +3274,7 @@ html.lenis body {
    OREHACK LIQUID SWEEP ANIMATION
    ============================================================ */
 .orehack-liquid-text {
-  background: linear-gradient(to right, #ffffff 33.33%, #7c3aed 33.33%, #7c3aed 66.66%, #ffffff 66.66%);
+  background: linear-gradient(to right, var(--liquid-primary) 33.33%, #7c3aed 33.33%, #7c3aed 66.66%, var(--liquid-primary) 66.66%);
   background-size: 300% 100%;
   background-position: 100% 0;
   -webkit-background-clip: text;

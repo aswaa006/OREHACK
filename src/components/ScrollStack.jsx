@@ -19,7 +19,8 @@ const ScrollStack = ({
   rotationAmount = 0,
   blurAmount = 0,
   useWindowScroll = false,
-  onStackComplete
+  onStackComplete,
+  unpinOnLastItem = false
 }) => {
   const scrollerRef = useRef(null);
   const stackCompletedRef = useRef(false);
@@ -113,7 +114,18 @@ const ScrollStack = ({
       const triggerStart = cardTop - stackPositionPx - itemStackDistance * i;
       const triggerEnd = cardTop - scaleEndPositionPx;
       const pinStart = cardTop - stackPositionPx - itemStackDistance * i;
-      const pinEnd = endElementTop - containerHeight / 2;
+      
+      let pinEnd = endElementTop - containerHeight / 2;
+      if (unpinOnLastItem) {
+        const lastCardIndex = cardsRef.current.length - 1;
+        if (i < lastCardIndex) {
+          const lastCardTop = cardOffsetsRef.current[lastCardIndex] ?? 0;
+          pinEnd = lastCardTop - stackPositionPx - itemStackDistance * lastCardIndex;
+        } else {
+          // The last card doesn't pin so it pushes the others up immediately
+          pinEnd = pinStart - 1;
+        }
+      }
 
       const scaleProgress = calculateProgress(scrollTop, triggerStart, triggerEnd);
       const targetScale = baseScale + i * itemScale;
@@ -193,6 +205,7 @@ const ScrollStack = ({
     blurAmount,
     useWindowScroll,
     onStackComplete,
+    unpinOnLastItem,
     calculateProgress,
     parsePercentage,
     getScrollData
@@ -390,6 +403,7 @@ const ScrollStack = ({
     blurAmount,
     useWindowScroll,
     onStackComplete,
+    unpinOnLastItem,
     recalculateOffsets,
     setupLenis,
     updateCardTransforms,
