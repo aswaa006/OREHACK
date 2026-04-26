@@ -6,56 +6,56 @@ const steps = [
   {
     num: "01",
     total: "04",
-    title: "REGISTER &\nAUTHENTICATE",
-    desc: "Teams receive credentials and log in through the secure submission portal. Each team is assigned a unique access token tied to their hackathon entry.",
-    tags: ["OAuth Login", "Team Tokens", "Portal Access"],
-    infoLabel: "PHASE",
-    infoValue: "Onboarding",
-    roleLabel: "PROCESS",
-    roleValue: "Identity Verification",
+    title: "INSTITUTIONS",
+    desc: "Move beyond placement-driven outcomes. OreHack enables institutions to build a parallel innovation ecosystem where startups are nurtured, and entrepreneurship stands alongside traditional careers.",
+    tags: ["Innovation", "Startups", "Ecosystem"],
+    infoLabel: "LABEL",
+    infoValue: "ECOSYSTEM",
+    roleLabel: "FOCUS",
+    roleValue: "Innovation",
     bg: "#7c3aed",
     accent: "#000000",
   },
   {
     num: "02",
     total: "04",
-    title: "SUBMIT\nREPOSITORY",
-    desc: "Submit your public GitHub repository link along with given  problem statement. Our system dives in and explores your project context at submission time.",
-    tags: ["GitHub URL", "Timestamp Lock", "Problem Statement"],
-    infoLabel: "PHASE",
-    infoValue: "Submission",
-    roleLabel: "PROCESS",
-    roleValue: "Code Snapshot",
+    title: "CORPORATES",
+    desc: "Access talent that has already built, not just learned. OreHack creates a direct bridge between companies and high-potential students, where real skills, execution, and innovation are visible before hiring.",
+    tags: ["Talent", "Hiring", "Builders"],
+    infoLabel: "LABEL",
+    infoValue: "TALENT",
+    roleLabel: "FOCUS",
+    roleValue: "Hiring",
     bg: "#000000",
     accent: "#7c3aed",
   },
   {
     num: "03",
     total: "04",
-    title: "AUTOMATED\nEVALUATION",
-    desc: "Our engine parses, inspects, and scores your submission through structured AI intelligence — covering code quality, functionality, and innovation.",
-    tags: ["Static Analysis", "AI Scoring", "Test Suite"],
-    infoLabel: "PHASE",
-    infoValue: "Analysis",
-    roleLabel: "PROCESS",
-    roleValue: "AI Code Review",
+    title: "HACKATHONS",
+    desc: "From manual effort to seamless execution. OreHack provides a complete platform to manage, evaluate, and scale hackathons with precision, fairness, and efficiency.",
+    tags: ["Automation", "Evaluation", "Scale"],
+    infoLabel: "LABEL",
+    infoValue: "EXECUTION",
+    roleLabel: "FOCUS",
+    roleValue: "Automation",
     bg: "#7c3aed",
     accent: "#000000",
   },
   {
     num: "04",
     total: "04",
-    title: "RESULTS &\nLEADERBOARD",
-    desc: "Scores and structured feedback are generated automatically. Rankings update in real time as evaluations complete across all teams.",
-    tags: ["Live Rankings", "Score Breakdown", "AI Feedback"],
-    infoLabel: "PHASE",
-    infoValue: "Results",
-    roleLabel: "PROCESS",
-    roleValue: "Real-time Ranking",
+    title: "STUDENTS",
+    desc: "Don’t just prepare for opportunities — create them. OreHack empowers students to build real solutions, explore entrepreneurship, and prove their capabilities beyond traditional learning.",
+    tags: ["Startups", "Skills", "Impact"],
+    infoLabel: "LABEL",
+    infoValue: "BUILDERS",
+    roleLabel: "FOCUS",
+    roleValue: "Impact",
     bg: "#000000",
     accent: "#7c3aed",
   },
-];export default function HowItWorks() {
+]; export default function HowItWorks() {
   const { isDayMode } = useTheme();
   const headingColor = isDayMode ? "text-black" : "text-white";
   const sectionBg = isDayMode ? "#ffffff" : "transparent";
@@ -69,7 +69,7 @@ const steps = [
       // "wherever black is there change to white"
       if (s.bg === "#000000") cardBg = "#ffffff";
       if (s.accent === "#000000") innerBg = "#ffffff";
-      
+
       // "in the purple bg card change the inner card to white"
       // (This is already covered by the check above since purple cards have black innerBg)
     }
@@ -193,7 +193,7 @@ const steps = [
                 <div className="hiw-card-right">
                   <div
                     className="hiw-info-box"
-                    style={{ 
+                    style={{
                       background: s.themedAccent,
                       border: (isDayMode && s.themedAccent === "#ffffff") ? "1px solid rgba(0,0,0,0.1)" : "none",
                       boxShadow: (isDayMode && s.themedAccent === "#ffffff") ? "0 10px 25px rgba(0,0,0,0.05)" : "none"

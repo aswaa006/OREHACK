@@ -48,6 +48,10 @@ const Navbar = () => {
   /* ── Scroll-active section detection ── */
   useEffect(() => {
     const handleScroll = () => {
+      if (location.pathname !== "/") {
+        setActiveSection("");
+        return;
+      }
       const offsets = NAV_SECTIONS.map(({ id }) => {
         const el = document.getElementById(id);
         if (!el) return { id, top: Infinity };
@@ -60,7 +64,7 @@ const Navbar = () => {
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [location.pathname]);
 
   /* ── Hidden admin key sequence ── */
   useEffect(() => {
