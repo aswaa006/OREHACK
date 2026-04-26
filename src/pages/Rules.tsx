@@ -65,7 +65,7 @@ const Rules: React.FC = () => {
 
   const [agreed, setAgreed] = useState(false);
 
-  const baseEvent = eventId ?? "origin-2k25";
+  const baseEvent = eventId ?? "origin-2k26";
   const hackName  = baseEvent.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
   const handleContinue = useCallback(() => {
@@ -85,24 +85,25 @@ const Rules: React.FC = () => {
 
   return (
     <PageTransition>
-      {/* Root — no overflow:hidden, full scroll */}
       <div
-        className="relative min-h-screen bg-[#050505] text-white selection:bg-purple-500/30 overflow-hidden"
+        className="relative min-h-screen overflow-hidden text-white selection:bg-purple-500/30"
+        style={{ background: "linear-gradient(160deg, #0a0a0a 0%, #141414 40%, #1a1a1a 70%, #0d0d0d 100%)" }}
       >
-        {/* Clean Soft Center Glow */}
-        <div className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center">
+
+
+        {/* Professional Ambient Purple Glows */}
+        <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
           <motion.div
-            animate={{ opacity: [0.3, 0.5, 0.3], scale: [1, 1.05, 1] }}
-            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            className="h-[600px] w-[600px] rounded-full bg-purple-600/10 blur-[120px]"
+            animate={{ opacity: [0.15, 0.25, 0.15], scale: [1, 1.1, 1] }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute -top-[20%] -left-[10%] h-[600px] w-[600px] rounded-full bg-purple-600/10 blur-[150px]"
+          />
+          <motion.div
+            animate={{ opacity: [0.1, 0.2, 0.1], scale: [1, 1.2, 1] }}
+            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+            className="absolute top-[40%] -right-[10%] h-[500px] w-[500px] rounded-full bg-purple-900/20 blur-[150px]"
           />
         </div>
-        
-        {/* Premium Noise Overlay */}
-        <div 
-          className="pointer-events-none fixed inset-0 z-0 opacity-[0.03] mix-blend-screen" 
-          style={{ backgroundImage: "url('data:image/svg+xml;utf8,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')" }} 
-        />
 
         {/* ── Sticky top bar ── */}
         <motion.div
@@ -150,8 +151,7 @@ const Rules: React.FC = () => {
             <h1 style={{
               fontSize: "clamp(1.75rem,4vw,2.75rem)",
               fontWeight: 800, letterSpacing: "-0.02em",
-              background: "linear-gradient(135deg, #fff 30%, #a855f7 100%)",
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+              color: "#fff",
               marginBottom: "0.75rem",
             }}>
               Rules &amp; Regulations
@@ -172,26 +172,26 @@ const Rules: React.FC = () => {
               >
                 <motion.div 
                   whileHover={{ 
-                    scale: 1.015, 
+                    scale: 1.01, 
                     y: -2,
-                    backgroundColor: "rgba(255,255,255,0.04)",
-                    borderColor: "rgba(255,255,255,0.15)",
-                    boxShadow: "0 12px 40px rgba(0,0,0,0.3)"
+                    backgroundColor: "rgba(255,255,255,0.03)",
+                    borderColor: "rgba(168,85,247,0.3)",
+                    boxShadow: "0 8px 30px rgba(168,85,247,0.1)"
                   }}
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   style={{
                     background: "rgba(255,255,255,0.02)",
-                    border: "1px solid rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.06)",
                     borderRadius: 16,
-                    backdropFilter: "blur(12px)",
+                    backdropFilter: "blur(8px)",
                     padding: "1.75rem 2rem",
                     cursor: "default",
                   }}
                 >
                   {/* Section heading */}
                   <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:"1.2rem" }}>
-                    <div style={{ width:4, height:22, borderRadius:2, background:`linear-gradient(180deg, ${section.color}, transparent)`, flexShrink:0 }} />
-                    <h3 style={{ fontSize:"1rem", fontWeight:700, letterSpacing:"0.14em", textTransform:"uppercase", color: section.color }}>
+                    <div style={{ width:4, height:22, borderRadius:2, background: section.color, flexShrink:0, boxShadow: `0 0 10px ${section.color}80` }} />
+                    <h3 style={{ fontSize:"1rem", fontWeight:700, letterSpacing:"0.14em", textTransform:"uppercase", color: "rgba(255,255,255,0.95)" }}>
                       {section.title}
                     </h3>
                   </div>
@@ -273,10 +273,10 @@ const Rules: React.FC = () => {
             disabled={!agreed}
             className="group relative flex items-center justify-center gap-2 rounded-full px-8 py-3.5 text-sm font-bold transition-all"
             style={{
-              background: agreed ? "#ffffff" : "rgba(255,255,255,0.05)",
+              background: agreed ? "linear-gradient(135deg, #e8e8e8 0%, #ffffff 50%, #d0d0d0 100%)" : "rgba(255,255,255,0.05)",
               color: agreed ? "#000000" : "rgba(255,255,255,0.2)",
               cursor: agreed ? "pointer" : "not-allowed",
-              boxShadow: agreed ? "0 0 20px rgba(255,255,255,0.2)" : "none",
+              boxShadow: agreed ? "0 4px 24px rgba(168,85,247,0.25), inset 0 1px 0 rgba(255,255,255,0.6)" : "none",
             }}
           >
             Continue 

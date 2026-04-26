@@ -32,11 +32,11 @@ interface EventContextValue {
   logout: () => void;
 }
 
-const DEFAULT_EVENT_START = new Date("2026-04-15T19:56:00").getTime();
+const DEFAULT_EVENT_START = new Date("2026-04-27T00:00:00").getTime();
 
 // Admin timer + flow config — persists in localStorage across refreshes
-const TIMER_STORAGE_KEY  = "orehack_admin_timer_config";
-const FLOW_STORAGE_KEY   = "orehack_admin_flow_config";
+const TIMER_STORAGE_KEY = "orehack_admin_timer_config";
+const FLOW_STORAGE_KEY = "orehack_admin_flow_config";
 
 function loadTimerConfig(): { eventStartTime: number; timerEnabled: boolean } {
   try {
@@ -55,7 +55,7 @@ function loadFlowConfig(): { rulesEnabled: boolean; waitingRoomEnabled: boolean;
 }
 
 const defaultState: EventState = {
-  eventId: "origin-2k25",
+  eventId: "origin-2k26",
   eventName: "Origin 2K25",
   eventStartTime: DEFAULT_EVENT_START,
   currentTime: Date.now(),
@@ -73,15 +73,15 @@ const defaultState: EventState = {
 
 const EventContext = createContext<EventContextValue>({
   state: defaultState,
-  setAuthenticated: () => {},
-  setRulesAccepted: () => {},
-  setStage1Active: () => {},
-  setEventStartTime: () => {},
-  setTimerEnabled: () => {},
-  setRulesEnabled: () => {},
-  setWaitingRoomEnabled: () => {},
-  setSubmissionEnabled: () => {},
-  logout: () => {},
+  setAuthenticated: () => { },
+  setRulesAccepted: () => { },
+  setStage1Active: () => { },
+  setEventStartTime: () => { },
+  setTimerEnabled: () => { },
+  setRulesEnabled: () => { },
+  setWaitingRoomEnabled: () => { },
+  setSubmissionEnabled: () => { },
+  logout: () => { },
 });
 
 export const useEvent = () => useContext(EventContext);
@@ -110,25 +110,25 @@ function slugToName(slug: string): string {
 export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const [state, setState] = useState<EventState>(() => {
-    const session    = loadSession();
-    const timerCfg   = loadTimerConfig();
-    const flowCfg    = loadFlowConfig();
-    const now        = Date.now();
-    const startTime  = timerCfg.eventStartTime;
-    const enabled    = timerCfg.timerEnabled;
+    const session = loadSession();
+    const timerCfg = loadTimerConfig();
+    const flowCfg = loadFlowConfig();
+    const now = Date.now();
+    const startTime = timerCfg.eventStartTime;
+    const enabled = timerCfg.timerEnabled;
 
     return {
       ...defaultState,
       ...session,
       eventStartTime: startTime,
-      timerEnabled:   enabled,
-      rulesEnabled:        flowCfg.rulesEnabled,
-      waitingRoomEnabled:  flowCfg.waitingRoomEnabled,
-      submissionEnabled:   flowCfg.submissionEnabled ?? false,
+      timerEnabled: enabled,
+      rulesEnabled: flowCfg.rulesEnabled,
+      waitingRoomEnabled: flowCfg.waitingRoomEnabled,
+      submissionEnabled: flowCfg.submissionEnabled ?? false,
       // stage1Active from flow config wins if session doesn't have it
       stage1Active: (session as EventState).stage1Active ?? flowCfg.stage1Active,
-      currentTime:  now,
-      isEventLive:  !enabled || now >= startTime,
+      currentTime: now,
+      isEventLive: !enabled || now >= startTime,
     };
   });
 
@@ -136,7 +136,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     let mounted = true;
 
     const syncFromDatabase = async () => {
-      const { data: hackathon } = await resolveHackathonBySlug(state.eventId || "origin-2k25");
+      const { data: hackathon } = await resolveHackathonBySlug(state.eventId || "origin-2k26");
       if (!mounted || !hackathon) return;
 
       const { runtime } = await loadHackathonRuntime(hackathon.id);
@@ -187,10 +187,10 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           eventId: next.eventId,
           eventName: next.eventName,
           isAuthenticated: next.isAuthenticated,
-          teamId:          next.teamId,
-          teamName:        next.teamName,
+          teamId: next.teamId,
+          teamName: next.teamName,
           hasAcceptedRules: next.hasAcceptedRules,
-          stage1Active:    next.stage1Active,
+          stage1Active: next.stage1Active,
         }));
       } catch { /* ignore */ }
       return next;
@@ -233,7 +233,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const setEventStartTime = useCallback((ts: number) => {
     setState((prev) => {
-      const now  = Date.now();
+      const now = Date.now();
       const next = { ...prev, eventStartTime: ts, isEventLive: !prev.timerEnabled || now >= ts };
       try {
         localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify({ eventStartTime: ts, timerEnabled: prev.timerEnabled }));
@@ -251,7 +251,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const setTimerEnabled = useCallback((v: boolean) => {
     setState((prev) => {
-      const now  = Date.now();
+      const now = Date.now();
       const next = { ...prev, timerEnabled: v, isEventLive: !v || now >= prev.eventStartTime };
       try {
         localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify({ eventStartTime: prev.eventStartTime, timerEnabled: v }));

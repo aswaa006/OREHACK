@@ -126,7 +126,7 @@ const WatermarkManager = ({ logoRef }: { logoRef: React.RefObject<HTMLImageEleme
 
 const EventPathRedirect = ({ to }: { to: string }) => {
   const { eventId } = useParams<{ eventId: string }>();
-  const baseEvent = eventId || "origin-2k25";
+  const baseEvent = eventId || "origin-2k26";
   return <Navigate to={`/event/${baseEvent}/${to}`} replace />;
 };
 

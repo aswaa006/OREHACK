@@ -7,37 +7,35 @@ import PageTransition from "@/components/PageTransition";
 import CountdownTimer from "@/components/CountdownTimer";
 import "@/styles/animations.css";
 
-/* ── Floating CSS particles ── */
-const Particles: React.FC = () => (
-  <div className="ore-particles">
-    {Array.from({ length: 12 }, (_, i) => (
-      <div key={i} className={`ore-particle ore-particle--${i + 1}`} />
-    ))}
-  </div>
-);
-
-/* ── Triple-ring CSS loader ── */
+/* ── Modern Spinner Loader ── */
 const Loader: React.FC = () => (
-  <div className="ore-loader">
-    <div className="ore-loader__ring ore-loader__ring--1" />
-    <div className="ore-loader__ring ore-loader__ring--2" />
-    <div className="ore-loader__ring ore-loader__ring--3" />
-  </div>
-);
-
-/* ── Subtle scan-line overlay ── */
-const ScanLines: React.FC = () => (
-  <div
+  <motion.div
+    animate={{ rotate: 360 }}
+    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
     style={{
-      pointerEvents: "none",
-      position: "fixed",
-      inset: 0,
-      zIndex: 1,
-      backgroundImage:
-        "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.012) 2px, rgba(255,255,255,0.012) 4px)",
+      width: 48, height: 48, borderRadius: "50%",
+      border: "3px solid rgba(255,255,255,0.05)",
+      borderTopColor: "#a855f7",
     }}
   />
 );
+
+/* ── Progress Bar ── */
+const TopProgressBar: React.FC<{ currentTime: number; targetTime: number }> = ({ currentTime, targetTime }) => {
+  // Calculate total duration from the moment the component mounts until the target time
+  const [initialTime] = React.useState(currentTime);
+  const totalDuration = Math.max(1000, targetTime - initialTime); // At least 1 second to avoid division by zero
+  const remaining = Math.max(0, targetTime - currentTime);
+  const progress = Math.min(100, Math.max(0, ((totalDuration - remaining) / totalDuration) * 100));
+
+  return (
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '3px', zIndex: 100, background: 'rgba(255,255,255,0.05)' }}>
+      <div
+        style={{ height: '100%', background: '#a855f7', width: `${progress}%`, transition: 'width 1s linear', boxShadow: '0 0 10px rgba(168,85,247,0.5)' }}
+      />
+    </div>
+  );
+};
 
 /* ── Top bar ── */
 const TopBar: React.FC<{ teamName: string }> = ({ teamName }) => (
@@ -45,28 +43,70 @@ const TopBar: React.FC<{ teamName: string }> = ({ teamName }) => (
     initial={{ opacity: 0, y: -16 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5 }}
+    className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-8 sm:px-12 backdrop-blur-md"
     style={{
-      position: "fixed", top: 0, left: 0, right: 0, zIndex: 20,
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      padding: "1rem 2rem",
-      background: "rgba(8,11,20,0.8)",
-      backdropFilter: "blur(20px)",
-      borderBottom: "1px solid rgba(255,255,255,0.06)",
+      background: "rgba(5,5,5,0.7)",
+      borderBottom: "1px solid rgba(255,255,255,0.03)",
+      height: "64px",          /* fixed height keeps both sides on the same baseline */
     }}
   >
-    <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(196,181,253,0.8)" }}>
-      ORE<span style={{ color: "rgba(255,255,255,0.3)" }}>HACK</span>
+    {/* Logo — matches EventLanding style */}
+    <span
+      style={{
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: "0.875rem",
+        fontWeight: 700,
+        letterSpacing: "0.2em",
+        color: "#ffffff",
+        textTransform: "uppercase",
+        lineHeight: 1,
+      }}
+    >
+      OREHACK<span style={{ color: "#a855f7" }}>++</span>
     </span>
 
-    {teamName && (
-      <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.32)", letterSpacing: "0.1em" }}>
-        Team: <span style={{ color: "rgba(196,181,253,0.65)" }}>{teamName}</span>
-      </span>
-    )}
+    {/* Right-hand pills — same baseline as logo via items-center on parent */}
+    <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+      {teamName && (
+        <span style={{
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: "0.65rem",
+          fontWeight: 700,
+          letterSpacing: "0.16em",
+          textTransform: "uppercase",
+          color: "rgba(255,255,255,0.38)",
+          lineHeight: 1,
+        }}>
+          TEAM{" "}
+          <span style={{ color: "rgba(255,255,255,0.88)", fontWeight: 700 }}>{teamName.toUpperCase()}</span>
+        </span>
+      )}
 
-    <div className="ore-status">
-      <div className="ore-status__dot ore-status__dot--waiting" />
-      <span style={{ color: "rgba(251,191,36,0.7)", fontSize: "0.68rem", letterSpacing: "0.18em" }}>WAITING</span>
+      {/* WAITING pill with animated pulse dot */}
+      <span style={{
+        display: "inline-flex", alignItems: "center", gap: 7,
+        padding: "5px 14px", borderRadius: 999,
+        border: "1px solid rgba(168,85,247,0.35)",
+        background: "rgba(168,85,247,0.08)",
+        fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase",
+        color: "rgba(216,180,254,0.9)",
+        fontFamily: "'JetBrains Mono', monospace",
+        lineHeight: 1,
+      }}>
+        <motion.div
+          style={{ width: 6, height: 6, borderRadius: "50%", background: "#a855f7", flexShrink: 0 }}
+          animate={{
+            boxShadow: [
+              "0 0 4px rgba(168,85,247,0.4)",
+              "0 0 12px rgba(168,85,247,0.9)",
+              "0 0 4px rgba(168,85,247,0.4)",
+            ],
+            scale: [1, 1.35, 1],
+          }}
+          transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+        />
+        WAITING
+      </span>
     </div>
   </motion.div>
 );
@@ -77,15 +117,32 @@ const StatusCard: React.FC<{ currentTime: number; targetTime: number; onComplete
     initial={{ opacity: 0, scale: 0.93 }}
     animate={{ opacity: 1, scale: 1 }}
     transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
-    style={{ position: "relative", zIndex: 2, textAlign: "center", maxWidth: 540, width: "100%", padding: "0 1.5rem" }}
+    style={{ position: "relative", zIndex: 2, textAlign: "center", maxWidth: 620, width: "100%", padding: "0 1.5rem", fontFamily: "'Outfit', sans-serif" }}
   >
-    {/* Loader or Countdown */}
+    {/* Countdown with subtle ambient glow pulse */}
     <motion.div
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: 0.35, duration: 0.55 }}
-      style={{ marginBottom: "2.5rem", minHeight: 104, display: "flex", alignItems: "center", justifyContent: "center" }}
+      style={{
+        marginBottom: "5rem",          /* ↑ more room between timer and heading */
+        minHeight: 104,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        position: "relative",
+      }}
     >
+      {/* Faint glow behind the numbers — pulses to show the page is alive */}
+      <motion.div
+        style={{
+          position: "absolute", inset: "-24px",
+          borderRadius: "50%",
+          background: "radial-gradient(ellipse at center, rgba(168,85,247,0.12) 0%, transparent 70%)",
+          pointerEvents: "none",
+          filter: "blur(8px)",
+        }}
+        animate={{ opacity: [0.5, 1, 0.5] }}
+        transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+      />
       {currentTime < targetTime ? (
         <CountdownTimer currentTime={currentTime} targetTime={targetTime} onComplete={onComplete} />
       ) : (
@@ -93,58 +150,37 @@ const StatusCard: React.FC<{ currentTime: number; targetTime: number; onComplete
       )}
     </motion.div>
 
-    {/* Status badge */}
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.45 }}
-      style={{ display: "flex", justifyContent: "center", marginBottom: "1.5rem" }}
-    >
-      <span className="ore-badge" style={{ fontSize: "0.65rem", letterSpacing: "0.22em" }}>
-        <div className="ore-status__dot ore-status__dot--waiting" style={{ width: 6, height: 6 }} />
-        Standby
-      </span>
-    </motion.div>
-
     {/* Main message */}
     <motion.h1
+      className="glitch-text"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.55, duration: 0.6 }}
       style={{
-        fontSize: "clamp(1.5rem,4.5vw,2.6rem)",
-        fontWeight: 700,
-        letterSpacing: "-0.02em",
-        lineHeight: 1.2,
+        fontFamily: "'Inter', sans-serif",
+        fontSize: "clamp(1.75rem,4.5vw,3rem)",
+        fontWeight: 900,
+        letterSpacing: "0.07em",
+        lineHeight: 1.25,
         color: "#fff",
         marginBottom: "1.25rem",
+        textTransform: "uppercase",
       }}
     >
-      Please wait for the{" "}
-      <span
-        style={{
-          background: "linear-gradient(135deg,#a855f7,#6366f1)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          backgroundClip: "text",
-        }}
-      >
-        problem statements
-      </span>{" "}
-      to be released
+      AWAITING{" "}
+      <span style={{ color: "#a855f7" }}>PROBLEM STATEMENT</span>
     </motion.h1>
 
-    {/* Pulsing subtitle */}
+    {/* Subtitle */}
     <motion.p
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 0.7 }}
-      className="ore-pulse-text"
-      style={{ color: "rgba(255,255,255,0.38)", fontSize: "0.875rem", lineHeight: 1.65 }}
+      style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.9rem", lineHeight: 1.7, fontWeight: 400, letterSpacing: "0.02em" }}
     >
-      The organizers will release the problem statements shortly.
+      The organizers will unlock the arena shortly.
       <br />
-      This page will automatically advance when Stage 1 begins.
+      This page will automatically advance when the event begins.
     </motion.p>
 
     {/* Divider with animated shimmer */}
@@ -152,12 +188,12 @@ const StatusCard: React.FC<{ currentTime: number; targetTime: number; onComplete
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 0.85 }}
-      style={{ margin: "2.5rem auto 0", width: 160, height: 1, background: "rgba(139,92,246,0.2)", borderRadius: 1, overflow: "hidden", position: "relative" }}
+      style={{ margin: "2.5rem auto 0", width: 80, height: 1, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden", position: "relative" }}
     >
       <motion.div
-        style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg,transparent,rgba(168,85,247,0.8),transparent)" }}
+        style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg,transparent,rgba(168,85,247,0.9),transparent)" }}
         animate={{ x: ["-100%", "200%"] }}
-        transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+        transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
       />
     </motion.div>
 
@@ -166,16 +202,16 @@ const StatusCard: React.FC<{ currentTime: number; targetTime: number; onComplete
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 1.0 }}
-      style={{ display: "flex", justifyContent: "center", gap: "2.5rem", marginTop: "3rem", flexWrap: "wrap" }}
+      style={{ display: "flex", justifyContent: "center", gap: "3.5rem", marginTop: "2.75rem", flexWrap: "wrap" }}
     >
       {[
-        { label: "Status",    value: "Waiting" },
-        { label: "Stage",     value: "Pre-Release" },
-        { label: "Next",      value: "Problem Drop" },
+        { label: "Status", value: "Waiting" },
+        { label: "Stage", value: "Pre-Release" },
+        { label: "Next", value: "Problem Drop" },
       ].map(({ label, value }) => (
         <div key={label} style={{ textAlign: "center" }}>
-          <div style={{ fontSize: "0.62rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 4 }}>{label}</div>
-          <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "rgba(196,181,253,0.7)" }}>{value}</div>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.6rem", fontWeight: 700, letterSpacing: "3px", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 8 }}>{label}</div>
+          <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.85)", letterSpacing: "0.04em" }}>{value}</div>
         </div>
       ))}
     </motion.div>
@@ -185,54 +221,24 @@ const StatusCard: React.FC<{ currentTime: number; targetTime: number; onComplete
 /* ── Ambient concentric rings ── */
 const AmbientRings: React.FC = () => (
   <>
-    {[0, 1, 2, 3].map((i) => (
+    {[0, 1].map((i) => (
       <motion.div
         key={i}
         style={{
           position: "absolute",
           borderRadius: "50%",
-          border: `1px solid rgba(139,92,246,${0.07 - i * 0.015})`,
-          width:  `${20 + i * 18}vmax`,
-          height: `${20 + i * 18}vmax`,
+          border: `1px solid rgba(168,85,247,${0.08 - i * 0.04})`,
+          width: `${35 + i * 15}vmax`,
+          height: `${35 + i * 15}vmax`,
           left: "50%", top: "50%",
           transform: "translate(-50%,-50%)",
           pointerEvents: "none",
         }}
-        animate={{ scale: [1, 1.03, 1], opacity: [0.5, 1, 0.5] }}
-        transition={{ duration: 5 + i * 1.5, repeat: Infinity, ease: "easeInOut" }}
+        animate={{ scale: [1, 1.03, 1], opacity: [0.3, 0.8, 0.3] }}
+        transition={{ duration: 8 + i * 3, repeat: Infinity, ease: "easeInOut" }}
       />
     ))}
   </>
-);
-
-/* ── Dev toggle panel (remove in prod) ── */
-const DevPanel: React.FC<{ onActivate: () => void }> = ({ onActivate }) => (
-  <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    transition={{ delay: 2 }}
-    style={{
-      position: "fixed", bottom: "1.5rem", right: "1.5rem", zIndex: 30,
-      background: "rgba(15,12,28,0.85)", border: "1px solid rgba(168,85,247,0.25)",
-      borderRadius: 12, padding: "0.75rem 1rem",
-      backdropFilter: "blur(12px)",
-    }}
-  >
-    <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.28)", letterSpacing: "0.12em", marginBottom: 8, textTransform: "uppercase" }}>
-      Dev Controls
-    </p>
-    <button
-      onClick={onActivate}
-      style={{
-        fontSize: "0.72rem", fontWeight: 600, color: "#a855f7",
-        background: "rgba(168,85,247,0.1)", border: "1px solid rgba(168,85,247,0.3)",
-        borderRadius: 8, padding: "0.4rem 0.85rem", cursor: "pointer",
-        transition: "all 200ms",
-      }}
-    >
-      Simulate Stage 1 Active →
-    </button>
-  </motion.div>
 );
 
 /* ─────────────────────────────────────────
@@ -244,7 +250,7 @@ const WaitingRoom: React.FC = () => {
   const { state, setStage1Active } = useEvent();
   const { isAuthenticated, hasAcceptedRules, stage1Active, teamName, waitingRoomEnabled } = useEventState();
 
-  const baseEvent = eventId ?? "origin-2k25";
+  const baseEvent = eventId ?? "origin-2k26";
 
   /* Auto-transition when stage1Active flips true */
   useEffect(() => {
@@ -261,30 +267,50 @@ const WaitingRoom: React.FC = () => {
   }, [setStage1Active]);
 
   /* Route guards */
-  if (!isAuthenticated)   return <Navigate to={`/event/${baseEvent}/login`} replace />;
-  if (!hasAcceptedRules)  return <Navigate to={`/event/${baseEvent}/rules`}  replace />;
+  if (!isAuthenticated) return <Navigate to={`/event/${baseEvent}/login`} replace />;
+  if (!hasAcceptedRules) return <Navigate to={`/event/${baseEvent}/rules`} replace />;
   // Admin skipped the waiting room — go straight to stage-2
   if (!waitingRoomEnabled) return <Navigate to={`/event/${baseEvent}/stage-2`} replace />;
 
   return (
     <PageTransition>
       <div
-        className="ore-page ore-waiting-bg"
-        style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
+        className="relative min-h-screen overflow-hidden text-white flex flex-col"
+        style={{ fontFamily: "'Outfit', sans-serif", background: "linear-gradient(160deg, #0a0a0a 0%, #141414 40%, #1a1a1a 70%, #0d0d0d 100%)" }}
       >
-        {/* Layers */}
-        <div className="ore-grid-bg" />
-        <div className="ore-radial-1" />
-        <div className="ore-radial-2" />
-        <ScanLines />
-        <Particles />
 
+
+        {/* Professional Ambient Purple Glows */}
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+          <motion.div
+            animate={{ opacity: [0.15, 0.25, 0.15], scale: [1, 1.1, 1] }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute -top-[20%] -left-[10%] h-[600px] w-[600px] rounded-full bg-purple-600/10 blur-[150px]"
+          />
+          <motion.div
+            animate={{ opacity: [0.1, 0.2, 0.1], scale: [1, 1.2, 1] }}
+            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+            className="absolute top-[40%] -right-[10%] h-[500px] w-[500px] rounded-full bg-purple-900/20 blur-[150px]"
+          />
+        </div>
+
+        <TopProgressBar currentTime={state.currentTime} targetTime={state.eventStartTime} />
         <TopBar teamName={teamName} />
 
-        {/* Center stage */}
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", paddingTop: "4.5rem" }}>
+        {/* Center stage — padded from the fixed topbar (64px) and balanced with footer */}
+        <div style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          position: "relative",
+          paddingTop: "96px",     /* topbar (64px) + 32px breathing room */
+          paddingBottom: "48px",  /* pushes content slightly above true-center, balancing the footer */
+          zIndex: 10,
+        }}>
           <AmbientRings />
-          <StatusCard currentTime={state.currentTime} targetTime={state.eventStartTime} />
+          <StatusCard currentTime={state.currentTime} targetTime={state.eventStartTime} onComplete={simulateStage1} />
         </div>
 
         {/* Footer */}
@@ -293,17 +319,14 @@ const WaitingRoom: React.FC = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 1.2 }}
           style={{
-            position: "relative", zIndex: 2,
+            position: "relative", zIndex: 10,
             textAlign: "center", padding: "1.25rem",
-            borderTop: "1px solid rgba(255,255,255,0.04)",
-            color: "rgba(255,255,255,0.14)",
-            fontSize: "0.65rem", letterSpacing: "0.16em", textTransform: "uppercase",
+            color: "rgba(255,255,255,0.15)",
+            fontSize: "0.65rem", letterSpacing: "0.16em", textTransform: "uppercase", fontWeight: 700
           }}
         >
           OreHack by Oregent © 2025 — Waiting for organizer signal…
         </motion.footer>
-
-        {/* Dev panel removed — control moved to Stage 2 Admin */}
       </div>
     </PageTransition>
   );

@@ -5,7 +5,7 @@ import { resolveHackathonBySlug } from "@/lib/event-db";
 import { supabase } from "@/lib/supabase";
 
 const ADMIN_SESSION_KEY = "orehack_origin_admin_auth";
-const HACKATHON_SLUG_CANDIDATES = ["origin-2k26", "origin-2k25"];
+const HACKATHON_SLUG_CANDIDATES = ["origin-2k26", "origin-2k26"];
 
 type SubmissionRecord = {
   id: string;

@@ -73,16 +73,16 @@ export function useControlState(teamId: string, isActive: boolean): UseControlSt
   // Prevent stale-closure issues in subscriptions and simulation
   const teamIdRef = useRef(teamId);
   const problemsRef = useRef<Problem[]>([]);
-  const hackathonSlugRef = useRef<string>("origin-2k25");
+  const hackathonSlugRef = useRef<string>("origin-2k26");
   useEffect(() => { teamIdRef.current = teamId; }, [teamId]);
   useEffect(() => { problemsRef.current = problems; }, [problems]);
 
   const getEventSlug = useCallback(() => {
-    if (typeof window === "undefined") return "origin-2k25";
+    if (typeof window === "undefined") return "origin-2k26";
     const parts = window.location.pathname.split("/").filter(Boolean);
     if (parts[0] === "event" && parts[1]) return parts[1];
     if (parts[0] === "hackathon" && parts[1]) return parts[1];
-    return "origin-2k25";
+    return "origin-2k26";
   }, []);
 
   // ── Initial data fetch ────────────────────────────────────────────────────

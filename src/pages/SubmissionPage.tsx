@@ -27,7 +27,7 @@ const SubmissionPage = () => {
   // EventContext — populated when coming via /event/:eventId flow
   const { state: eventState } = useEvent();
 
-  const effectiveHackathonId = hackathonId || eventId || "origin-2k25";
+  const effectiveHackathonId = hackathonId || eventId || "origin-2k26";
 
   const storedSessionRaw = typeof window !== "undefined" ? localStorage.getItem("orehack_team_session") : null;
   let storedSession: {

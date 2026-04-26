@@ -133,15 +133,6 @@ const HackathonLogin = () => {
         className="relative min-h-screen overflow-hidden text-white"
         style={{ background: "linear-gradient(160deg, #0a0a0a 0%, #141414 40%, #1a1a1a 70%, #0d0d0d 100%)" }}
       >
-        {/* Subtle grid */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)",
-            backgroundSize: "52px 52px",
-          }}
-        />
         {/* Radial grey glows */}
         {[0, 1].map((i) => (
           <motion.div

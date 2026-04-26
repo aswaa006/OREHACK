@@ -228,7 +228,7 @@ const ProblemStatementsOverview: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const { isAuthenticated, hasAcceptedRules, teamName, submissionEnabled } = useEventState();
-  const baseEvent = eventId ?? "origin-2k25";
+  const baseEvent = eventId ?? "origin-2k26";
 
   // Prefer live DB data; fallback to session snapshot when DB is unavailable.
   const [problems, setProblems] = React.useState<ProblemData[]>([]);

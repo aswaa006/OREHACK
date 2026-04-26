@@ -162,7 +162,7 @@ const ProblemStatements: React.FC = () => {
   const [submissionEnabled, setSubmissionEnabled] = React.useState<boolean | null>(null);
   const [loading, setLoading] = React.useState(true);
 
-  const baseEvent = eventId ?? "origin-2k25";
+  const baseEvent = eventId ?? "origin-2k26";
 
   React.useEffect(() => {
     let mounted = true;

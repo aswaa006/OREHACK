@@ -333,14 +333,6 @@ const HackathonsPage = () => {
           position: "sticky", top: 0, height: "100vh",
           overflow: "hidden", display: "flex", alignItems: "center",
         }}>
-          {/* subtle grid */}
-          <div aria-hidden style={{
-            position: "absolute", inset: 0,
-            backgroundImage: "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
-            backgroundSize: "60px 60px",
-            maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent)",
-            pointerEvents: "none",
-          }} />
 
           <div style={{ width: "100%", position: "relative", zIndex: 1 }}>
             <div style={{

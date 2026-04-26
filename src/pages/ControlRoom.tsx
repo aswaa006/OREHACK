@@ -226,7 +226,7 @@ const ErrorBanner: React.FC<{ message: string; onRetry: () => void }> = ({ messa
 const ControlRoom: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const { isAuthenticated, hasAcceptedRules, teamId, teamName, stage1Active, waitingRoomEnabled } = useEventState();
-  const baseEvent = eventId ?? "origin-2k25";
+  const baseEvent = eventId ?? "origin-2k26";
   const navigate = useNavigate();
 
   // Redirect back to waiting room if event is stopped
