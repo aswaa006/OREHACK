@@ -7,6 +7,7 @@ const steps = [
     num: "01",
     total: "04",
     title: "INSTITUTIONS",
+    label: "WE BUILD FOR ALL ✦ INSTITUTIONS",
     desc: "Move beyond placement-driven outcomes. OreHack enables institutions to build a parallel innovation ecosystem where startups are nurtured, and entrepreneurship stands alongside traditional careers.",
     tags: ["Innovation", "Startups", "Ecosystem"],
     infoLabel: "LABEL",
@@ -20,6 +21,7 @@ const steps = [
     num: "02",
     total: "04",
     title: "CORPORATES",
+    label: "WE BUILD FOR ALL ✦ CORPORATES",
     desc: "Access talent that has already built, not just learned. OreHack creates a direct bridge between companies and high-potential students, where real skills, execution, and innovation are visible before hiring.",
     tags: ["Talent", "Hiring", "Builders"],
     infoLabel: "LABEL",
@@ -33,6 +35,7 @@ const steps = [
     num: "03",
     total: "04",
     title: "HACKATHONS",
+    label: "WE BUILD FOR ALL ✦ HACKATHONS",
     desc: "From manual effort to seamless execution. OreHack provides a complete platform to manage, evaluate, and scale hackathons with precision, fairness, and efficiency.",
     tags: ["Automation", "Evaluation", "Scale"],
     infoLabel: "LABEL",
@@ -46,6 +49,7 @@ const steps = [
     num: "04",
     total: "04",
     title: "STUDENTS",
+    label: "WE BUILD FOR ALL ✦ STUDENTS",
     desc: "Don’t just prepare for opportunities — create them. OreHack empowers students to build real solutions, explore entrepreneurship, and prove their capabilities beyond traditional learning.",
     tags: ["Startups", "Skills", "Impact"],
     infoLabel: "LABEL",
@@ -176,7 +180,7 @@ const steps = [
                 {/* Left content */}
                 <div className="hiw-card-left">
                   <p className="hiw-step-label" style={{ color: labelTextColor }}>
-                    STEP {s.num} / {s.total}
+                    {s.label}
                   </p>
                   <h3 className="hiw-title" style={{ color: cardTextColor }}>{s.title}</h3>
                   <p className="hiw-desc" style={{ color: subTextColor }}>{s.desc}</p>
