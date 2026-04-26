@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
 import emailjs from "@emailjs/browser";
 import { useTheme } from "@/context/ThemeContext";
@@ -136,7 +137,7 @@ const Contact = () => {
     <section
       id="contact"
       ref={ref}
-      className="relative pt-20 pb-0 overflow-hidden"
+      className="relative pt-12 pb-0 overflow-hidden"
       style={{ transition: "background 0.5s ease" }}
     >
       {/* Animated background */}
@@ -149,7 +150,7 @@ const Contact = () => {
       <div className="relative z-10 container mx-auto px-6 max-w-7xl" style={{ perspective: "1200px" }}>
 
         {/* TOP SECTION: Illustration + Main Header */}
-        <div className="grid md:grid-cols-2 gap-12 items-center mb-16 pt-10">
+        <div className="grid md:grid-cols-2 gap-10 items-center mb-20 pt-6">
           <motion.div
             initial={{ opacity: 0, scale: 0.9, rotate: -5 }}
             animate={isInView ? { opacity: 1, scale: 1, rotate: 0 } : {}}
@@ -157,7 +158,7 @@ const Contact = () => {
             className="flex justify-center md:justify-start"
           >
             {/* Doodle-style Illustration */}
-            <div className="relative w-full max-w-[450px]">
+            <div className="relative w-full max-w-[380px]">
               <svg viewBox="0 0 500 400" className="w-full h-auto drop-shadow-2xl">
                 <defs>
                   <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -194,17 +195,17 @@ const Contact = () => {
             initial={{ opacity: 0, x: 50 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-left"
+            className="text-center"
           >
             <h2
-              className="text-5xl md:text-7xl font-black mb-6 leading-tight"
+              className="text-4xl md:text-6xl font-black mb-8 leading-tight"
               style={{ color: headingColor, fontFamily: "ui-serif, Georgia, serif" }}
             >
               Have questions?<br />
               <span className="text-primary italic">Shoot us an email.</span>
             </h2>
             <p
-              className="text-lg md:text-xl max-w-lg mb-8 leading-relaxed"
+              className="text-sm md:text-base max-w-lg mb-6 leading-relaxed text-center mx-auto"
               style={{ color: subtitleColor }}
             >
               We are an industry-leading hackathon organization providing the best experience for builders. Have a question for us or feedback? Please click on the most appropriate category and fill out the form to reach us.
@@ -213,7 +214,7 @@ const Contact = () => {
         </div>
 
         {/* MAIN SECTION: List + Form */}
-        <div className="grid lg:grid-cols-2 gap-16 items-start">
+        <div className="grid lg:grid-cols-2 gap-10 items-start">
 
           {/* LEFT: How can we help? */}
           <motion.div
@@ -221,8 +222,8 @@ const Contact = () => {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            <h3 className="text-2xl font-bold mb-8" style={{ color: headingColor }}>How can we help?</h3>
-            <div className="space-y-3">
+            <h3 className="text-xl font-bold mb-6" style={{ color: headingColor }}>How can we help?</h3>
+            <div className="space-y-4">
               {[
                 "I want to sponsor OREHACK",
                 "I'm a mentor or want to contribute",
@@ -237,12 +238,12 @@ const Contact = () => {
                   key={idx}
                   whileHover={{ x: 8 }}
                   onClick={() => setFormState({ ...formState, category: item })}
-                  className="flex items-center gap-4 p-3 rounded-xl cursor-pointer transition-all duration-300 border border-transparent hover:border-primary/20"
+                  className="flex items-center gap-2.5 p-1.5 rounded-xl cursor-pointer transition-all duration-300 border border-transparent hover:border-primary/20"
                   style={{
                     background: formState.category === item ? "rgba(124, 58, 237, 0.1)" : "transparent"
                   }}
                 >
-                  <span className="text-base font-bold flex-1 uppercase tracking-wider" style={{ color: formState.category === item ? "#7c3aed" : subtitleColor }}>{item}</span>
+                  <span className="text-[11px] font-bold flex-1 uppercase tracking-widest" style={{ color: formState.category === item ? "#7c3aed" : subtitleColor }}>{item}</span>
                   <div className="flex items-center justify-center transition-all duration-300" style={{ color: formState.category === item ? "#7c3aed" : iconColor }}>
                     <motion.div
                       animate={{ rotate: formState.category === item ? 45 : 0 }}
@@ -269,9 +270,10 @@ const Contact = () => {
             initial={{ opacity: 0, x: 50 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.8, delay: 0.5 }}
+            className="-mt-8"
           >
             <div
-              className="relative rounded-3xl p-8 md:p-12 shadow-2xl"
+              className="relative rounded-3xl p-6 md:p-10 shadow-2xl"
               style={{
                 background: cardBg,
                 backdropFilter: "blur(20px)",
@@ -299,30 +301,30 @@ const Contact = () => {
                   <motion.form
                     key="form"
                     onSubmit={handleSubmit}
-                    className="space-y-6"
+                    className="space-y-4"
                   >
                     {/* Selected Category Display */}
                     <div className="relative">
                       <label className="block text-sm font-bold uppercase tracking-wider mb-2 opacity-60" style={{ color: headingColor }}>Selected Category</label>
-                      <motion.div 
-                        layoutId="categoryFly" 
-                        className="absolute inset-x-0 bottom-0 top-7 bg-primary/5 rounded-xl pointer-events-none -z-10" 
+                      <motion.div
+                        layoutId="categoryFly"
+                        className="absolute inset-x-0 bottom-0 top-7 bg-primary/5 rounded-xl pointer-events-none -z-10"
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
                       />
                       <div
-                        className="w-full px-5 py-4 rounded-xl transition-all duration-300 font-bold flex items-center uppercase tracking-wider"
+                        className="w-full px-4 py-3 rounded-xl transition-all duration-300 font-bold flex items-center uppercase tracking-wider text-sm"
                         style={{
                           background: inputBg,
                           border: `1px solid ${inputBorder}`,
                           color: "#7c3aed",
-                          minHeight: "58px"
+                          minHeight: "50px"
                         }}
                       >
                         {formState.category}
                       </div>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-6">
+                    <div className="grid md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-bold uppercase tracking-wider mb-2 opacity-60" style={{ color: headingColor }}>Your Name *</label>
                         <input
@@ -330,7 +332,7 @@ const Contact = () => {
                           required
                           value={formState.name}
                           onChange={(e) => setFormState({ ...formState, name: e.target.value })}
-                          className="w-full px-5 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all duration-300"
+                          className="w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all duration-300 text-sm"
                           style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: inputText }}
                         />
                       </div>
@@ -341,7 +343,7 @@ const Contact = () => {
                           required
                           value={formState.email}
                           onChange={(e) => setFormState({ ...formState, email: e.target.value })}
-                          className="w-full px-5 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all duration-300"
+                          className="w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all duration-300 text-sm"
                           style={{ background: inputBg, border: `1px solid ${emailError ? "#ef4444" : inputBorder}`, color: inputText }}
                         />
                       </div>
@@ -354,7 +356,7 @@ const Contact = () => {
                         rows={5}
                         value={formState.message}
                         onChange={(e) => setFormState({ ...formState, message: e.target.value })}
-                        className="w-full px-5 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all duration-300 resize-none"
+                        className="w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all duration-300 resize-none text-sm"
                         style={{ background: inputBg, border: `1px solid ${inputBorder}`, color: inputText }}
                       />
                     </div>
@@ -363,11 +365,11 @@ const Contact = () => {
                     <motion.button
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full py-5 rounded-2xl font-black uppercase tracking-widest text-white overflow-hidden relative group shadow-xl active:scale-[0.98] transition-all duration-300"
+                      className="w-full py-4 rounded-2xl font-black uppercase tracking-widest text-white overflow-hidden relative group shadow-xl active:scale-[0.98] transition-all duration-300"
                       disabled={loading}
                       style={{
                         background: isDayMode ? "#000000" : "#7c3aed",
-                        border: "none",
+                        border: "1px solid rgba(255, 255, 255, 0.4)",
                       }}
                     >
                       <span className="relative z-10 flex items-center justify-center gap-2">
@@ -395,7 +397,7 @@ const Contact = () => {
 
       {/* ── Footer (embedded to avoid spacing gap) ─────────────────── */}
       <div
-        className="relative z-10 mt-20 pt-16 pb-0 overflow-hidden"
+        className="relative z-10 mt-12 pt-12 pb-0 overflow-hidden"
         style={{
           borderTop: `1px solid ${footerBorderColor}`,
           color: footerTextColor,
@@ -404,38 +406,64 @@ const Contact = () => {
       >
         <div className="container mx-auto px-6">
           {/* Top section: Navigation + Social */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
             {/* Navigation */}
             <div>
               <h4
-                className="text-xs font-semibold uppercase tracking-[0.2em] mb-6"
+                className="text-[10px] font-semibold uppercase tracking-[0.2em] mb-4"
                 style={{ color: footerMutedColor }}
               >
                 Navigation
               </h4>
               <ul className="space-y-3">
                 {[
-                  { label: "Hackathons", id: "hackathons" },
-                  { label: "How It Works", id: "how-it-works" },
-                  { label: "About", id: "about" },
-                  { label: "Contact", id: "contact" },
+                  { label: "Home", id: "home", type: "scroll" },
+                  { label: "Empower", id: "how-it-works", type: "scroll" },
+                  { label: "About", id: "about", type: "scroll" },
+                  { label: "Contact", id: "contact", type: "scroll" },
+                  { label: "Hackathons", id: "hackathons", type: "link", path: "/hackathons" },
+                  { label: "T-H-E", id: "the", type: "link", path: "/the" },
                 ].map((link) => (
                   <li key={link.id}>
-                    <button
-                      onClick={() => {
-                        const el = document.getElementById(link.id);
-                        if (el) el.scrollIntoView({ behavior: "smooth" });
-                      }}
-                      style={{
-                        transition: "all 0.3s ease",
-                        color: isDayMode ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.8)",
-                      }}
-                      className="text-base"
-                      onMouseEnter={(e) => (e.currentTarget.style.color = footerLinkHover)}
-                      onMouseLeave={(e) => (e.currentTarget.style.color = isDayMode ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.8)")}
-                    >
-                      {link.label}
-                    </button>
+                    {link.type === "scroll" ? (
+                      <button
+                        onClick={() => {
+                          const el = document.getElementById(link.id);
+                          if (el) {
+                            el.scrollIntoView({ behavior: "smooth" });
+                          } else {
+                            window.location.href = `/#${link.id}`;
+                          }
+                        }}
+                        style={{
+                          transition: "all 0.3s ease",
+                          color: isDayMode ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.8)",
+                          background: "none",
+                          border: "none",
+                          padding: 0,
+                          cursor: "pointer"
+                        }}
+                        className="text-base"
+                        onMouseEnter={(e) => (e.currentTarget.style.color = footerLinkHover)}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = isDayMode ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.8)")}
+                      >
+                        {link.label}
+                      </button>
+                    ) : (
+                      <Link
+                        to={link.path!}
+                        style={{
+                          transition: "all 0.3s ease",
+                          color: isDayMode ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.8)",
+                          textDecoration: "none"
+                        }}
+                        className="text-base block"
+                        onMouseEnter={(e) => (e.currentTarget.style.color = footerLinkHover)}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = isDayMode ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.8)")}
+                      >
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -444,7 +472,7 @@ const Contact = () => {
             {/* Social */}
             <div>
               <h4
-                className="text-xs font-semibold uppercase tracking-[0.2em] mb-6"
+                className="text-[10px] font-semibold uppercase tracking-[0.2em] mb-4"
                 style={{ color: footerMutedColor }}
               >
                 Social
@@ -476,14 +504,28 @@ const Contact = () => {
               </ul>
             </div>
 
-            {/* Branding column */}
-            <div className="flex flex-col justify-between">
-              <div>
-                <span className="text-xl font-bold tracking-tight" style={{ color: footerTextColor }}>
-                  Ore<span className="text-gradient-primary">hack</span>
+            <div className="flex flex-col items-center gap-4 origin-left">
+              <img
+                src={isDayMode ? "/oregent logo black.png" : "/oregent-logo.png"}
+                alt="Oregent"
+                className="h-10 md:h-12 w-auto object-contain"
+              />
+              <div className="flex flex-col items-center text-center">
+                <span 
+                  className="text-xl md:text-2xl font-bold tracking-[0.2em] uppercase leading-none"
+                  style={{ color: footerTextColor, fontFamily: "'Outfit', sans-serif" }}
+                >
+                  Oregent
                 </span>
-                <p className="text-sm mt-2 leading-relaxed" style={{ color: footerMutedColor }}>
-                  A Controlled Technical Evaluation System — engineered by Oregent.
+                <p 
+                  className="text-[10px] md:text-xs italic opacity-80 mt-2"
+                  style={{ 
+                    color: footerMutedColor,
+                    fontFamily: "'Outfit', sans-serif",
+                    letterSpacing: "0.15em"
+                  }}
+                >
+                  Zero-touch Execution
                 </p>
               </div>
             </div>
@@ -491,7 +533,7 @@ const Contact = () => {
 
           {/* Divider + copyright bar */}
           <div
-            className="py-6 flex flex-col md:flex-row items-center justify-between gap-4"
+            className="py-4 flex flex-col md:flex-row items-center justify-between gap-3"
             style={{ borderTop: `1px solid ${footerBorderColor}` }}
           >
             <p className="text-sm" style={{ color: footerMutedColor }}>
@@ -507,11 +549,11 @@ const Contact = () => {
         </div>
 
         {/* Giant brand text */}
-        <div className="relative mt-12 flex items-end justify-center overflow-hidden select-none pointer-events-none pb-0 mb-0 w-full">
+        <div className="relative mt-6 flex items-end justify-center overflow-hidden select-none pointer-events-none pb-0 mb-0 w-full">
           <h2
             className="font-black tracking-tighter text-center"
             style={{
-              fontSize: "21.5vw",
+              fontSize: "18vw",
               lineHeight: 0.8,
               background: "linear-gradient(180deg, hsl(263 84% 58%) 0%, hsl(263 84% 38%) 50%, transparent 100%)",
               WebkitBackgroundClip: "text",
