@@ -294,7 +294,7 @@ const WhatWeDo = () => {
           </div>
 
           {/* Right Side — Image Column */}
-          <div className="flex-1 flex flex-col items-center justify-center min-h-[360px]">
+          <div className="flex-1 flex flex-col items-center justify-center">
             <AnimatePresence mode="wait">
               <motion.div
                 key={active}
@@ -302,18 +302,24 @@ const WhatWeDo = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.02 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
-                className="w-full h-full max-h-[460px] rounded-2xl flex items-center justify-center overflow-hidden"
+                className="w-full rounded-2xl flex items-center justify-center overflow-hidden"
                 style={{
                   background: items[active].img ? "transparent" : placeholderBg,
                   border: items[active].img ? "none" : placeholderBorder,
-                  minHeight: "360px",
+                  aspectRatio: "4 / 3",
+                  maxHeight: "clamp(260px, 45vh, 520px)",
                 }}
               >
                 {items[active].img ? (
                   <img
                     src={items[active].img}
                     alt={items[active].title}
-                    className="w-full h-full object-cover"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "contain",
+                      display: "block",
+                    }}
                   />
                 ) : (
                   <span
