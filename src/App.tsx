@@ -34,7 +34,9 @@ import ControlRoom from "./pages/ControlRoom";
 import ProblemStatementsOverview from "./pages/ProblemStatementsOverview";
 import OriginStage3 from "./pages/OriginStage3";
 import HackathonsPage from "./pages/Hackathons";
+import ThePage from "./pages/ThePage";
 import { runStartupHealthCheck } from "@/lib/health-check";
+import { ThemeProvider } from "./context/ThemeContext";
 
 const queryClient = new QueryClient();
 
@@ -121,7 +123,9 @@ const WatermarkManager = ({ logoRef }: { logoRef: React.RefObject<HTMLImageEleme
     };
   }, [location.pathname, isLandingPage, logoRef]);
 
-  return <LogoBackgroundWatermark imgRef={logoRef} hidden={isLandingPage} />;
+  const isHiddenPage = location.pathname === "/" || location.pathname === "/the";
+
+  return <LogoBackgroundWatermark imgRef={logoRef} hidden={isHiddenPage} />;
 };
 
 const EventPathRedirect = ({ to }: { to: string }) => {
@@ -175,6 +179,7 @@ const AnimatedRoutes = () => {
         <Route path="/event/:eventId/stage-3" element={<EventPathRedirect to="submit" />} />
 
         <Route path="/hackathons" element={<HackathonsPage />} />
+        <Route path="/the" element={<ThePage />} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>
@@ -214,7 +219,8 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
+      <ThemeProvider>
+        <TooltipProvider>
         <BrowserRouter>
           <WatermarkManager logoRef={logoRef} />
 
@@ -240,7 +246,8 @@ const App = () => {
             </div>
           </EventProvider>
         </BrowserRouter>
-      </TooltipProvider>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };

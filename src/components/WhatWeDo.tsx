@@ -19,19 +19,19 @@ const items = [
     num: "03",
     title: "Drive Students from Learning\nto Real Execution",
     desc: "OreHack bridges the gap between academic learning and real-world application. Learning matters only when it leads to execution. Through structured pathways from ideation to implementation, students gain hands-on experience and evolve into confident builders ready for real challenges.",
-    img: "",
+    img: "/www4.jpg",
   },
   {
     num: "04",
     title: "Hackathon-as-a-Service\n(HaaS)",
     desc: "OreHack delivers a complete, ready-to-deploy innovation ecosystem for institutions. Innovation, delivered as a service. By integrating training, execution, and evaluation into a unified platform, institutions can seamlessly adopt and scale innovation programs with confidence.",
-    img: "",
+    img: "/www5.jpg",
   },
   {
     num: "05",
     title: "Power Fair & Efficient\nHackathon Evaluations",
     desc: "OreHack ensures every submission is assessed with precision, consistency, and complete transparency. Fairness is not optional — it is engineered. By standardizing evaluation frameworks and eliminating bias, the platform delivers accurate and timely outcomes.",
-    img: "",
+    img: "/www6.jpg",
   },
 ];
 
@@ -294,7 +294,7 @@ const WhatWeDo = () => {
           </div>
 
           {/* Right Side — Image Column */}
-          <div className="flex-1 flex flex-col items-center justify-center min-h-[360px]">
+          <div className="flex-1 flex flex-col items-center justify-center">
             <AnimatePresence mode="wait">
               <motion.div
                 key={active}
@@ -302,18 +302,24 @@ const WhatWeDo = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.02 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
-                className="w-full h-full max-h-[460px] rounded-2xl flex items-center justify-center overflow-hidden"
+                className="w-full rounded-2xl flex items-center justify-center overflow-hidden"
                 style={{
                   background: items[active].img ? "transparent" : placeholderBg,
                   border: items[active].img ? "none" : placeholderBorder,
-                  minHeight: "360px",
+                  aspectRatio: "4 / 3",
+                  maxHeight: "clamp(260px, 45vh, 520px)",
                 }}
               >
                 {items[active].img ? (
                   <img
                     src={items[active].img}
                     alt={items[active].title}
-                    className="w-full h-full object-cover"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "contain",
+                      display: "block",
+                    }}
                   />
                 ) : (
                   <span

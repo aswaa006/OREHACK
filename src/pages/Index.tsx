@@ -12,7 +12,7 @@ import TargetCursor from "@/components/TargetCursor";
 
 import LogoLoop from "@/components/LogoLoop";
 import { SiReact, SiNextdotjs, SiTypescript, SiTailwindcss, SiFramer, SiVite, SiSupabase, SiGithub } from "react-icons/si";
-import { ThemeProvider, useTheme } from "@/context/ThemeContext";
+import { useTheme } from "@/context/ThemeContext";
 
 const techLogos = [
   { node: <SiReact />, title: "React", href: "https://react.dev" },
@@ -77,11 +77,7 @@ const IndexContent = () => {
 };
 
 const Index = () => {
-  return (
-    <ThemeProvider>
-      <IndexContent />
-    </ThemeProvider>
-  );
+  return <IndexContent />;
 };
 
 export default Index;
