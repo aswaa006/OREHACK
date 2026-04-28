@@ -270,7 +270,6 @@ const Navbar = () => {
         <button
           onClick={() => handleNavClick("contact")}
           className="group relative inline-flex items-center gap-2 px-5 py-1.5 rounded-full overflow-hidden transition-all duration-300 hover:scale-[1.05] hover:shadow-lg active:scale-[0.98]"
-          onClick={() => handleNavClick("contact")}
           style={{
             background: ctaBg,
             color: ctaText,

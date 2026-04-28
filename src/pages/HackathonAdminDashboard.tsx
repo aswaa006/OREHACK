@@ -17,7 +17,6 @@ import { supabase } from "@/lib/supabase";
 import { loadNormalizedSubmissions, type NormalizedSubmission } from "@/lib/submission-data";
 import {
   clearAdminSession,
-  normalizeDashboardRole,
   readLegacyAdminSession,
 } from "@/lib/dashboard-routing";
 
@@ -87,37 +86,6 @@ const HackathonAdminDashboard = () => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
     const checkAuth = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        const { data: profile } = await supabase
-          .from("users")
-          .select("id, default_role, is_active")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        const roleRows = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(1);
-
-        const resolvedRole = normalizeDashboardRole(roleRows.data?.[0]?.role ?? profile?.default_role);
-        const allowed = resolvedRole === "hackathon_admin" || resolvedRole === "developer_admin";
-
-        if (!profile || profile.is_active === false || !allowed) {
-          clearAdminSession();
-          await supabase.auth.signOut();
-          navigate("/admin/auth");
-          return false;
-        }
-
-        return true;
-      }
-
       const legacySession = readLegacyAdminSession();
       if (!legacySession) {
         navigate("/admin/auth");

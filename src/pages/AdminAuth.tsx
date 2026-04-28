@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { loginAdmin, setAdminToken } from "@/lib/backend-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,70 +28,29 @@ const AdminAuth = () => {
     setError("");
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
+      const data = await loginAdmin(email.trim(), password);
+      const resolvedRole = normalizeDashboardRole(data.admin.role);
+      const roleRoute = resolveAdminRoute(resolvedRole);
 
-      if (error) {
-        setError("Invalid password. Access denied.");
+      if (resolvedRole === "unknown") {
+        clearAdminSession();
+        setError("No dashboard role is assigned to this account.");
         return;
       }
 
-      if (data.user) {
-        const { data: userProfile, error: profileError } = await supabase
-          .from("users")
-          .select("id, email, full_name, default_role, is_active")
-          .eq("id", data.user.id)
-          .maybeSingle();
+      setAdminToken(data.token);
+      storeAdminSession({
+        userId: data.admin.id,
+        email: data.admin.email ?? null,
+        role: resolvedRole,
+        hackathonId: data.admin.hackathonSlug ?? null,
+        source: "backend",
+        createdAt: Date.now(),
+      });
 
-        if (profileError || !userProfile) {
-          clearAdminSession();
-          setError("Your Supabase account is not linked to a dashboard profile.");
-          return;
-        }
-
-        if (userProfile.is_active === false) {
-          clearAdminSession();
-          setError("This account is disabled.");
-          return;
-        }
-
-        const { data: roleRows, error: roleError } = await supabase
-          .from("user_roles")
-          .select("role, hackathon_id")
-          .eq("user_id", data.user.id)
-          .order("created_at", { ascending: false })
-          .limit(1);
-
-        if (roleError) {
-          clearAdminSession();
-          setError(roleError.message || "Unable to resolve your dashboard role.");
-          return;
-        }
-
-        const resolvedRole = normalizeDashboardRole(roleRows?.[0]?.role ?? userProfile.default_role);
-        const roleRoute = resolveAdminRoute(resolvedRole);
-
-        if (resolvedRole === "unknown") {
-          clearAdminSession();
-          setError("No dashboard role is assigned to this account.");
-          return;
-        }
-
-        storeAdminSession({
-          userId: data.user.id,
-          email: userProfile.email ?? data.user.email ?? null,
-          role: resolvedRole,
-          hackathonId: roleRows?.[0]?.hackathon_id ? String(roleRows[0].hackathon_id) : null,
-          source: "supabase",
-          createdAt: Date.now(),
-        });
-
-        navigate(roleRoute, { replace: true });
-      }
+      navigate(roleRoute, { replace: true });
     } catch (err) {
-      setError("Authentication failed. Please try again.");
+      setError(err instanceof Error ? err.message : "Authentication failed. Please try again.");
     } finally {
       setIsLoading(false);
     }

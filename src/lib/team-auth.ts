@@ -11,18 +11,10 @@ export type TeamCredentialResult = {
 
 type TeamRow = {
   id: string;
-  team_code: string;
+  team_id: string;
   team_name: string;
   password_hash: string | null;
-  password_legacy: string | null;
   is_active: boolean | null;
-};
-
-type LegacySubmissionRow = {
-  id: string;
-  teamID: string;
-  Team_Name: string;
-  password: string | null;
 };
 
 type RpcPayload =
@@ -90,7 +82,7 @@ const parseRpcPayload = (payload: RpcPayload) => {
 };
 
 export async function verifyTeamCredentials(input: {
-  hackathonId: string;
+  hackathonSlug: string;
   teamCode: string;
   teamName: string;
   password: string;
@@ -100,26 +92,7 @@ export async function verifyTeamCredentials(input: {
   const password = input.password.trim();
 
   // 1) Server-side verification via RPC (preferred)
-  const rpcCandidates: Array<{ fn: string; args: Record<string, string> }> = [
-    {
-      fn: "verify_team_login",
-      args: {
-        p_hackathon_id: input.hackathonId,
-        p_team_code: teamCode,
-        p_team_name: teamName,
-        p_password: password,
-      },
-    },
-    {
-      fn: "verify_team_credentials",
-      args: {
-        p_hackathon_id: input.hackathonId,
-        p_team_code: teamCode,
-        p_team_name: teamName,
-        p_password: password,
-      },
-    },
-  ];
+  const rpcCandidates: Array<{ fn: string; args: Record<string, string> }> = [];
 
   for (const candidate of rpcCandidates) {
     const { data, error } = await supabase.rpc(candidate.fn, candidate.args);
@@ -152,15 +125,15 @@ export async function verifyTeamCredentials(input: {
     if (parsed.teamDbId) {
       const { data: team } = await supabase
         .from("teams")
-        .select("id, team_code, team_name")
+        .select("id, team_id, team_name")
         .eq("id", parsed.teamDbId)
-        .maybeSingle<{ id: string; team_code: string; team_name: string }>();
+        .maybeSingle<{ id: string; team_id: string; team_name: string }>();
 
       if (team) {
         return {
           valid: true,
           teamDbId: String(team.id),
-          teamCode: team.team_code || teamCode,
+          teamCode: team.team_id || teamCode,
           teamName: team.team_name || teamName,
         };
       }
@@ -177,9 +150,9 @@ export async function verifyTeamCredentials(input: {
   // 2) Fallback: local compatibility verification
   const { data: team, error: teamError } = await supabase
     .from("teams")
-    .select("id, team_code, team_name, password_hash, password_legacy, is_active")
-    .eq("hackathon_id", input.hackathonId)
-    .eq("team_code", teamCode)
+    .select("id, team_id, team_name, password_hash, is_active")
+    .eq("hackathon_slug", input.hackathonSlug)
+    .eq("team_id", teamCode)
     .maybeSingle<TeamRow>();
 
   if (teamError) {
@@ -214,7 +187,6 @@ export async function verifyTeamCredentials(input: {
     }
 
     const passOk = await passwordMatches(password, {
-      legacy: team.password_legacy,
       hash: team.password_hash,
     });
 
@@ -231,62 +203,16 @@ export async function verifyTeamCredentials(input: {
     return {
       valid: true,
       teamDbId: String(team.id),
-      teamCode: team.team_code || teamCode,
+      teamCode: team.team_id || teamCode,
       teamName: team.team_name || teamName,
     };
   }
 
-  const { data: legacy, error: legacyError } = await supabase
-    .from("submissions")
-    .select("id, teamID, Team_Name, password")
-    .eq("hackathon_id", input.hackathonId)
-    .eq("teamID", teamCode)
-    .maybeSingle<LegacySubmissionRow>();
-
-  if (legacyError) {
-    return {
-      valid: false,
-      teamDbId: null,
-      teamCode,
-      teamName,
-      error: legacyError.message || "Login failed. Please try again.",
-    };
-  }
-
-  if (!legacy) {
-    return {
-      valid: false,
-      teamDbId: null,
-      teamCode,
-      teamName,
-      error: "Invalid Team ID, Team Name, or password.",
-    };
-  }
-
-  if ((legacy.Team_Name || "").trim().toLowerCase() !== teamName.toLowerCase()) {
-    return {
-      valid: false,
-      teamDbId: null,
-      teamCode,
-      teamName,
-      error: "Team name does not match this Team ID.",
-    };
-  }
-
-  if ((legacy.password || "").trim() !== password) {
-    return {
-      valid: false,
-      teamDbId: null,
-      teamCode,
-      teamName,
-      error: "Password does not match this Team ID.",
-    };
-  }
-
   return {
-    valid: true,
+    valid: false,
     teamDbId: null,
-    teamCode: legacy.teamID || teamCode,
-    teamName: legacy.Team_Name || teamName,
+    teamCode,
+    teamName,
+    error: "Invalid Team ID, Team Name, or password.",
   };
 }

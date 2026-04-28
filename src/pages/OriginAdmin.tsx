@@ -2,7 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { clearAdminSession, normalizeDashboardRole } from "@/lib/dashboard-routing";
+import {
+  clearAdminSession,
+  normalizeDashboardRole,
+  readLegacyAdminSession,
+  storeAdminSession,
+} from "@/lib/dashboard-routing";
+import { getAdminToken, loginAdmin, setAdminToken } from "@/lib/backend-api";
 import { uploadHackathonBanner } from "@/lib/storage";
 
 /* ─── Auth constants ─────────────────────────────────────── */
@@ -18,33 +24,17 @@ const toSlug = (value: string) =>
 
 const mapStatusToDb = (status: HackathonStatus) => {
   if (status === "Upcoming") return "scheduled";
-  if (status === "Completed") return "completed";
+  if (status === "Completed") return "closed";
   return "live";
 };
 
-const verifyOriginAdminAccess = async (userId: string) => {
-  const { data: profile, error: profileError } = await supabase
-    .from("users")
-    .select("id, default_role, is_active")
-    .eq("id", userId)
-    .maybeSingle();
-
-  if (profileError || !profile || profile.is_active === false) {
-    return { ok: false, error: "This account cannot access Origin admin." };
+const verifyOriginAdminAccess = async () => {
+  const existingSession = readLegacyAdminSession();
+  if (!existingSession) {
+    return { ok: false, error: "Admin session not found." };
   }
 
-  const roleRows = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(1);
-
-  if (roleRows.error) {
-    return { ok: false, error: roleRows.error.message || "Unable to resolve role." };
-  }
-
-  const resolvedRole = normalizeDashboardRole(roleRows.data?.[0]?.role ?? profile.default_role);
+  const resolvedRole = normalizeDashboardRole(existingSession.role);
   const allowed = resolvedRole === "developer_admin" || resolvedRole === "hackathon_admin";
   if (!allowed) {
     return { ok: false, error: "You do not have admin access." };
@@ -215,28 +205,33 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
     setErr("");
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: user.trim(),
-      password: pass,
-    });
+    try {
+      const data = await loginAdmin(user.trim(), pass);
+      const resolvedRole = normalizeDashboardRole(data.admin.role);
+      if (resolvedRole !== "developer_admin" && resolvedRole !== "hackathon_admin") {
+        clearAdminSession();
+        setErr("You do not have admin access.");
+        setLoading(false);
+        return;
+      }
 
-    if (error || !data.user) {
-      setErr("Invalid credentials.");
-      setLoading(false);
-      return;
-    }
-
-    const access = await verifyOriginAdminAccess(data.user.id);
-    if (!access.ok) {
-      await supabase.auth.signOut();
-      setErr(access.error || "Access denied.");
-      setLoading(false);
-      return;
-    }
+      setAdminToken(data.token);
+      storeAdminSession({
+        userId: data.admin.id,
+        email: data.admin.email ?? null,
+        role: resolvedRole,
+        hackathonId: data.admin.hackathonSlug ?? null,
+        source: "backend",
+        createdAt: Date.now(),
+      });
 
       sessionStorage.setItem(ADMIN_SESSION_KEY, "true");
       onLogin();
+    } catch (error) {
+      setErr(error instanceof Error ? error.message : "Invalid credentials.");
+    } finally {
       setLoading(false);
+    }
   };
 
   const iStyle: React.CSSProperties = {
@@ -289,20 +284,18 @@ const OriginAdmin = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const token = getAdminToken();
+      const existingSession = readLegacyAdminSession();
 
-      if (!user) {
+      if (!token || !existingSession) {
         sessionStorage.removeItem(ADMIN_SESSION_KEY);
         setIsAuthenticated(false);
         setAuthChecking(false);
         return;
       }
 
-      const access = await verifyOriginAdminAccess(user.id);
+      const access = await verifyOriginAdminAccess();
       if (!access.ok) {
-        await supabase.auth.signOut();
         clearAdminSession();
         sessionStorage.removeItem(ADMIN_SESSION_KEY);
         setIsAuthenticated(false);
@@ -320,7 +313,6 @@ const OriginAdmin = () => {
   const logout = async () => {
     setIsAuthenticated(false);
     clearAdminSession();
-    await supabase.auth.signOut();
     sessionStorage.removeItem(ADMIN_SESSION_KEY);
   };
 
@@ -336,9 +328,9 @@ const OriginAdmin = () => {
       slug: id,
       theme: "General",
       duration_hours: 24,
-      status: mapStatusToDb(newStatus),
-      submissions_count: Number(newParticipants) || 0,
-      evaluated_count: 0,
+        status: mapStatusToDb(newStatus),
+        total_submissions: Number(newParticipants) || 0,
+        total_evaluated: 0,
     });
 
     if (insertRes.error) {

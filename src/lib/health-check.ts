@@ -2,13 +2,15 @@ import { supabase } from "@/lib/supabase";
 
 export type HealthTableName =
   | "hackathons"
-  | "hackathon_runtime"
-  | "control_state"
-  | "users"
-  | "user_roles"
+  | "admins"
+  | "stage_events"
   | "teams"
   | "submissions"
-  | "submission_scores";
+  | "problems"
+  | "problem_selections"
+  | "evaluation_reports"
+  | "jury_scores"
+  | "final_results";
 
 export type HealthTableResult = {
   table: HealthTableName;
@@ -27,13 +29,15 @@ export type StartupHealthReport = {
 
 const TABLES: Array<{ table: HealthTableName; critical: boolean }> = [
   { table: "hackathons", critical: true },
-  { table: "hackathon_runtime", critical: true },
-  { table: "control_state", critical: true },
-  { table: "users", critical: false },
-  { table: "user_roles", critical: false },
+  { table: "admins", critical: true },
+  { table: "stage_events", critical: false },
   { table: "teams", critical: false },
   { table: "submissions", critical: false },
-  { table: "submission_scores", critical: false },
+  { table: "problems", critical: false },
+  { table: "problem_selections", critical: false },
+  { table: "evaluation_reports", critical: false },
+  { table: "jury_scores", critical: false },
+  { table: "final_results", critical: false },
 ];
 
 async function checkTable(table: HealthTableName, critical: boolean): Promise<HealthTableResult> {

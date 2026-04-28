@@ -52,11 +52,11 @@ const CreateHackathon = () => {
       name: form.name.trim(),
       slug: liveSlug,
       theme: form.theme.trim() || "General",
-      start_date: form.startDate || null,
+      start_time: new Date(form.startDate).toISOString(),
       duration_hours: Number(form.durationHours || 24),
       status: "live",
-      submissions_count: 0,
-      evaluated_count: 0,
+      total_submissions: 0,
+      total_evaluated: 0,
     });
 
     if (insertError) {
