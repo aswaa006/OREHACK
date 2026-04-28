@@ -1,0 +1,7 @@
+﻿D:\OREHACK\src\lib\dashboard-routing.ts
+D:\OREHACK\src\pages\AdminAuth.tsx
+D:\OREHACK\src\pages\AdminHealth.tsx
+D:\OREHACK\src\pages\DeveloperAdminDashboard.tsx
+D:\OREHACK\src\pages\HackathonAdminDashboard.tsx
+D:\OREHACK\src\pages\HackathonAdminUnderDevelopment.tsx
+D:\OREHACK\src\pages\OriginAdmin.tsx

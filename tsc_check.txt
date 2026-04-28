@@ -1,0 +1,32 @@
+﻿src/components/animate-ui/primitives/animate/scroll-progress.tsx(86,6): error TS2322: Type '{ ref?: LegacyRef<HTMLDivElement>; slot?: string; title?: string; key?: Key; defaultChecked?: boolean; defaultValue?: string | number | readonly string[]; suppressContentEditableWarning?: boolean; ... 321 more ...; style: { ...; } | { ...; }; } | { ...; }' is not assignable to type 'IntrinsicAttributes & Omit<HTMLMotionProps<"div">, "ref"> & RefAttributes<HTMLDivElement> & { ...; } & Omit<...> & { ...; }'.
+  Type '{ ref?: LegacyRef<HTMLDivElement>; slot?: string; title?: string; key?: Key; defaultChecked?: boolean; defaultValue?: string | number | readonly string[]; suppressContentEditableWarning?: boolean; ... 321 more ...; style: { ...; } | { ...; }; }' is not assignable to type '{ ref?: Ref<HTMLDivElement>; }'.
+    Types of property 'ref' are incompatible.
+      Type 'LegacyRef<HTMLDivElement>' is not assignable to type 'Ref<HTMLDivElement>'.
+        Type 'string' is not assignable to type 'Ref<HTMLDivElement>'.
+src/components/animate-ui/primitives/animate/scroll-progress.tsx(115,29): error TS2345: Argument of type 'LegacyRef<HTMLDivElement>' is not assignable to parameter of type 'Ref<HTMLDivElement>'.
+  Type 'string' is not assignable to type 'Ref<HTMLDivElement>'.
+src/components/animate-ui/primitives/animate/slot.tsx(32,44): error TS2540: Cannot assign to 'current' because it is a read-only property.
+src/components/LogoLoop.tsx(120,5): error TS2339: Property 'logos' does not exist on type '{}'.
+src/components/LogoLoop.tsx(121,5): error TS2339: Property 'speed' does not exist on type '{}'.
+src/components/LogoLoop.tsx(122,5): error TS2339: Property 'direction' does not exist on type '{}'.
+src/components/LogoLoop.tsx(123,5): error TS2339: Property 'width' does not exist on type '{}'.
+src/components/LogoLoop.tsx(124,5): error TS2339: Property 'logoHeight' does not exist on type '{}'.
+src/components/LogoLoop.tsx(125,5): error TS2339: Property 'gap' does not exist on type '{}'.
+src/components/LogoLoop.tsx(126,5): error TS2339: Property 'pauseOnHover' does not exist on type '{}'.
+src/components/LogoLoop.tsx(127,5): error TS2339: Property 'hoverSpeed' does not exist on type '{}'.
+src/components/LogoLoop.tsx(128,5): error TS2339: Property 'fadeOut' does not exist on type '{}'.
+src/components/LogoLoop.tsx(129,5): error TS2339: Property 'fadeOutColor' does not exist on type '{}'.
+src/components/LogoLoop.tsx(130,5): error TS2339: Property 'scaleOnHover' does not exist on type '{}'.
+src/components/LogoLoop.tsx(131,5): error TS2339: Property 'renderItem' does not exist on type '{}'.
+src/components/LogoLoop.tsx(132,5): error TS2339: Property 'ariaLabel' does not exist on type '{}'.
+src/components/LogoLoop.tsx(133,5): error TS2339: Property 'className' does not exist on type '{}'.
+src/components/LogoLoop.tsx(134,5): error TS2339: Property 'style' does not exist on type '{}'.
+src/hooks/useControlState.ts(216,42): error TS2349: This expression is not callable.
+  Type 'never' has no call signatures.
+src/pages/ControlRoom.tsx(416,29): error TS2367: This comparison appears to be unintentional because the types '"VIEW" | "RESULT"' and '"SELECT"' have no overlap.
+src/pages/Index.tsx(61,11): error TS2322: Type '{ logos: { node: Element; title: string; href: string; }[]; speed: number; logoHeight: number; gap: number; fadeOut: boolean; fadeOutColor: string; scaleOnHover: boolean; }' is not assignable to type 'IntrinsicAttributes & object'.
+  Property 'logos' does not exist on type 'IntrinsicAttributes & object'.
+src/pages/OriginControlPanel.tsx(177,115): error TS2353: Object literal may only specify known properties, and 'pos' does not exist in type 'Properties<string | number, string & {}>'.
+src/pages/OriginStage4.tsx(330,20): error TS2749: 'teamCode' refers to a value, but is being used as a type here. Did you mean 'typeof teamCode'?
+src/pages/OriginStage4.tsx(331,20): error TS2749: 'teamName' refers to a value, but is being used as a type here. Did you mean 'typeof teamName'?
+src/pages/WaitingRoom.tsx(287,12): error TS2741: Property 'onComplete' is missing in type '{ currentTime: number; targetTime: number; }' but required in type '{ currentTime: number; targetTime: number; onComplete: () => void; }'.

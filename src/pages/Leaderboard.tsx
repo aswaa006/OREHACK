@@ -1,7 +1,8 @@
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { supabase } from "@/lib/supabase";
+import { resolveHackathonBySlug } from "@/lib/event-db";
+import { loadNormalizedSubmissions } from "@/lib/submission-data";
 
 type LeaderboardRow = {
   team: string;
@@ -25,24 +26,29 @@ const Leaderboard = () => {
       setLoading(true);
       setError("");
 
-      const { data, error: fetchError } = await supabase
-        .from("submissions")
-        .select("Team_Name, TeamID, Total_Scores, Progress")
-        .order("Total_Scores", { ascending: false, nullsFirst: false });
+      const { data: hackathon } = await resolveHackathonBySlug(hackathonId);
+      const submissionScope = hackathon?.id || hackathonId;
+
+      const { data, error: fetchError } = await loadNormalizedSubmissions({
+        hackathonId: submissionScope,
+        limit: 500,
+      });
 
       if (!mounted) return;
 
       if (fetchError) {
-        setError(fetchError.message || "Failed to load leaderboard.");
+        setError(fetchError || "Failed to load leaderboard.");
         setLoading(false);
         return;
       }
 
-      const mapped = (data || []).map((row) => ({
-        team: row.Team_Name?.trim() || row.TeamID || "Unknown",
-        score: Number(row.Total_Scores || 0),
-        status: row.Progress || "queued",
-      }));
+      const mapped = (data || [])
+        .map((row) => ({
+          team: row.team_name?.trim() || row.team_id || "Unknown",
+          score: Number(row.final_score ?? row.score ?? 0),
+          status: row.status || "queued",
+        }))
+        .sort((left, right) => right.score - left.score);
 
       setRows(mapped);
       setLoading(false);

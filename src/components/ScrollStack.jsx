@@ -19,7 +19,8 @@ const ScrollStack = ({
   rotationAmount = 0,
   blurAmount = 0,
   useWindowScroll = false,
-  onStackComplete
+  onStackComplete,
+  unpinOnLastItem = false
 }) => {
   const scrollerRef = useRef(null);
   const stackCompletedRef = useRef(false);
@@ -113,7 +114,18 @@ const ScrollStack = ({
       const triggerStart = cardTop - stackPositionPx - itemStackDistance * i;
       const triggerEnd = cardTop - scaleEndPositionPx;
       const pinStart = cardTop - stackPositionPx - itemStackDistance * i;
-      const pinEnd = endElementTop - containerHeight / 2;
+      
+      let pinEnd = endElementTop - containerHeight / 2;
+      if (unpinOnLastItem) {
+        const lastCardIndex = cardsRef.current.length - 1;
+        if (i < lastCardIndex) {
+          const lastCardTop = cardOffsetsRef.current[lastCardIndex] ?? 0;
+          pinEnd = lastCardTop - stackPositionPx - itemStackDistance * lastCardIndex;
+        } else {
+          // The last card doesn't pin so it pushes the others up immediately
+          pinEnd = pinStart - 1;
+        }
+      }
 
       const scaleProgress = calculateProgress(scrollTop, triggerStart, triggerEnd);
       const targetScale = baseScale + i * itemScale;
@@ -193,6 +205,7 @@ const ScrollStack = ({
     blurAmount,
     useWindowScroll,
     onStackComplete,
+    unpinOnLastItem,
     calculateProgress,
     parsePercentage,
     getScrollData
@@ -307,6 +320,23 @@ const ScrollStack = ({
       }, 500);
 
       window.addEventListener('scroll', handleScroll, { passive: true });
+
+      // ── One-time offset refresh when nearing viewport ──
+      // This ensures that even if ActiveHackathons shifted things, 
+      // we have the final correct pixel offsets right before flipping starts.
+      let hasRefreshedOnEntry = false;
+      const refreshListener = () => {
+        if (hasRefreshedOnEntry) return;
+        const rect = scroller.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 1.5) { // Refresh when within 1.5 screens
+          recalculateOffsets();
+          updateCardTransforms();
+          hasRefreshedOnEntry = true;
+          window.removeEventListener('scroll', refreshListener);
+        }
+      };
+      window.addEventListener('scroll', refreshListener, { passive: true });
+
       const handleResize = () => {
         recalculateOffsets();
         handleScroll();
@@ -321,6 +351,7 @@ const ScrollStack = ({
         clearTimeout(recalcTimer2);
         stopRAFLoop();
         window.removeEventListener('scroll', handleScroll);
+        window.removeEventListener('scroll', refreshListener);
         window.removeEventListener('resize', handleResize);
         window.removeEventListener('load', handleResize);
         if (rafIdRef.current) {
@@ -372,6 +403,7 @@ const ScrollStack = ({
     blurAmount,
     useWindowScroll,
     onStackComplete,
+    unpinOnLastItem,
     recalculateOffsets,
     setupLenis,
     updateCardTransforms,

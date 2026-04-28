@@ -35,6 +35,9 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { gsap } from "gsap";
+import { motion } from "framer-motion";
+import { useTheme } from "@/context/ThemeContext";
 
 const logoSrc = "/oregent-logo.png";
 
@@ -57,11 +60,106 @@ const CSS = `
   --blue:   #3b82f6;
   color: var(--text);
   background: var(--bg);
-  padding: 80px 24px 60px;
+  padding: 80px 0 80px;
+  margin-top: 100px;
   position: relative;
   overflow: hidden;
+  transition: background 0.4s ease, color 0.4s ease;
 }
-.og-about::before {
+.og-about.day-mode {
+  --bg:     #ffffff;
+  --card:   #f8f7ff;
+  --border: rgba(124, 58, 237, 0.1);
+  --text:   #000000;
+  --muted:  #6b7280;
+}
+.og-about.day-mode::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(124, 58, 237, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 58, 237, 0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+}
+.day-mode .og-search {
+  background: rgba(255,255,255,.9);
+  border: 1px solid rgba(124,58,237,.15);
+  box-shadow: 0 0 20px rgba(124,58,237,.05);
+}
+/* Enhanced Border Sweep for Day Mode */
+.day-mode .og-card::before {
+  background: conic-gradient(
+    from var(--border-angle, 0deg),
+    transparent 0%,
+    transparent 25%,
+    rgba(124, 58, 237, 0.8) 30%,
+    rgba(59, 130, 246, 0.9) 35%,
+    rgba(124, 58, 237, 0.8) 40%,
+    transparent 45%,
+    transparent 100%
+  ) !important;
+}
+.day-mode .og-orbit-center img,
+.day-mode .og-ls-logo,
+.day-mode .og-hero-badge img,
+.day-mode .og-brand-item img {
+  filter: none !important;
+}
+.day-mode .og-orbit-ring,
+.day-mode .og-ls-ring {
+  border-color: rgba(124, 58, 237, 0.15);
+}
+.day-mode .og-orbit-icon svg,
+.day-mode .og-brand-item svg,
+.day-mode .og-ls-word-orbit text {
+  stroke: rgba(124, 58, 237, 0.5);
+}
+.day-mode .og-orbit-word {
+  color: #7c3aed;
+  opacity: 0.6;
+}
+.day-mode .og-code {
+  color: #4b5563;
+}
+.day-mode .tag { color: #0550ae; }
+.day-mode .kw  { color: #cf222e; }
+.day-mode .str { color: #0a3069; }
+.day-mode .atr { color: #24292f; }
+.day-mode .cm  { color: #6e7781; }
+.day-mode .og-search-icon {
+  background: rgba(124, 58, 237, 0.05);
+  border-color: rgba(124, 58, 237, 0.1);
+}
+.day-mode .og-search-btn {
+  background: rgba(124, 58, 237, 0.08);
+  border-color: rgba(124, 58, 237, 0.15);
+}
+.day-mode .og-hero-label {
+  color: #7c3aed;
+  opacity: 0.8;
+}
+.day-mode .og-c-e {
+  --text: #ffffff;
+  --muted: rgba(255,255,255,0.6);
+  background: #000000 !important;
+}
+.day-mode .og-c-e .og-hero-title {
+  color: #ffffff;
+}
+.day-mode .og-c-e .og-hero-label {
+  color: rgba(255,255,255,0.7);
+}
+.day-mode .og-c-e .og-ls-logo,
+.day-mode .og-c-e .og-hero-badge img {
+  filter: brightness(0) invert(1) !important;
+}
+.day-mode .og-c-e .og-orbit-word {
+  color: #ffffff !important;
+  opacity: 0.4;
+}
+.og-about:not(.day-mode)::before {
   content: '';
   position: absolute; inset: 0;
   background-image:
@@ -70,7 +168,7 @@ const CSS = `
   background-size: 60px 60px;
   pointer-events: none;
 }
-.og-wrap { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
+.og-wrap { max-width: 1400px; margin: 0 auto; position: relative; z-index: 1; }
 
 /* ═══════════════════════════════════════
    ZOOM WRAPPER — Simple immediate fade
@@ -97,6 +195,7 @@ const CSS = `
   grid-template-rows: repeat(6, 1fr);
   gap: 8px;
   height: 790px;
+  margin-top: 80px;
 }
 
 /* Col 1 — 50/50 */
@@ -122,9 +221,16 @@ const CSS = `
   overflow: hidden;
   position: relative;
   will-change: transform, opacity, filter;
-  transition: border-color .3s;
+  transition: border-color .3s, background 0.4s ease, box-shadow 0.4s ease;
+  box-shadow: 0 10px 40px rgba(124, 58, 237, 0.12), 0 0 20px rgba(124, 58, 237, 0.08);
 }
-.og-card:hover { border-color: rgba(255,255,255,.16); }
+.og-card:hover { 
+  border-color: rgba(124,58,237,.25); 
+  box-shadow: 0 15px 50px rgba(124, 58, 237, 0.22), 0 0 30px rgba(124, 58, 237, 0.15);
+}
+.og-about.day-mode .og-card {
+  box-shadow: 0 10px 40px rgba(124, 58, 237, 0.18), 0 0 25px rgba(124, 58, 237, 0.12) !important;
+}
 
 /* ═══════════════════════════════════════
    ANIMATED BORDER GLOW SWEEP
@@ -154,13 +260,12 @@ const CSS = `
   pointer-events: none;
   transition: opacity 0.6s;
 }
+.og-card::before {
+  opacity: 1 !important;
+  transition: opacity 1s 0.3s;
+}
 .og-anim .og-card::before {
   animation: borderSweep 4s linear infinite;
-  opacity: 0;
-}
-.og-anim .og-card.og-card-visible::before {
-  opacity: 1;
-  transition: opacity 1s 0.3s;
 }
 @property --border-angle {
   syntax: '<angle>';
@@ -238,11 +343,87 @@ const CSS = `
 .og-card-glow {
   position: absolute; inset: 0; border-radius: 20px;
   background: radial-gradient(500px circle at var(--gx,50%) var(--gy,50%),
-    rgba(124,58,237,.08), transparent 40%);
+    rgba(132, 0, 255, 0.1), transparent 40%);
   pointer-events: none; z-index: 0;
   opacity: 0; transition: opacity .4s;
 }
 .og-card:hover .og-card-glow { opacity: 1; }
+
+/* MagicBento border glow */
+.og-card {
+  --glow-x: 50%;
+  --glow-y: 50%;
+  --glow-intensity: 0;
+  --glow-radius: 300px;
+  --glow-color: 132, 0, 255;
+}
+
+.og-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  background: radial-gradient(
+    var(--glow-radius) circle at var(--glow-x) var(--glow-y),
+    rgba(var(--glow-color), calc(var(--glow-intensity) * 0.8)) 0%,
+    rgba(var(--glow-color), calc(var(--glow-intensity) * 0.4)) 30%,
+    transparent 60%
+  );
+  border-radius: inherit;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 1 !important;
+  --glow-intensity: 0.4;
+  transition: --glow-intensity 0.3s ease;
+  z-index: 12;
+}
+.og-card:hover {
+  --glow-intensity: 1 !important;
+}
+
+.og-card:hover {
+  box-shadow: 0 4px 20px rgba(46, 24, 78, 0.4), 0 0 30px rgba(132, 0, 255, 0.2);
+}
+
+.global-spotlight {
+  position: fixed;
+  width: 800px;
+  height: 800px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle,
+    rgba(132, 0, 255, 0.15) 0%,
+    rgba(132, 0, 255, 0.08) 15%,
+    rgba(132, 0, 255, 0.04) 25%,
+    rgba(132, 0, 255, 0.02) 40%,
+    rgba(132, 0, 255, 0.01) 65%,
+    transparent 70%
+  );
+  z-index: 200;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  mix-blend-mode: screen;
+}
+.day-mode .global-spotlight {
+  mix-blend-mode: multiply;
+  background: radial-gradient(circle,
+    rgba(124, 58, 237, 0.12) 0%,
+    rgba(124, 58, 237, 0.06) 20%,
+    transparent 70%
+  );
+}
+.day-mode .og-card-glow {
+  mix-blend-mode: multiply;
+  background: radial-gradient(500px circle at var(--gx,50%) var(--gy,50%),
+    rgba(124, 58, 237, 0.08), transparent 40%);
+}
+
+.bento-section {
+  position: relative;
+  user-select: none;
+}
 
 /* Dot texture */
 .og-tex::after {
@@ -420,7 +601,7 @@ pre.og-code {
 
 /* ═══ HERO — center card (Card E) ═══ */
 .og-c-e {
-  background: linear-gradient(140deg,#0a1228,#060d1c 55%,#0d1420);
+  background: linear-gradient(140deg,#000000,#050508 55%,#000000);
   border-color: rgba(124,58,237,.18);
   display: flex; align-items: center; justify-content: center;
   text-align: center; padding: 32px;
@@ -613,24 +794,160 @@ pre.og-code {
 
 /* ═══ SVG ICONS — formal replacements for emojis ═══ */
 const SvgIcons = {
-  close: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>,
-  mic: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>,
-  camera: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>,
-  search: <svg viewBox="0 0 24 24" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>,
-  chart: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>,
-  bolt: <svg viewBox="0 0 24 24" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
-  link: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>,
-  message: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
-  code: <svg viewBox="0 0 24 24" strokeWidth="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>,
-  pen: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>,
-  grid: <svg viewBox="0 0 24 24" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
-  cpu: <svg viewBox="0 0 24 24" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>,
-  star: <svg viewBox="0 0 24 24" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
-  globe: <svg viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
-  brain: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M12 2a4 4 0 0 1 4 4 4 4 0 0 1-1.2 2.85A5 5 0 0 1 17 13a5 5 0 0 1-2 4 3 3 0 0 1-3 5 3 3 0 0 1-3-5 5 5 0 0 1-2-4 5 5 0 0 1 2.2-4.15A4 4 0 0 1 8 6a4 4 0 0 1 4-4z"/><line x1="12" y1="2" x2="12" y2="22"/></svg>,
-  shield: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
-  target: <svg viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
-  layers: <svg viewBox="0 0 24 24" strokeWidth="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>,
+  close: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>,
+  mic: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /></svg>,
+  camera: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>,
+  search: <svg viewBox="0 0 24 24" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>,
+  chart: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M18 20V10M12 20V4M6 20v-6" /></svg>,
+  bolt: <svg viewBox="0 0 24 24" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>,
+  link: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>,
+  message: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>,
+  code: <svg viewBox="0 0 24 24" strokeWidth="2"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>,
+  pen: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M12 19l7-7 3 3-7 7-3-3z" /><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" /><path d="M2 2l7.586 7.586" /><circle cx="11" cy="11" r="2" /></svg>,
+  grid: <svg viewBox="0 0 24 24" strokeWidth="2"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>,
+  cpu: <svg viewBox="0 0 24 24" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2" /><rect x="9" y="9" width="6" height="6" /><line x1="9" y1="1" x2="9" y2="4" /><line x1="15" y1="1" x2="15" y2="4" /><line x1="9" y1="20" x2="9" y2="23" /><line x1="15" y1="20" x2="15" y2="23" /><line x1="20" y1="9" x2="23" y2="9" /><line x1="20" y1="14" x2="23" y2="14" /><line x1="1" y1="9" x2="4" y2="9" /><line x1="1" y1="14" x2="4" y2="14" /></svg>,
+  star: <svg viewBox="0 0 24 24" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>,
+  globe: <svg viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>,
+  brain: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M12 2a4 4 0 0 1 4 4 4 4 0 0 1-1.2 2.85A5 5 0 0 1 17 13a5 5 0 0 1-2 4 3 3 0 0 1-3 5 3 3 0 0 1-3-5 5 5 0 0 1-2-4 5 5 0 0 1 2.2-4.15A4 4 0 0 1 8 6a4 4 0 0 1 4-4z" /><line x1="12" y1="2" x2="12" y2="22" /></svg>,
+  shield: <svg viewBox="0 0 24 24" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>,
+  target: <svg viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg>,
+  layers: <svg viewBox="0 0 24 24" strokeWidth="2"><polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" /></svg>,
+};
+
+/* ═══ MagicBento Utility Functions ═══ */
+const calculateSpotlightValues = (radius: number) => ({
+  proximity: radius * 0.5,
+  fadeDistance: radius * 0.75
+});
+
+const updateCardGlowProperties = (card: HTMLElement, mouseX: number, mouseY: number, glow: number, radius: number) => {
+  const rect = card.getBoundingClientRect();
+  const relativeX = ((mouseX - rect.left) / rect.width) * 100;
+  const relativeY = ((mouseY - rect.top) / rect.height) * 100;
+
+  card.style.setProperty('--glow-x', `${relativeX}%`);
+  card.style.setProperty('--glow-y', `${relativeY}%`);
+  card.style.setProperty('--glow-intensity', glow.toString());
+  card.style.setProperty('--glow-radius', `${radius}px`);
+};
+
+/* ═══ Global Spotlight Component ═══ */
+const GlobalSpotlight = ({
+  gridRef,
+  disableAnimations = false,
+  enabled = true,
+  spotlightRadius = 300,
+  glowColor = '132, 0, 255',
+  isDayMode = false
+}: {
+  gridRef: React.RefObject<HTMLDivElement>;
+  disableAnimations?: boolean;
+  enabled?: boolean;
+  spotlightRadius?: number;
+  glowColor?: string;
+  isDayMode?: boolean;
+}) => {
+  const spotlightRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (disableAnimations || !gridRef?.current || !enabled) return;
+
+    const spotlight = document.createElement('div');
+    spotlight.className = `global-spotlight ${isDayMode ? 'day-mode' : ''}`;
+    document.body.appendChild(spotlight);
+    spotlightRef.current = spotlight;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!spotlightRef.current || !gridRef.current) return;
+
+      const section = gridRef.current;
+      const rect = section.getBoundingClientRect();
+      const mouseInside =
+        e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+
+      const cards = gridRef.current.querySelectorAll('.og-card');
+
+      if (!mouseInside) {
+        gsap.to(spotlightRef.current, {
+          opacity: 0,
+          duration: 0.3,
+          ease: 'power2.out'
+        });
+        cards.forEach(card => {
+          (card as HTMLElement).style.setProperty('--glow-intensity', '0');
+        });
+        return;
+      }
+
+      const { proximity, fadeDistance } = calculateSpotlightValues(spotlightRadius);
+      let minDistance = Infinity;
+
+      cards.forEach(card => {
+        const cardElement = card as HTMLElement;
+        const cardRect = cardElement.getBoundingClientRect();
+        const centerX = cardRect.left + cardRect.width / 2;
+        const centerY = cardRect.top + cardRect.height / 2;
+        const distance =
+          Math.hypot(e.clientX - centerX, e.clientY - centerY) - Math.max(cardRect.width, cardRect.height) / 2;
+        const effectiveDistance = Math.max(0, distance);
+
+        minDistance = Math.min(minDistance, effectiveDistance);
+
+        let glowIntensity = 0;
+        if (effectiveDistance <= proximity) {
+          glowIntensity = 1;
+        } else if (effectiveDistance <= fadeDistance) {
+          glowIntensity = (fadeDistance - effectiveDistance) / (fadeDistance - proximity);
+        }
+
+        updateCardGlowProperties(cardElement, e.clientX, e.clientY, glowIntensity, spotlightRadius);
+      });
+
+      gsap.to(spotlightRef.current, {
+        left: e.clientX,
+        top: e.clientY,
+        duration: 0.1,
+        ease: 'power2.out'
+      });
+
+      const targetOpacity =
+        minDistance <= proximity
+          ? 0.8
+          : minDistance <= fadeDistance
+            ? ((fadeDistance - minDistance) / (fadeDistance - proximity)) * 0.8
+            : 0;
+
+      gsap.to(spotlightRef.current, {
+        opacity: targetOpacity,
+        duration: targetOpacity > 0 ? 0.2 : 0.5,
+        ease: 'power2.out'
+      });
+    };
+
+    const handleMouseLeave = () => {
+      gridRef.current?.querySelectorAll('.og-card').forEach(card => {
+        (card as HTMLElement).style.setProperty('--glow-intensity', '0');
+      });
+      if (spotlightRef.current) {
+        gsap.to(spotlightRef.current, {
+          opacity: 0,
+          duration: 0.3,
+          ease: 'power2.out'
+        });
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseleave', handleMouseLeave);
+      spotlightRef.current?.parentNode?.removeChild(spotlightRef.current);
+    };
+  }, [gridRef, disableAnimations, enabled, spotlightRadius, glowColor]);
+
+  return null;
 };
 
 /* ═══ CODE LINES (Card A typing animation) ═══ */
@@ -678,8 +995,13 @@ function BentoCard({
     el.style.transform = `perspective(800px) rotateX(${-dy * 5}deg) rotateY(${dx * 7}deg) scale(1.01)`;
     const g = el.querySelector(".og-card-glow") as HTMLElement;
     if (g) {
-      g.style.setProperty("--gx", `${((e.clientX - r.left) / r.width) * 100}%`);
-      g.style.setProperty("--gy", `${((e.clientY - r.top) / r.height) * 100}%`);
+      const px = ((e.clientX - r.left) / r.width) * 100;
+      const py = ((e.clientY - r.top) / r.height) * 100;
+      g.style.setProperty("--gx", `${px}%`);
+      g.style.setProperty("--gy", `${py}%`);
+      // Update MagicBento variables
+      el.style.setProperty('--glow-x', `${px}%`);
+      el.style.setProperty('--glow-y', `${py}%`);
     }
   }, []);
 
@@ -703,7 +1025,10 @@ function BentoCard({
 }
 
 export default function AboutOregent() {
+  const { isDayMode } = useTheme();
+  const [isRevealed, setIsRevealed] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
   const codeRef = useRef<HTMLPreElement>(null);
   const searchRef = useRef<HTMLSpanElement>(null);
@@ -731,12 +1056,65 @@ export default function AboutOregent() {
     };
   }, []);
 
+  /* ── High-sensitivity Scroll Snap (Splash Effect) ── */
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    let isSnapping = false;
+    let snapTimeout: ReturnType<typeof setTimeout>;
+
+    const handleScrollSnap = (deltaY: number) => {
+      if (isSnapping) return;
+      const rect = section.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+
+      // If scrolling down AND the top of the section is coming into the viewport (bottom 60%)
+      if (deltaY > 0 && rect.top <= windowHeight && rect.top > windowHeight * 0.15) {
+        isSnapping = true;
+        const absoluteTop = rect.top + window.scrollY;
+
+        // Use smooth scrollTo to snap the view
+        window.scrollTo({
+          top: absoluteTop,
+          behavior: 'smooth'
+        });
+
+        // 1.5s cooldown to let the smooth scroll finish
+        snapTimeout = setTimeout(() => {
+          isSnapping = false;
+        }, 1200);
+      }
+    };
+
+    const onWheel = (e: WheelEvent) => handleScrollSnap(e.deltaY);
+
+    let touchStartY = 0;
+    const onTouchStart = (e: TouchEvent) => { touchStartY = e.touches[0].clientY; };
+    const onTouchMove = (e: TouchEvent) => {
+      const touchY = e.touches[0].clientY;
+      const deltaY = touchStartY - touchY; // positive = scrolling down
+      handleScrollSnap(deltaY);
+    };
+
+    window.addEventListener('wheel', onWheel, { passive: true });
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+
+    return () => {
+      clearTimeout(snapTimeout);
+      window.removeEventListener('wheel', onWheel);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+    };
+  }, []);
+
   /* ── Code block (Card A) - dynamic character typing ── */
   useEffect(() => {
     let alive = true;
     const el = codeRef.current;
     if (!el || !started) return;
-    
+
     // Tokenize HTML versus pure characters to type smoothly over spans
     const fullHtml = CODE_LINES.join('\n');
     const tokens: string[] = [];
@@ -765,12 +1143,12 @@ export default function AboutOregent() {
       }
       idx++;
       if (el) el.innerHTML = tokens.slice(0, idx).join('') + '<span class="og-cur"></span>';
-      
+
       const isTag = tokens[idx - 1] && tokens[idx - 1].startsWith('<');
       // If it’s an HTML tag, type it instantly (0ms), otherwise type like a fast keyboard
       setTimeout(typeTokens, isTag ? 0 : 20 + Math.random() * 30);
     };
-    
+
     el.innerHTML = '';
     const startTimer = setTimeout(typeTokens, 600);
     return () => { alive = false; clearTimeout(startTimer); };
@@ -845,13 +1223,71 @@ export default function AboutOregent() {
      JSX
      ═══════════════════════════════════════════ */
   return (
-    <div className="og-about" ref={sectionRef} id="about">
+    <div className={`og-about ${isDayMode ? 'day-mode' : ''}`} ref={sectionRef} id="about">
       <style>{CSS}</style>
       <div className="og-wrap">
+        <GlobalSpotlight gridRef={gridRef} isDayMode={isDayMode} />
         <div ref={triggerRef} style={{ position: 'absolute', top: '400px', left: 0, width: '1px', height: '1px' }} />
 
-        <div className={`og-zoom${started ? " og-anim" : ""}`}>
-          <div className="og-bento">
+        {/* ── Header: Eyebrow + WHO WE ARE ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="w-full text-center mt-12 mb-8 px-6 md:px-16 lg:px-32"
+        >
+          <p
+            className="text-xs font-bold uppercase tracking-[0.2em] mb-4 orehack-liquid-text"
+            style={{ fontFamily: "'Outfit', sans-serif" }}
+          >
+            (TRUST THE BUILD)
+          </p>
+          <h2
+            className={`text-4xl md:text-7xl font-black leading-none ${isDayMode ? 'text-black' : 'text-white'} m-0 uppercase flex flex-row flex-wrap items-baseline justify-center gap-4 md:gap-6 italic`}
+            style={{
+              fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
+              letterSpacing: "-0.04em",
+              textShadow: isDayMode ? "none" : "0 0 60px rgba(124, 58, 237, 0.45), 0 0 120px rgba(124, 58, 237, 0.2)",
+            }}
+          >
+            <span>WHO</span>
+            <span>WE</span>
+            <span
+              style={{
+                fontFamily: '"Playfair Display", serif',
+                color: "#7c3aed",
+                letterSpacing: "0.02em",
+                textShadow: "0 0 40px rgba(124, 58, 237, 0.8), 0 0 80px rgba(124, 58, 237, 0.4)",
+              }}
+            >
+              ARE ?
+            </span>
+          </h2>
+
+          {/* Glow divider */}
+          <div style={{ position: "relative", marginTop: "2rem", height: "2px" }}>
+            <div style={{
+              width: "100%",
+              height: "1px",
+              background: "linear-gradient(to right, transparent, rgba(124,58,237,0.6), rgba(255,255,255,0.3), rgba(124,58,237,0.6), transparent)",
+            }} />
+            <div style={{
+              position: "absolute",
+              top: "-12px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: "60%",
+              height: "24px",
+              background: "radial-gradient(ellipse at center, rgba(124,58,237,0.35) 0%, transparent 70%)",
+              filter: "blur(6px)",
+              pointerEvents: "none",
+            }} />
+          </div>
+        </motion.div>
+
+        <div className={`og-zoom${started ? " og-anim" : ""} px-6 md:px-16 lg:px-32 pt-32 pb-20`}>
+          <div className="og-bento bento-section" ref={gridRef}>
 
             {/* ═══ A — Startup Development (col1 top, 50%) ═══ */}
             <BentoCard className="og-c-a og-tex" delay={0.36}>
@@ -878,10 +1314,10 @@ export default function AboutOregent() {
               <div className="og-inner">
                 <div className="og-title">Oregent Teach</div>
                 <div className="og-desc">Oregent Teach (formerly EyeQ) - practical, project-based technical education, 40 active students.</div>
-                
+
                 <div className="og-counter-wrap" style={{ marginTop: 'auto', paddingBottom: '20px' }}>
                   <span className="og-counter-num" ref={counterRef}>0</span>
-                  <span className="og-counter-label">+<br/>projects<br/>shipped</span>
+                  <span className="og-counter-label">+<br />projects<br />shipped</span>
                 </div>
               </div>
             </BentoCard>
@@ -903,31 +1339,31 @@ export default function AboutOregent() {
             {/* ═══ E — HERO (col2 center, 33%) — Loading Screen Logo animation ═══ */}
             <BentoCard className="og-c-e" delay={0.1}>
               <div className="og-hero-glow" />
-              
+
               <div className="cl-word-orbit" style={{ position: 'absolute', inset: -50, pointerEvents: 'none', transform: 'scale(1.8)' }}>
-                  <svg viewBox="0 0 400 400" className="cl-word-orbit-svg" width="100%" height="100%">
-                      <defs>
-                          <path
-                              id="wordCircleReal"
-                              d="M 200,200 m -160,0 a 160,160 0 1,1 320,0 a 160,160 0 1,1 -320,0"
-                              fill="none"
-                          />
-                      </defs>
-                      <g className="cl-word-orbit-spin" style={{ transformOrigin: '200px 200px', animation: 'spinLogo 20s linear infinite' }}>
-                          {['INNOVATE', 'CREATE', 'BUILD', 'HACK', 'DESIGN', 'CODE', 'LAUNCH', 'DEPLOY'].map((word, i, arr) => {
-                              const offset = `${(i / arr.length) * 100}%`;
-                              return (
-                                  <text key={word} className="cl-orbit-word" dy="-8" fill="rgba(255,255,255,0.5)" fontSize="13px" fontFamily="monospace" letterSpacing="0.22em" fontWeight="700">
-                                      <textPath href="#wordCircleReal" startOffset={offset} textAnchor="middle">
-                                          {word}
-                                      </textPath>
-                                  </text>
-                              );
-                          })}
-                      </g>
-                  </svg>
+                <svg viewBox="0 0 400 400" className="cl-word-orbit-svg" width="100%" height="100%">
+                  <defs>
+                    <path
+                      id="wordCircleReal"
+                      d="M 200,200 m -160,0 a 160,160 0 1,1 320,0 a 160,160 0 1,1 -320,0"
+                      fill="none"
+                    />
+                  </defs>
+                  <g className="cl-word-orbit-spin" style={{ transformOrigin: '200px 200px', animation: 'spinLogo 20s linear infinite' }}>
+                    {['INNOVATE', 'CREATE', 'BUILD', 'HACK', 'DESIGN', 'CODE', 'LAUNCH', 'DEPLOY'].map((word, i, arr) => {
+                      const offset = `${(i / arr.length) * 100}%`;
+                      return (
+                        <text key={word} className="cl-orbit-word" dy="-8" fill="rgba(255,255,255,0.5)" fontSize="13px" fontFamily="monospace" letterSpacing="0.22em" fontWeight="700">
+                          <textPath href="#wordCircleReal" startOffset={offset} textAnchor="middle">
+                            {word}
+                          </textPath>
+                        </text>
+                      );
+                    })}
+                  </g>
+                </svg>
               </div>
-              
+
               <img src={logoSrc} alt="Oregent BG Logo" className="og-ls-logo" />
               <div className="og-hero-inner">
                 <div className="og-hero-badge">
@@ -978,7 +1414,7 @@ export default function AboutOregent() {
                 <div className="og-strip-wrap" ref={stripRef} data-hovered="false" onMouseEnter={onStripEnter} onMouseLeave={onStripLeave}>
                   <div className="og-strip-track">
                     {[SvgIcons.cpu, SvgIcons.brain, SvgIcons.target, SvgIcons.star, SvgIcons.shield, SvgIcons.globe, SvgIcons.layers,
-                      SvgIcons.cpu, SvgIcons.brain, SvgIcons.target, SvgIcons.star, SvgIcons.shield, SvgIcons.globe, SvgIcons.layers].map((icon, i) => (
+                    SvgIcons.cpu, SvgIcons.brain, SvgIcons.target, SvgIcons.star, SvgIcons.shield, SvgIcons.globe, SvgIcons.layers].map((icon, i) => (
                       <div className="og-strip-chip" key={i}>{icon}</div>
                     ))}
                   </div>
