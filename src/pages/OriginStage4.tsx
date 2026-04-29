@@ -538,38 +538,40 @@ const OriginStage4 = () => {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="min-h-screen bg-background px-5 py-10 text-foreground md:px-8">
-      <div className="mx-auto w-full max-w-[1400px] space-y-8">
-        <motion.header
-          initial={{ opacity: 0, y: 18 }}
+    <div style={{ minHeight: "100vh", background: "#000000", color: "#f1f5f9", padding: "2.5rem 2rem" }}>
+      <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", flexDirection: "column", gap: "2rem" }}>
+        
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="rounded-2xl border border-border/70 bg-card/50 p-6 backdrop-blur-sm"
+          style={{ background: "#000000", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "1rem", padding: "1.75rem 2rem" }}
         >
-          <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
-            <button onClick={() => navigate("/orehackproject1924")} className="transition-colors hover:text-foreground">Dashboard</button>
+          {/* Breadcrumb - Font 1 size +3 */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontFamily: "'Outfit', sans-serif", fontWeight: 600, letterSpacing: "-0.05em", fontSize: "1.2rem", color: "rgba(255,255,255,0.35)", marginBottom: "0.75rem" }}>
+            <button onClick={() => navigate("/orehackproject1924")} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontFamily: "inherit", fontSize: "inherit", padding: 0, transition: "color 0.2s" }}>Dashboard</button>
             <span>/</span>
-            <button onClick={() => navigate("/orehackproject1924/panel")} className="transition-colors hover:text-foreground">Stages</button>
+            <button onClick={() => navigate("/orehackproject1924/panel")} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontFamily: "inherit", fontSize: "inherit", padding: 0, transition: "color 0.2s" }}>Stages</button>
             <span>/</span>
-            <span className="font-semibold text-primary">Stage 4 - Reports</span>
+            <span style={{ color: "#a78bfa" }}>Stage 4 — Reports</span>
           </div>
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Stage 4</p>
-          <h1 className="text-3xl font-black md:text-4xl">Reports and Data Engine</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+
+          <p style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 400, fontSize: "1.1rem", color: "#ffffff", marginBottom: "0.35rem" }}>Stage 4</p>
+          <h1 style={{ fontFamily: "'Instrument Serif', serif", fontStyle: "italic", fontWeight: 500, fontSize: "2.6rem", margin: "0 0 0.4rem", color: "#7c3aed" }}>Reports and Data Engine</h1>
+          <p style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 400, fontSize: "1.05rem", color: "rgba(255,255,255,0.38)", margin: "0 0 1.25rem" }}>
             Live normalized data view for teams, submissions, and score sheets.
+            <br />
+            <span style={{ fontSize: "0.85rem", opacity: 0.7 }}>Managing: {managedHackathon ? `${managedHackathon.name} (${managedHackathon.slug})` : "No active hackathon"}</span>
           </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Managing: {managedHackathon ? `${managedHackathon.name} (${managedHackathon.slug})` : "No active hackathon"}
-          </p>
-          <div className="mt-4">
-            <button
-              onClick={() => navigate("/orehackproject1924/panel")}
-              className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-card"
-            >
-              Back to Stages
-            </button>
-          </div>
-        </motion.header>
+          <button
+            onClick={() => navigate("/orehackproject1924/panel")}
+            style={{ fontFamily: "'Playfair Display', serif", background: "#ffffff", border: "1px solid #ffffff", borderRadius: "0.5rem", padding: "0.6rem 1.1rem", color: "#000000", fontSize: "0.95rem", cursor: "pointer", transition: "all 0.2s ease" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#e5e5e5"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#ffffff"; }}
+          >
+            ← Back to Stages
+          </button>
+        </motion.div>
 
         {error && (
           <p className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
@@ -577,28 +579,28 @@ const OriginStage4 = () => {
           </p>
         )}
 
-        <section className="grid gap-4 md:grid-cols-3">
+        <section style={{ display: "grid", gap: "1rem", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
           {[
-            { label: "Total Rows", value: stats.total, tone: "text-cyan-300" },
-            { label: "Completed", value: stats.completed, tone: "text-emerald-300" },
-            { label: "Queued", value: stats.queued, tone: "text-amber-300" },
+            { label: "Total Rows", value: stats.total },
+            { label: "Completed", value: stats.completed },
+            { label: "Queued", value: stats.queued },
           ].map((card) => (
-            <div key={card.label} className="rounded-xl border border-border/70 bg-card/40 p-5">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">{card.label}</p>
-              <p className={`mt-2 text-3xl font-extrabold ${card.tone}`}>{card.value}</p>
+            <div key={card.label} style={{ background: "#000000", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "1rem", padding: "1.25rem" }}>
+              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.1em", color: "#a78bfa", margin: 0 }}>{card.label}</p>
+              <p style={{ fontFamily: "'Playfair Display', serif", fontSize: "2rem", color: "#ffffff", margin: "0.5rem 0 0" }}>{card.value}</p>
             </div>
           ))}
         </section>
 
-        <section className="rounded-2xl border border-border/70 bg-card/40 p-4">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm font-semibold text-foreground">Add New Row</p>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs uppercase tracking-wider text-muted-foreground">Sort by</span>
+        <section style={{ background: "#000000", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "1rem", padding: "1rem" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "0.75rem", marginBottom: "1rem" }}>
+            <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: "1.1rem", fontWeight: 600, color: "#ffffff", margin: 0 }}>Add New Row / Sort</p>
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.5rem" }}>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "rgba(255,255,255,0.5)" }}>Sort by</span>
               <select
                 value={marksSort}
                 onChange={(e) => setMarksSort(e.target.value as typeof marksSort)}
-                className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                style={{ background: "#000000", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "0.5rem", padding: "0.4rem 0.6rem", color: "#ffffff", fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem", outline: "none" }}
               >
                 <option value="desc">Marks: High to Low</option>
                 <option value="asc">Marks: Low to High</option>
@@ -607,7 +609,7 @@ const OriginStage4 = () => {
               <select
                 value={problemSort}
                 onChange={(e) => setProblemSort(e.target.value as typeof problemSort)}
-                className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                style={{ background: "#000000", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "0.5rem", padding: "0.4rem 0.6rem", color: "#ffffff", fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem", outline: "none" }}
               >
                 <option value="asc">Problem Statement: A to Z</option>
                 <option value="desc">Problem Statement: Z to A</option>
@@ -615,71 +617,57 @@ const OriginStage4 = () => {
               </select>
             </div>
           </div>
-          <div className="grid gap-3 md:grid-cols-4">
-            <input
-              value={newForm.teamID}
-              onChange={(e) => onNewChange("teamID", e.target.value)}
-              placeholder="Team ID"
-              className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
-            />
-            <input
-              value={newForm.Team_Name}
-              onChange={(e) => onNewChange("Team_Name", e.target.value)}
-              placeholder="Team Name"
-              className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
-            />
-            <select
-              value={newForm.Progress}
-              onChange={(e) => onNewChange("Progress", e.target.value)}
-              className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
-            >
+          <div style={{ display: "grid", gap: "0.75rem", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
+            <input value={newForm.teamID} onChange={(e) => onNewChange("teamID", e.target.value)} placeholder="Team ID" style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "0.5rem", padding: "0.5rem 0.75rem", color: "#ffffff", fontFamily: "'Outfit', sans-serif", fontSize: "0.85rem", outline: "none" }} />
+            <input value={newForm.Team_Name} onChange={(e) => onNewChange("Team_Name", e.target.value)} placeholder="Team Name" style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "0.5rem", padding: "0.5rem 0.75rem", color: "#ffffff", fontFamily: "'Outfit', sans-serif", fontSize: "0.85rem", outline: "none" }} />
+            <select value={newForm.Progress} onChange={(e) => onNewChange("Progress", e.target.value)} style={{ background: "#000000", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "0.5rem", padding: "0.5rem 0.75rem", color: "#ffffff", fontFamily: "'Outfit', sans-serif", fontSize: "0.85rem", outline: "none" }}>
               <option value="queued">queued</option>
               <option value="completed">completed</option>
             </select>
-            <input
-              value={newForm.Repo_URL}
-              onChange={(e) => onNewChange("Repo_URL", e.target.value)}
-              placeholder="Repo URL"
-              className="rounded-lg border border-border bg-background px-3 py-2 text-sm md:col-span-2"
-            />
-            <input
-              value={newForm.Total_Scores ?? ""}
-              onChange={(e) => onNewChange("Total_Scores", e.target.value)}
-              placeholder="Total Score"
-              className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
-            />
+            <input value={newForm.Repo_URL} onChange={(e) => onNewChange("Repo_URL", e.target.value)} placeholder="Repo URL" style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "0.5rem", padding: "0.5rem 0.75rem", color: "#ffffff", fontFamily: "'Outfit', sans-serif", fontSize: "0.85rem", outline: "none" }} />
+            <input value={newForm.Total_Scores ?? ""} onChange={(e) => onNewChange("Total_Scores", e.target.value)} placeholder="Total Score" style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "0.5rem", padding: "0.5rem 0.75rem", color: "#ffffff", fontFamily: "'Outfit', sans-serif", fontSize: "0.85rem", outline: "none" }} />
             <button
               onClick={addRow}
               disabled={saving}
-              className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+              style={{ background: "#ffffff", color: "#000000", border: "1px solid #ffffff", borderRadius: "0.5rem", padding: "0.5rem 1rem", fontFamily: "'Playfair Display', serif", fontSize: "0.95rem", cursor: saving ? "not-allowed" : "pointer", transition: "all 0.2s" }}
+              onMouseEnter={e => { if(!saving) (e.currentTarget as HTMLButtonElement).style.background = "#e5e5e5"; }}
+              onMouseLeave={e => { if(!saving) (e.currentTarget as HTMLButtonElement).style.background = "#ffffff"; }}
             >
               Add Row
             </button>
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-2xl border border-border/70 bg-card/40">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1650px] table-fixed">
+        <section style={{ overflow: "hidden", borderRadius: "1rem", border: "1px solid rgba(255,255,255,0.07)", background: "#000000" }}>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", minWidth: "1650px", tableLayout: "fixed", borderCollapse: "collapse" }}>
               <thead>
-                <tr className="border-b border-border/70 bg-card/60 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                  <th className="w-[120px] px-4 py-3">Team ID</th>
-                  <th className="w-[200px] px-4 py-3">Team Name</th>
-                  <th className="w-[220px] px-4 py-3">Repo URL</th>
-                  <th className="w-[110px] px-4 py-3">Progress</th>
-                  <th className="w-[100px] px-4 py-3 text-right">Tech</th>
-                  <th className="w-[100px] px-4 py-3 text-right">Innovation</th>
-                  <th className="w-[120px] px-4 py-3 text-right">Completeness</th>
-                  <th className="w-[110px] px-4 py-3 text-right">Total</th>
-                  <th className="min-w-[300px] px-4 py-3">Problem Statement</th>
-                  <th className="w-[120px] px-4 py-3 text-right">Actions</th>
+                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.02)", textAlign: "left", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "#ffffff", fontFamily: "'JetBrains Mono', monospace" }}>
+                  <th style={{ width: "120px", padding: "1rem" }}>Team ID</th>
+                  <th style={{ width: "200px", padding: "1rem" }}>Team Name</th>
+                  <th style={{ width: "220px", padding: "1rem" }}>Repo URL</th>
+                  <th style={{ width: "110px", padding: "1rem" }}>Progress</th>
+                  <th style={{ width: "100px", padding: "1rem", textAlign: "right" }}>Tech</th>
+                  <th style={{ width: "100px", padding: "1rem", textAlign: "right" }}>Innovation</th>
+                  <th style={{ width: "120px", padding: "1rem", textAlign: "right" }}>Completeness</th>
+                  <th style={{ width: "110px", padding: "1rem", textAlign: "right" }}>Total</th>
+                  <th style={{ minWidth: "300px", padding: "1rem" }}>Problem Statement</th>
+                  <th style={{ width: "120px", padding: "1rem", textAlign: "right" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan={10} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    <td colSpan={10} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "'Outfit', sans-serif" }}>
                       Loading submissions...
+                    </td>
+                  </tr>
+                )}
+
+                {!loading && sortedSubmissions.length === 0 && (
+                  <tr>
+                    <td colSpan={10} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "'Outfit', sans-serif" }}>
+                      No submissions found
                     </td>
                   </tr>
                 )}
@@ -688,98 +676,97 @@ const OriginStage4 = () => {
                   const isEditing = editingRowId === row.id;
                   const submitted = row.Repo_URL.trim().length > 0;
                   const statusLabel = submitted ? "Completed" : "In Progress";
-                  const statusClass = submitted
-                    ? "bg-emerald-500/15 text-emerald-400"
-                    : "bg-amber-500/15 text-amber-300";
+                  const statusBg = submitted ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.05)";
+                  const statusColor = "#ffffff";
 
                   return (
-                    <tr key={row.id} className="border-b border-border/60 text-sm hover:bg-card/60">
-                      <td className="px-4 py-3">
+                    <tr key={row.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", fontSize: "1.15rem", fontFamily: "'JetBrains Mono', monospace", color: "#ffffff", transition: "background 0.2s" }} onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.02)")} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+                      <td style={{ padding: "0.75rem 1rem" }}>
                         {isEditing ? (
                           <input
                             value={editForm.teamID}
                             onChange={(e) => onEditChange("teamID", e.target.value)}
-                            className="w-full rounded border border-border bg-background px-2 py-1"
+                            style={{ width: "100%", background: "#000000", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "0.25rem", padding: "0.25rem 0.5rem", color: "#fff", outline: "none" }}
                           />
                         ) : (
                           row.teamID
                         )}
                       </td>
-                      <td className="px-4 py-3">
+                      <td style={{ padding: "0.75rem 1rem" }}>
                         {isEditing ? (
                           <input
                             value={editForm.Team_Name}
                             onChange={(e) => onEditChange("Team_Name", e.target.value)}
-                            className="w-full rounded border border-border bg-background px-2 py-1"
+                            style={{ width: "100%", background: "#000000", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "0.25rem", padding: "0.25rem 0.5rem", color: "#fff", outline: "none" }}
                           />
                         ) : (
-                          <div className="w-[180px] truncate" title={row.Team_Name}>{row.Team_Name || "-"}</div>
+                          <div style={{ width: "180px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={row.Team_Name}>{row.Team_Name || "-"}</div>
                         )}
                       </td>
-                      <td className="px-4 py-3">
+                      <td style={{ padding: "0.75rem 1rem" }}>
                         {isEditing ? (
                           <input
                             value={editForm.Repo_URL}
                             onChange={(e) => onEditChange("Repo_URL", e.target.value)}
-                            className="w-full rounded border border-border bg-background px-2 py-1"
+                            style={{ width: "100%", background: "#000000", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "0.25rem", padding: "0.25rem 0.5rem", color: "#fff", outline: "none" }}
                           />
                         ) : (
-                          <div className="w-[200px] truncate" title={row.Repo_URL}>{row.Repo_URL || "-"}</div>
+                          <div style={{ width: "200px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={row.Repo_URL}>{row.Repo_URL || "-"}</div>
                         )}
                       </td>
-                      <td className="px-4 py-3">
+                      <td style={{ padding: "0.75rem 1rem" }}>
                         {isEditing ? (
                           <select
                             value={editForm.Progress}
                             onChange={(e) => onEditChange("Progress", e.target.value)}
-                            className="w-full rounded border border-border bg-background px-2 py-1"
+                            style={{ width: "100%", background: "#000000", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "0.25rem", padding: "0.25rem 0.5rem", color: "#fff", outline: "none" }}
                           >
                             <option value="queued">queued</option>
                             <option value="completed">completed</option>
                           </select>
                         ) : (
-                          <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusClass}`}>{statusLabel}</span>
+                          <span style={{ display: "inline-block", borderRadius: "9999px", padding: "0.25rem 0.6rem", fontSize: "0.95rem", fontWeight: 600, background: statusBg, color: statusColor }}>{statusLabel}</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td style={{ padding: "0.75rem 1rem", textAlign: "right" }}>
                         {isEditing ? (
                           <input
                             value={editForm.Tech_Scores ?? ""}
                             onChange={(e) => onEditChange("Tech_Scores", e.target.value)}
-                            className="w-20 rounded border border-border bg-background px-2 py-1 text-right"
+                            style={{ width: "80px", background: "#000000", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "0.25rem", padding: "0.25rem 0.5rem", color: "#fff", outline: "none", textAlign: "right" }}
                           />
                         ) : (
                           row.Tech_Scores ?? "-"
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td style={{ padding: "0.75rem 1rem", textAlign: "right" }}>
                         {isEditing ? (
                           <input
                             value={editForm.Innov_Scores ?? ""}
                             onChange={(e) => onEditChange("Innov_Scores", e.target.value)}
-                            className="w-20 rounded border border-border bg-background px-2 py-1 text-right"
+                            style={{ width: "80px", background: "#000000", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "0.25rem", padding: "0.25rem 0.5rem", color: "#fff", outline: "none", textAlign: "right" }}
                           />
                         ) : (
                           row.Innov_Scores ?? "-"
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td style={{ padding: "0.75rem 1rem", textAlign: "right" }}>
                         {isEditing ? (
                           <input
                             value={editForm.Completeness_Scores ?? ""}
                             onChange={(e) => onEditChange("Completeness_Scores", e.target.value)}
-                            className="w-24 rounded border border-border bg-background px-2 py-1 text-right"
+                            style={{ width: "90px", background: "#000000", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "0.25rem", padding: "0.25rem 0.5rem", color: "#fff", outline: "none", textAlign: "right" }}
                           />
                         ) : (
                           row.Completeness_Scores ?? "-"
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right font-semibold text-foreground">
+                      <td style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: 600 }}>
                         {isEditing ? (
                           <input
                             value={editForm.Total_Scores ?? ""}
                             onChange={(e) => onEditChange("Total_Scores", e.target.value)}
-                            className="w-24 rounded border border-border bg-background px-2 py-1 text-right"
+                            style={{ width: "90px", background: "#000000", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "0.25rem", padding: "0.25rem 0.5rem", color: "#fff", outline: "none", textAlign: "right" }}
                           />
                         ) : row.Total_Scores !== null ? (
                           row.Total_Scores.toFixed(1)
@@ -787,41 +774,42 @@ const OriginStage4 = () => {
                           "-"
                         )}
                       </td>
-                      <td className="px-4 py-3">
+                      <td style={{ padding: "0.75rem 1rem" }}>
                         {isEditing ? (
                           <textarea
                             value={editForm.Problem_Statement}
                             onChange={(e) => onEditChange("Problem_Statement", e.target.value)}
-                            className="min-h-[60px] w-full rounded border border-border bg-background px-2 py-1 text-xs"
+                            style={{ minHeight: "60px", width: "100%", background: "#000000", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "0.25rem", padding: "0.25rem 0.5rem", color: "#fff", outline: "none", fontSize: "0.75rem", fontFamily: "inherit" }}
                           />
                         ) : (
-                          <div className="group/problem flex items-center justify-between gap-3">
-                            <span className="block max-w-[280px] truncate text-xs italic text-muted-foreground">
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem" }}>
+                            <span style={{ display: "block", maxWidth: "280px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontSize: "0.75rem", fontStyle: "italic", color: "rgba(255,255,255,0.5)" }}>
                               {row.Problem_Statement || "No statement provided"}
                             </span>
                             <button
                               onClick={() => setViewingProblem(row.Problem_Statement)}
-                              className="shrink-0 rounded-md bg-white/5 p-1.5 text-muted-foreground opacity-0 transition-all hover:bg-primary/20 hover:text-primary group-hover/problem:opacity-100"
-                              title="Expand Problem Statement"
+                              style={{ flexShrink: 0, borderRadius: "0.35rem", background: "rgba(255,255,255,0.05)", padding: "0.35rem 0.5rem", color: "rgba(255,255,255,0.6)", fontSize: "0.75rem", cursor: "pointer", border: "none", transition: "all 0.2s" }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(167,139,250,0.2)"; (e.currentTarget as HTMLButtonElement).style.color = "#a78bfa"; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)"; (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.6)"; }}
                             >
                               View
                             </button>
                           </div>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td style={{ padding: "0.75rem 1rem", textAlign: "right" }}>
                         {isEditing ? (
-                          <div className="flex justify-end gap-2">
+                          <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
                             <button
                               onClick={saveEdit}
                               disabled={saving}
-                              className="rounded bg-emerald-600 px-2 py-1 text-xs font-semibold text-white disabled:opacity-50"
+                              style={{ borderRadius: "0.25rem", background: "#ffffff", border: "1px solid #ffffff", padding: "0.25rem 0.5rem", fontSize: "0.75rem", fontWeight: 600, color: "#000000", cursor: saving ? "not-allowed" : "pointer", fontFamily: "'Playfair Display', serif" }}
                             >
                               Save
                             </button>
                             <button
                               onClick={cancelEdit}
-                              className="rounded bg-muted px-2 py-1 text-xs font-semibold text-foreground"
+                              style={{ borderRadius: "0.25rem", background: "transparent", border: "1px solid rgba(255,255,255,0.2)", padding: "0.25rem 0.5rem", fontSize: "0.75rem", fontWeight: 600, color: "#ffffff", cursor: "pointer", fontFamily: "'Playfair Display', serif" }}
                             >
                               Cancel
                             </button>
@@ -829,7 +817,7 @@ const OriginStage4 = () => {
                         ) : (
                           <button
                             onClick={() => startEdit(row)}
-                            className="rounded bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground"
+                            style={{ borderRadius: "0.25rem", background: "#ffffff", border: "1px solid #ffffff", padding: "0.25rem 0.5rem", fontSize: "0.75rem", fontWeight: 600, color: "#000000", cursor: "pointer", fontFamily: "'Playfair Display', serif" }}
                           >
                             Edit
                           </button>
@@ -839,13 +827,6 @@ const OriginStage4 = () => {
                   );
                 })}
 
-                {!loading && sortedSubmissions.length === 0 && (
-                  <tr>
-                    <td colSpan={10} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                      No submissions found.
-                    </td>
-                  </tr>
-                )}
               </tbody>
             </table>
           </div>
@@ -853,39 +834,43 @@ const OriginStage4 = () => {
       </div>
 
       {viewingProblem !== null && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+        <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             onClick={() => setViewingProblem(null)}
-            className="absolute inset-0 bg-background/80 backdrop-blur-md"
+            style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(4px)" }}
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="relative flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-border/80 bg-card shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)]"
+            style={{ position: "relative", display: "flex", flexDirection: "column", maxHeight: "85vh", width: "100%", maxWidth: "42rem", overflow: "hidden", borderRadius: "1.5rem", border: "1px solid rgba(255,255,255,0.07)", background: "#000000", boxShadow: "0 32px 64px -16px rgba(0,0,0,0.6)" }}
           >
-            <div className="flex items-center justify-between border-b border-border/40 p-6">
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.07)", padding: "1.5rem" }}>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary">Problem Concept</p>
-                <h3 className="mt-1 text-xl font-black">Detailed Statement</h3>
+                <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.25em", color: "#a78bfa", margin: 0 }}>Problem Concept</p>
+                <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.25rem", fontWeight: 700, margin: "0.25rem 0 0", color: "#ffffff" }}>Detailed Statement</h3>
               </div>
               <button
                 onClick={() => setViewingProblem(null)}
-                className="rounded-full bg-white/5 p-2 text-muted-foreground transition-colors hover:bg-white/10 hover:text-white"
+                style={{ borderRadius: "9999px", background: "rgba(255,255,255,0.05)", padding: "0.5rem", color: "rgba(255,255,255,0.5)", border: "none", cursor: "pointer", transition: "all 0.2s" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.1)"; (e.currentTarget as HTMLButtonElement).style.color = "#ffffff"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)"; (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.5)"; }}
               >
                 Close
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-8">
-              <p className="whitespace-pre-wrap text-base font-medium leading-relaxed text-muted-foreground">
+            <div style={{ flex: 1, overflowY: "auto", padding: "2rem" }}>
+              <p style={{ fontFamily: "'Outfit', sans-serif", whiteSpace: "pre-wrap", fontSize: "1rem", fontWeight: 400, lineHeight: 1.6, color: "rgba(255,255,255,0.6)", margin: 0 }}>
                 {viewingProblem || "No statement content available."}
               </p>
             </div>
-            <div className="flex justify-end border-t border-border/40 bg-card/30 p-5">
+            <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.02)", padding: "1.25rem" }}>
               <button
                 onClick={() => setViewingProblem(null)}
-                className="rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground transition-all hover:brightness-110 active:scale-95"
+                style={{ borderRadius: "0.75rem", background: "#ffffff", padding: "0.6rem 1.5rem", fontSize: "0.875rem", fontWeight: 700, color: "#000000", border: "1px solid #ffffff", fontFamily: "'Playfair Display', serif", cursor: "pointer", transition: "all 0.2s" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#e5e5e5"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#ffffff"; }}
               >
                 Close View
               </button>

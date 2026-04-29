@@ -31,7 +31,7 @@ const ToggleRow = ({
   <div
     id={id}
     style={{
-      background: "rgba(15,18,30,0.7)",
+      background: "#000000",
       border: `1px solid ${enabled ? onBorder : offBorder}`,
       borderRadius: "1.1rem",
       padding: "1.6rem",
@@ -44,30 +44,30 @@ const ToggleRow = ({
     {/* Header */}
     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1rem" }}>
       <div>
-        <p style={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", margin: "0 0 0.3rem" }}>
+        <p style={{ fontFamily: "'Instrument Serif', serif", fontStyle: "italic", fontSize: "1.45rem", fontWeight: 500, letterSpacing: "0.02em", color: "#a78bfa", margin: "0 0 0.3rem" }}>
           {sublabel}
         </p>
-        <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: 0, letterSpacing: "-0.01em", color: "#f1f5f9" }}>{label}</h3>
+        <h3 style={{ fontFamily: "'Instrument Serif', serif", fontStyle: "italic", fontSize: "1.8rem", fontWeight: 500, margin: 0, letterSpacing: "0.01em", color: "#f1f5f9" }}>{label}</h3>
       </div>
 
       {/* Status badge */}
       <span style={{
         display: "inline-flex", alignItems: "center", gap: "0.35rem",
         padding: "0.25rem 0.75rem", borderRadius: "9999px",
-        background: enabled ? `${onColor}18` : "rgba(255,255,255,0.05)",
-        border: `1px solid ${enabled ? onBorder : "rgba(255,255,255,0.09)"}`,
-        color: enabled ? onColor : "rgba(255,255,255,0.3)",
-        fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase",
+        background: "rgba(255,255,255,0.05)",
+        border: "1px solid rgba(255,255,255,0.3)",
+        color: "#ffffff",
+        fontFamily: "'Outfit', sans-serif", fontSize: "0.85rem", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase",
         flexShrink: 0,
         transition: "all 0.3s ease",
       }}>
-        <span style={{ width: 6, height: 6, borderRadius: "50%", background: enabled ? onColor : "rgba(255,255,255,0.2)", flexShrink: 0, boxShadow: enabled ? `0 0 8px ${onColor}` : "none", transition: "all 0.3s" }} />
+        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ffffff", flexShrink: 0, boxShadow: "0 0 8px rgba(255,255,255,0.5)", transition: "all 0.3s" }} />
         {enabled ? onLabel : offLabel}
       </span>
     </div>
 
     {/* Description */}
-    <p style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.42)", lineHeight: 1.65, margin: 0 }}>
+    <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: "0.95rem", color: "rgba(255,255,255,0.42)", lineHeight: 1.65, margin: 0 }}>
       {description}
     </p>
 
@@ -78,13 +78,16 @@ const ToggleRow = ({
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "0.85rem 1.2rem",
         borderRadius: "0.75rem",
-        border: `1px solid ${enabled ? offBorder : onBorder}`,
-        background: enabled ? `${offColor}09` : `${onColor}09`,
-        color: enabled ? offColor : onColor,
-        cursor: "pointer", fontSize: "0.82rem", fontWeight: 700,
+        border: "1px solid #ffffff",
+        background: "transparent",
+        color: "#ffffff",
+        fontFamily: "'Playfair Display', serif",
+        cursor: "pointer", fontSize: "1rem", fontWeight: 500,
         transition: "all 0.25s ease",
         width: "100%",
       }}
+      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.1)"; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
     >
       <span>
         {enabled ? `Disable — ${offLabel}` : `Enable — ${onLabel}`}
@@ -93,8 +96,8 @@ const ToggleRow = ({
       {/* Toggle pill */}
       <span style={{
         display: "inline-flex", width: 42, height: 24, borderRadius: 12,
-        background: enabled ? `${onColor}25` : "rgba(255,255,255,0.06)",
-        border: `1px solid ${enabled ? onBorder : "rgba(255,255,255,0.1)"}`,
+        background: enabled ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.05)",
+        border: "1px solid #ffffff",
         padding: 3, alignItems: "center",
         justifyContent: enabled ? "flex-end" : "flex-start",
         transition: "all 0.3s",
@@ -102,9 +105,9 @@ const ToggleRow = ({
       }}>
         <span style={{
           width: 16, height: 16, borderRadius: "50%",
-          background: enabled ? onColor : "rgba(255,255,255,0.25)",
+          background: "#ffffff",
           transition: "background 0.3s",
-          boxShadow: enabled ? `0 0 6px ${onColor}` : "none",
+          boxShadow: enabled ? "0 0 6px #ffffff" : "none",
         }} />
       </span>
     </button>
@@ -137,31 +140,34 @@ const OriginStage2 = () => {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#080b14", color: "#f1f5f9", fontFamily: "'Inter', system-ui, sans-serif", padding: "2.5rem 2rem" }}>
+    <div style={{ minHeight: "100vh", background: "#000000", color: "#f1f5f9", padding: "2.5rem 2rem" }}>
       <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", flexDirection: "column", gap: "2rem" }}>
 
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
-          style={{ background: "rgba(15,18,30,0.7)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "1rem", padding: "1.75rem 2rem", backdropFilter: "blur(16px)" }}
+          style={{ background: "#000000", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "1rem", padding: "1.75rem 2rem" }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.68rem", color: "rgba(255,255,255,0.35)", marginBottom: "0.75rem" }}>
-            <button onClick={() => navigate("/orehackproject1924")} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontSize: "0.68rem", padding: 0 }}>Dashboard</button>
+          {/* Breadcrumb - Font 1 size +3 */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontFamily: "'Outfit', sans-serif", fontWeight: 600, letterSpacing: "-0.05em", fontSize: "1.2rem", color: "rgba(255,255,255,0.35)", marginBottom: "0.75rem" }}>
+            <button onClick={() => navigate("/orehackproject1924")} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontFamily: "inherit", fontSize: "inherit", padding: 0, transition: "color 0.2s" }}>Dashboard</button>
             <span>/</span>
-            <button onClick={() => navigate("/orehackproject1924/panel")} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontSize: "0.68rem", padding: 0 }}>Stages</button>
+            <button onClick={() => navigate("/orehackproject1924/panel")} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontFamily: "inherit", fontSize: "inherit", padding: 0, transition: "color 0.2s" }}>Stages</button>
             <span>/</span>
-            <span style={{ color: "#60a5fa", fontWeight: 600 }}>Stage 2 — Live Monitoring</span>
+            <span style={{ color: "#a78bfa" }}>Stage 2 — Live Monitoring</span>
           </div>
 
-          <p style={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#60a5fa", marginBottom: "0.3rem" }}>Stage 2</p>
-          <h1 style={{ fontSize: "2rem", fontWeight: 900, letterSpacing: "-0.02em", margin: "0 0 0.35rem" }}>Live Monitoring</h1>
-          <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.38)", margin: "0 0 1.25rem" }}>
+          <p style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 400, fontSize: "1.1rem", color: "#ffffff", marginBottom: "0.35rem" }}>Stage 2</p>
+          <h1 style={{ fontFamily: "'Instrument Serif', serif", fontStyle: "italic", fontWeight: 500, fontSize: "2.6rem", margin: "0 0 0.4rem", color: "#7c3aed" }}>Live Monitoring</h1>
+          <p style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 400, fontSize: "1.05rem", color: "rgba(255,255,255,0.38)", margin: "0 0 1.25rem" }}>
             Control the participant flow — toggle the Rules page, Waiting Room, and release the problem statements.
           </p>
           <button
             onClick={() => navigate("/orehackproject1924/panel")}
-            style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "0.5rem", padding: "0.4rem 1rem", color: "rgba(255,255,255,0.6)", fontSize: "0.75rem", cursor: "pointer" }}
+            style={{ fontFamily: "'Playfair Display', serif", background: "#ffffff", border: "1px solid #ffffff", borderRadius: "0.5rem", padding: "0.6rem 1.1rem", color: "#000000", fontSize: "0.95rem", cursor: "pointer", transition: "all 0.2s ease" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#e5e5e5"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#ffffff"; }}
           >
             ← Back to Stages
           </button>
@@ -172,27 +178,27 @@ const OriginStage2 = () => {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.07 }}
-          style={{ display: "flex", alignItems: "center", gap: "0", background: "rgba(15,18,30,0.6)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "0.85rem", padding: "0.85rem 1.5rem", overflowX: "auto" }}
+          style={{ display: "flex", alignItems: "center", gap: "0", background: "#000000", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "0.85rem", padding: "0.85rem 1.5rem", overflowX: "auto" }}
         >
           {[
             { step: "Login", active: true, color: "#a78bfa" },
             { step: "→", arrow: true },
-            { step: "Rules", active: rulesEnabled, color: "#f472b6" },
+            { step: "Rules", active: rulesEnabled, color: "#a78bfa" },
             { step: "→", arrow: true },
-            { step: "Waiting Room", active: waitingRoomEnabled, color: "#60a5fa" },
+            { step: "Waiting Room", active: waitingRoomEnabled, color: "#a78bfa" },
             { step: "→", arrow: true },
-            { step: "Stage 2 (Release)", active: stage1Active, color: "#4ade80" },
+            { step: "Stage 2 (Release)", active: stage1Active, color: "#a78bfa" },
           ].map((item, i) =>
             item.arrow ? (
               <span key={i} style={{ color: "rgba(255,255,255,0.2)", fontSize: "0.9rem", padding: "0 0.5rem", flexShrink: 0 }}>→</span>
             ) : (
               <span key={i} style={{
-                fontSize: "0.7rem", fontWeight: 700, padding: "0.3rem 0.75rem",
+                fontFamily: "'Instrument Serif', serif", fontStyle: "italic", fontSize: "1.3rem", fontWeight: 500, padding: "0.3rem 0.75rem",
                 borderRadius: "0.4rem", flexShrink: 0,
-                background: item.active ? `${item.color}15` : "rgba(255,255,255,0.04)",
-                color: item.active ? item.color! : "rgba(255,255,255,0.25)",
-                border: `1px solid ${item.active ? item.color! + "30" : "rgba(255,255,255,0.07)"}`,
-                textDecoration: (!item.active && !item.arrow) ? "line-through" : "none",
+                background: item.step === "Stage 2 (Release)" ? (item.active ? `${item.color}15` : "rgba(255,255,255,0.04)") : "#ffffff",
+                color: item.step === "Stage 2 (Release)" ? (item.active ? item.color! : "rgba(255,255,255,0.25)") : "#7c3aed",
+                border: item.step === "Stage 2 (Release)" ? `1px solid ${item.active ? item.color! + "30" : "rgba(255,255,255,0.07)"}` : "1px solid #ffffff",
+                textDecoration: (!item.active && item.step !== "Stage 2 (Release)") ? "line-through" : "none",
                 transition: "all 0.3s",
               }}>
                 {item.step}
@@ -218,10 +224,10 @@ const OriginStage2 = () => {
               enabled={rulesEnabled}
               onLabel="RULES REQUIRED"
               offLabel="RULES SKIPPED"
-              onColor="#f472b6"
-              offColor="#fbbf24"
-              onBorder="rgba(244,114,182,0.3)"
-              offBorder="rgba(251,191,36,0.25)"
+              onColor="#a78bfa"
+              offColor="#ffffff"
+              onBorder="rgba(167,139,250,0.3)"
+              offBorder="rgba(255,255,255,0.25)"
               onToggle={() => setRulesEnabled(!rulesEnabled)}
             />
           </motion.div>
@@ -240,10 +246,10 @@ const OriginStage2 = () => {
               enabled={waitingRoomEnabled}
               onLabel="WAITING ROOM ACTIVE"
               offLabel="WAITING ROOM SKIPPED"
-              onColor="#60a5fa"
-              offColor="#fbbf24"
-              onBorder="rgba(96,165,250,0.3)"
-              offBorder="rgba(251,191,36,0.25)"
+              onColor="#a78bfa"
+              offColor="#ffffff"
+              onBorder="rgba(167,139,250,0.3)"
+              offBorder="rgba(255,255,255,0.25)"
               onToggle={() => setWaitingRoomEnabled(!waitingRoomEnabled)}
             />
           </motion.div>
@@ -255,10 +261,8 @@ const OriginStage2 = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           style={{
-            background: stage1Active
-              ? "linear-gradient(135deg, rgba(16,185,129,0.09) 0%, rgba(5,150,105,0.06) 100%)"
-              : "linear-gradient(135deg, rgba(99,102,241,0.09) 0%, rgba(139,92,246,0.06) 100%)",
-            border: stage1Active ? "1px solid rgba(74,222,128,0.28)" : "1px solid rgba(99,102,241,0.22)",
+            background: "#000000",
+            border: "1px solid rgba(255,255,255,0.07)",
             borderRadius: "1.25rem",
             padding: "2rem",
             display: "flex",
@@ -269,13 +273,13 @@ const OriginStage2 = () => {
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
             <div>
-              <p style={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", margin: "0 0 0.3rem" }}>
+              <p style={{ fontFamily: "'Instrument Serif', serif", fontStyle: "italic", fontWeight: 500, letterSpacing: "0.02em", color: "#a78bfa", margin: "0 0 0.3rem", fontSize: "1.45rem" }}>
                 Problem Statement Release
               </p>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 800, margin: "0 0 0.4rem", letterSpacing: "-0.01em" }}>
-                {stage1Active ? "🟢  Event is LIVE — Problem Statements Released" : "⏸  Waiting for Start Signal"}
+              <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.5rem", color: "#ffffff", fontWeight: 500, margin: "0 0 0.4rem" }}>
+                {stage1Active ? "Event is LIVE — Problem Statements Released" : "Waiting for Start Signal"}
               </h3>
-              <p style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.42)", margin: 0, lineHeight: 1.6 }}>
+              <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: "0.95rem", color: "rgba(255,255,255,0.42)", margin: 0, lineHeight: 1.6 }}>
                 {stage1Active
                   ? "All participants in the waiting room have been automatically redirected to Stage 2. The event is in progress."
                   : "Click START to release the problem statements. All participants currently in the waiting room will be instantly redirected."}
@@ -288,10 +292,10 @@ const OriginStage2 = () => {
                   key="live-badge"
                   initial={{ scale: 0.7, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", borderRadius: "9999px", background: "rgba(74,222,128,0.12)", border: "1px solid rgba(74,222,128,0.35)" }}
+                  style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 1rem", borderRadius: "9999px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.15)" }}
                 >
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4ade80", boxShadow: "0 0 10px rgba(74,222,128,0.8)", animation: "lp 1.5s ease-in-out infinite" }} />
-                  <span style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.14em", color: "#4ade80" }}>LIVE</span>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ffffff", boxShadow: "0 0 10px rgba(255,255,255,0.5)", animation: "lp 1.5s ease-in-out infinite" }} />
+                  <span style={{ fontFamily: "'Outfit', sans-serif", fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.14em", color: "#ffffff" }}>LIVE</span>
                 </motion.div>
               ) : null}
             </AnimatePresence>
@@ -307,21 +311,18 @@ const OriginStage2 = () => {
                 display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
                 padding: "0.9rem 1.5rem",
                 borderRadius: "0.75rem",
-                border: "none",
-                background: stage1Active
-                  ? "rgba(255,255,255,0.05)"
-                  : "linear-gradient(135deg, #059669, #10b981)",
-                color: stage1Active ? "rgba(255,255,255,0.25)" : "#fff",
-                fontWeight: 800, fontSize: "0.95rem",
+                border: "1px solid #ffffff",
+                background: stage1Active ? "rgba(255,255,255,0.8)" : "#ffffff",
+                color: stage1Active ? "rgba(124,58,237,0.5)" : "#7c3aed",
+                fontFamily: "'Playfair Display', serif",
+                fontSize: "1rem",
                 cursor: stage1Active ? "not-allowed" : "pointer",
-                boxShadow: stage1Active ? "none" : "0 6px 24px rgba(16,185,129,0.35)",
                 transition: "all 0.3s ease",
               }}
+              onMouseEnter={e => { if (!stage1Active) (e.currentTarget as HTMLButtonElement).style.background = "#f3f4f6"; }}
+              onMouseLeave={e => { if (!stage1Active) (e.currentTarget as HTMLButtonElement).style.background = "#ffffff"; }}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="5 3 19 12 5 21 5 3" />
-              </svg>
-              {stage1Active ? "Event Already Started" : "▶  Start — Release Problem Statements"}
+              {stage1Active ? "Event Already Started" : "Start — Release Problem Statements"}
             </button>
 
             {/* RESET button */}
@@ -331,13 +332,16 @@ const OriginStage2 = () => {
                 style={{
                   padding: "0.9rem 1.5rem",
                   borderRadius: "0.75rem",
-                  border: "1px solid rgba(239,68,68,0.3)",
-                  background: "rgba(239,68,68,0.08)",
-                  color: "#f87171",
-                  fontWeight: 700, fontSize: "0.82rem",
+                  border: "1px solid #ffffff",
+                  background: "#ffffff",
+                  color: "#000000",
+                  fontFamily: "'Playfair Display', serif",
+                  fontSize: "1rem",
                   cursor: "pointer",
                   transition: "all 0.2s ease",
                 }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#e5e5e5"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#ffffff"; }}
               >
                 Reset / Stop Event
               </button>

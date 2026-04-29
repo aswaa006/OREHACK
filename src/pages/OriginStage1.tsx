@@ -43,12 +43,12 @@ const TimerRing = ({ remaining, total }: { remaining: number; total: number }) =
   return (
     <svg width="140" height="140" viewBox="0 0 140 140">
       {/* Track */}
-      <circle cx="70" cy="70" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
+      <circle cx="70" cy="70" r={r} fill="none" stroke="#1a1a1a" strokeWidth="8" />
       {/* Progress arc */}
       <circle
         cx="70" cy="70" r={r}
         fill="none"
-        stroke={remaining <= 0 ? "#4ade80" : remaining < 300000 ? "#f59e0b" : "#a78bfa"}
+        stroke="#a78bfa"
         strokeWidth="8"
         strokeLinecap="round"
         strokeDasharray={circ}
@@ -62,7 +62,7 @@ const TimerRing = ({ remaining, total }: { remaining: number; total: number }) =
           cx={70 + r * Math.cos(((-90 + (1 - progress) * 360) * Math.PI) / 180)}
           cy={70 + r * Math.sin(((-90 + (1 - progress) * 360) * Math.PI) / 180)}
           r="5"
-          fill={remaining < 300000 ? "#f59e0b" : "#a78bfa"}
+          fill="#a78bfa"
           style={{ filter: "blur(1px)" }}
         />
       )}
@@ -123,31 +123,37 @@ const OriginStage1 = () => {
   const isLive = state.isEventLive;
 
   return (
-    <div style={{ minHeight: "100vh", background: "#080b14", color: "#f1f5f9", fontFamily: "'Inter', system-ui, sans-serif", padding: "2.5rem 2rem" }}>
+    <div style={{ minHeight: "100vh", background: "#000000", color: "#f1f5f9", padding: "2.5rem 2rem" }}>
       <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", flexDirection: "column", gap: "2rem" }}>
 
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
-          style={{ background: "rgba(15,18,30,0.7)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "1rem", padding: "1.75rem 2rem", backdropFilter: "blur(16px)" }}
+          style={{ background: "#000000", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "1rem", padding: "1.75rem 2rem" }}
         >
-          {/* Breadcrumb */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.68rem", color: "rgba(255,255,255,0.35)", marginBottom: "0.75rem" }}>
-            <button onClick={() => navigate("/orehackproject1924")} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontSize: "0.68rem", padding: 0 }}>Dashboard</button>
+          {/* Breadcrumb - Font 1 size +3 */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontFamily: "'Outfit', sans-serif", fontWeight: 600, letterSpacing: "-0.05em", fontSize: "1.2rem", color: "rgba(255,255,255,0.35)", marginBottom: "0.75rem" }}>
+            <button onClick={() => navigate("/orehackproject1924")} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontFamily: "inherit", fontSize: "inherit", padding: 0, transition: "color 0.2s" }}>
+              Dashboard
+            </button>
             <span>/</span>
-            <button onClick={() => navigate("/orehackproject1924/panel")} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontSize: "0.68rem", padding: 0 }}>Stages</button>
+            <button onClick={() => navigate("/orehackproject1924/panel")} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontFamily: "inherit", fontSize: "inherit", padding: 0, transition: "color 0.2s" }}>
+              Stages
+            </button>
             <span>/</span>
-            <span style={{ color: "#6ee7b7", fontWeight: 600 }}>Stage 1 — Pre-Event Setup</span>
+            <span style={{ color: "#a78bfa" }}>Stage 1 — Pre-Event Setup</span>
           </div>
 
-          <p style={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#6ee7b7", marginBottom: "0.3rem" }}>Stage 1</p>
-          <h1 style={{ fontSize: "2rem", fontWeight: 900, letterSpacing: "-0.02em", margin: "0 0 0.35rem" }}>Pre-Event Setup</h1>
-          <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.38)", margin: "0 0 1.25rem" }}>Configure the event start time and control the public countdown timer.</p>
+          <p style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 400, fontSize: "1.1rem", color: "#ffffff", marginBottom: "0.35rem" }}>Stage 1</p>
+          <h1 style={{ fontFamily: "'Instrument Serif', serif", fontStyle: "italic", fontWeight: 500, fontSize: "2.6rem", margin: "0 0 0.4rem", color: "#7c3aed" }}>Pre-Event Setup</h1>
+          <p style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 400, fontSize: "1.05rem", color: "rgba(255,255,255,0.38)", margin: "0 0 1.25rem" }}>Configure the event start time and control the public countdown timer.</p>
 
           <button
             onClick={() => navigate("/orehackproject1924/panel")}
-            style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "0.5rem", padding: "0.4rem 1rem", color: "rgba(255,255,255,0.6)", fontSize: "0.75rem", cursor: "pointer" }}
+            style={{ fontFamily: "'Playfair Display', serif", background: "#ffffff", border: "1px solid #ffffff", borderRadius: "0.5rem", padding: "0.6rem 1.1rem", color: "#000000", fontSize: "0.95rem", cursor: "pointer", transition: "all 0.2s ease" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#e5e5e5"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#ffffff"; }}
           >
             ← Back to Stages
           </button>
@@ -164,22 +170,22 @@ const OriginStage1 = () => {
             gap: "1rem",
             padding: "1rem 1.5rem",
             borderRadius: "0.85rem",
-            border: `1px solid ${isLive ? "rgba(74,222,128,0.3)" : "rgba(251,191,36,0.25)"}`,
-            background: isLive ? "rgba(74,222,128,0.07)" : "rgba(251,191,36,0.07)",
+            border: "1px solid rgba(255,255,255,0.15)",
+            background: "#000000",
           }}
         >
           <div style={{
             width: 10, height: 10, borderRadius: "50%",
-            background: isLive ? "#4ade80" : "#fbbf24",
-            boxShadow: isLive ? "0 0 12px rgba(74,222,128,0.8)" : "0 0 12px rgba(251,191,36,0.7)",
+            background: "#ffffff",
+            boxShadow: "0 0 12px rgba(255,255,255,0.5)",
             animation: "pulse 1.8s ease-in-out infinite",
             flexShrink: 0,
           }} />
           <div>
-            <p style={{ fontSize: "0.8rem", fontWeight: 700, color: isLive ? "#4ade80" : "#fbbf24", margin: "0 0 0.1rem" }}>
-              {!state.timerEnabled ? "TIMER DISABLED — Event Always Live" : isLive ? "EVENT IS LIVE" : "COUNTDOWN ACTIVE"}
+            <p style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.2rem", color: "#ffffff", margin: "0 0 0.1rem" }}>
+              {!state.timerEnabled ? "Timer Disabled — Event Always Live" : isLive ? "Event is LIVE" : "Countdown Active"}
             </p>
-            <p style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.4)", margin: 0 }}>
+            <p style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 400, fontSize: "0.85rem", color: "rgba(255,255,255,0.6)", margin: 0 }}>
               {state.timerEnabled
                 ? isLive
                   ? `Started at ${formatAbsolute(state.eventStartTime)}`
@@ -197,9 +203,9 @@ const OriginStage1 = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.12 }}
-            style={{ background: "rgba(15,18,30,0.7)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "1.1rem", padding: "2rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "1.5rem" }}
+            style={{ background: "#000000", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "1.1rem", padding: "2rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "1.5rem" }}
           >
-            <p style={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", margin: 0, alignSelf: "flex-start" }}>Live Countdown</p>
+            <p style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 600, letterSpacing: "-0.05em", fontSize: "1.2rem", color: "#7c3aed", margin: 0, alignSelf: "flex-start", textTransform: "uppercase" }}>Live Countdown</p>
 
             {/* Ring */}
             <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -208,7 +214,7 @@ const OriginStage1 = () => {
                 {!state.timerEnabled ? (
                   <span style={{ fontSize: "2rem" }}>∞</span>
                 ) : (
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "1.1rem", fontWeight: 700, color: "#f1f5f9", letterSpacing: "0.06em" }}>
+                  <span style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 600, letterSpacing: "-0.05em", fontSize: "1.5rem", color: "#ffffff" }}>
                     {msRemaining <= 0 ? "LIVE" : formatCountdown(msRemaining)}
                   </span>
                 )}
@@ -217,8 +223,8 @@ const OriginStage1 = () => {
 
             {/* Absolute time display */}
             <div style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.65rem", padding: "0.85rem 1rem", textAlign: "center" }}>
-              <p style={{ fontSize: "0.6rem", letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", margin: "0 0 0.3rem" }}>Scheduled Start</p>
-              <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "0.85rem", color: state.timerEnabled ? "#c4b5fd" : "rgba(255,255,255,0.25)", margin: 0, textDecoration: state.timerEnabled ? "none" : "line-through" }}>
+              <p style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 400, fontSize: "0.85rem", color: "rgba(255,255,255,0.6)", margin: "0 0 0.3rem" }}>Scheduled Start</p>
+              <p style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 400, fontSize: "0.95rem", color: state.timerEnabled ? "#a78bfa" : "rgba(255,255,255,0.25)", margin: 0, textDecoration: state.timerEnabled ? "none" : "line-through" }}>
                 {formatAbsolute(state.eventStartTime)}
               </p>
             </div>
@@ -233,8 +239,8 @@ const OriginStage1 = () => {
           >
 
             {/* Set start time */}
-            <div style={{ background: "rgba(15,18,30,0.7)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "1.1rem", padding: "1.5rem" }}>
-              <p style={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", margin: "0 0 0.9rem" }}>Set Event Start Time</p>
+            <div style={{ background: "#000000", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "1.1rem", padding: "1.5rem" }}>
+              <p style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 600, letterSpacing: "-0.05em", fontSize: "1.1rem", color: "#7c3aed", margin: "0 0 0.9rem" }}>Set Event Start Time</p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                 <input
@@ -249,6 +255,7 @@ const OriginStage1 = () => {
                     borderRadius: "0.6rem",
                     padding: "0.65rem 0.9rem",
                     color: state.timerEnabled ? "#f1f5f9" : "rgba(255,255,255,0.25)",
+                    fontFamily: "'Outfit', sans-serif",
                     fontSize: "0.875rem",
                     outline: "none",
                     colorScheme: "dark",
@@ -263,19 +270,18 @@ const OriginStage1 = () => {
                     disabled={!state.timerEnabled}
                     style={{
                       flex: 1,
-                      background: state.timerEnabled
-                        ? "linear-gradient(135deg, #7c3aed, #a855f7)"
-                        : "rgba(255,255,255,0.06)",
-                      border: "none",
+                      fontFamily: "'Playfair Display', serif",
+                      background: state.timerEnabled ? "#ffffff" : "rgba(255,255,255,0.06)",
+                      border: "1px solid #ffffff",
                       borderRadius: "0.6rem",
                       padding: "0.65rem",
-                      color: state.timerEnabled ? "#fff" : "rgba(255,255,255,0.25)",
-                      fontWeight: 700,
-                      fontSize: "0.82rem",
+                      color: state.timerEnabled ? "#000000" : "rgba(255,255,255,0.25)",
+                      fontSize: "0.95rem",
                       cursor: state.timerEnabled ? "pointer" : "not-allowed",
                       transition: "all 0.2s ease",
-                      boxShadow: state.timerEnabled ? "0 4px 18px rgba(124,58,237,0.3)" : "none",
                     }}
+                    onMouseEnter={e => { if (state.timerEnabled) (e.currentTarget as HTMLButtonElement).style.background = "#e5e5e5"; }}
+                    onMouseLeave={e => { if (state.timerEnabled) (e.currentTarget as HTMLButtonElement).style.background = "#ffffff"; }}
                   >
                     {saved ? "✓ Saved!" : "Apply Start Time"}
                   </button>
@@ -289,15 +295,19 @@ const OriginStage1 = () => {
                     disabled={!state.timerEnabled}
                     title="+1 hour from now"
                     style={{
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.1)",
+                      fontFamily: "'Outfit', sans-serif",
+                      background: state.timerEnabled ? "#ffffff" : "rgba(255,255,255,0.06)",
+                      border: "1px solid #ffffff",
                       borderRadius: "0.6rem",
                       padding: "0.65rem 0.9rem",
-                      color: state.timerEnabled ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.2)",
-                      fontSize: "0.75rem",
+                      color: state.timerEnabled ? "#000000" : "rgba(255,255,255,0.25)",
+                      fontSize: "0.95rem",
                       cursor: state.timerEnabled ? "pointer" : "not-allowed",
                       whiteSpace: "nowrap",
+                      transition: "all 0.2s ease",
                     }}
+                    onMouseEnter={e => { if (state.timerEnabled) (e.currentTarget as HTMLButtonElement).style.background = "#e5e5e5"; }}
+                    onMouseLeave={e => { if (state.timerEnabled) (e.currentTarget as HTMLButtonElement).style.background = "#ffffff"; }}
                   >
                     +1h
                   </button>
@@ -309,15 +319,19 @@ const OriginStage1 = () => {
                     disabled={!state.timerEnabled}
                     title="+30 minutes from now"
                     style={{
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.1)",
+                      fontFamily: "'Outfit', sans-serif",
+                      background: state.timerEnabled ? "#ffffff" : "rgba(255,255,255,0.06)",
+                      border: "1px solid #ffffff",
                       borderRadius: "0.6rem",
                       padding: "0.65rem 0.9rem",
-                      color: state.timerEnabled ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.2)",
-                      fontSize: "0.75rem",
+                      color: state.timerEnabled ? "#000000" : "rgba(255,255,255,0.25)",
+                      fontSize: "0.95rem",
                       cursor: state.timerEnabled ? "pointer" : "not-allowed",
                       whiteSpace: "nowrap",
+                      transition: "all 0.2s ease",
                     }}
+                    onMouseEnter={e => { if (state.timerEnabled) (e.currentTarget as HTMLButtonElement).style.background = "#e5e5e5"; }}
+                    onMouseLeave={e => { if (state.timerEnabled) (e.currentTarget as HTMLButtonElement).style.background = "#ffffff"; }}
                   >
                     +30m
                   </button>
@@ -325,7 +339,7 @@ const OriginStage1 = () => {
               </div>
 
               {!state.timerEnabled && (
-                <p style={{ fontSize: "0.72rem", color: "#fbbf24", marginTop: "0.65rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: "0.85rem", color: "#a78bfa", marginTop: "0.65rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
                   </svg>
@@ -336,13 +350,13 @@ const OriginStage1 = () => {
 
             {/* Timer toggle */}
             <div style={{
-              background: "rgba(15,18,30,0.7)",
-              border: state.timerEnabled ? "1px solid rgba(255,255,255,0.07)" : "1px solid rgba(251,191,36,0.25)",
+              background: "#000000",
+              border: "1px solid rgba(255,255,255,0.07)",
               borderRadius: "1.1rem",
               padding: "1.5rem",
             }}>
-              <p style={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", margin: "0 0 0.5rem" }}>Timer Control</p>
-              <p style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.45)", margin: "0 0 1.1rem", lineHeight: 1.6 }}>
+              <p style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 600, letterSpacing: "-0.05em", fontSize: "1.1rem", color: "#7c3aed", margin: "0 0 0.5rem" }}>Timer Control</p>
+              <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: "0.85rem", color: "rgba(255,255,255,0.45)", margin: "0 0 1.1rem", lineHeight: 1.6 }}>
                 {state.timerEnabled
                   ? "Timer is ON — public landing page shows the countdown and locks login until start time."
                   : "Timer is OFF — the countdown is hidden and login is always accessible regardless of time."}
@@ -357,14 +371,16 @@ const OriginStage1 = () => {
                   justifyContent: "space-between",
                   padding: "0.9rem 1.2rem",
                   borderRadius: "0.75rem",
-                  border: state.timerEnabled ? "1px solid rgba(251,191,36,0.3)" : "1px solid rgba(74,222,128,0.35)",
-                  background: state.timerEnabled ? "rgba(251,191,36,0.08)" : "rgba(74,222,128,0.08)",
-                  color: state.timerEnabled ? "#fbbf24" : "#4ade80",
+                  border: "1px solid #ffffff",
+                  background: "#ffffff",
+                  color: "#000000",
+                  fontFamily: "'Playfair Display', serif",
                   cursor: "pointer",
-                  fontSize: "0.85rem",
-                  fontWeight: 700,
+                  fontSize: "1rem",
                   transition: "all 0.25s ease",
                 }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#e5e5e5"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#ffffff"; }}
               >
                 <span style={{ display: "flex", alignItems: "center", gap: "0.55rem" }}>
                   {state.timerEnabled ? (
@@ -376,7 +392,7 @@ const OriginStage1 = () => {
                       <path d="M18.36 6.64a9 9 0 1 1-12.73 0" /><line x1="12" y1="2" x2="12" y2="12" />
                     </svg>
                   )}
-                  {state.timerEnabled ? "Disable Timer (Go Live Immediately)" : "Enable Timer (Restore Countdown)"}
+                  {state.timerEnabled ? "Disable Timer (Go Live)" : "Enable Timer"}
                 </span>
 
                 {/* Toggle pill */}
@@ -384,14 +400,14 @@ const OriginStage1 = () => {
                   display: "inline-flex",
                   width: 40, height: 22,
                   borderRadius: 11,
-                  background: state.timerEnabled ? "rgba(251,191,36,0.2)" : "rgba(74,222,128,0.25)",
-                  border: state.timerEnabled ? "1px solid rgba(251,191,36,0.4)" : "1px solid rgba(74,222,128,0.4)",
+                  background: state.timerEnabled ? "rgba(0,0,0,0.8)" : "rgba(0,0,0,0.1)",
+                  border: "1px solid #000000",
                   padding: 2,
                   alignItems: "center",
                   transition: "background 0.3s",
                   justifyContent: state.timerEnabled ? "flex-end" : "flex-start",
                 }}>
-                  <span style={{ width: 16, height: 16, borderRadius: "50%", background: state.timerEnabled ? "#fbbf24" : "#4ade80", transition: "background 0.3s", boxShadow: "0 0 6px rgba(0,0,0,0.3)" }} />
+                  <span style={{ width: 16, height: 16, borderRadius: "50%", background: state.timerEnabled ? "#a78bfa" : "#ffffff", transition: "background 0.3s", boxShadow: "0 0 6px rgba(0,0,0,0.3)" }} />
                 </span>
               </button>
             </div>
@@ -408,33 +424,37 @@ const OriginStage1 = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setConfirmDisable(false)}
-                style={{ position: "absolute", inset: 0, background: "rgba(8,11,20,0.85)", backdropFilter: "blur(8px)" }}
+                style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)" }}
               />
               <motion.div
                 initial={{ opacity: 0, scale: 0.88, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.92, y: 10 }}
-                style={{ position: "relative", zIndex: 1, background: "rgba(15,18,30,0.95)", border: "1px solid rgba(251,191,36,0.25)", borderRadius: "1.25rem", padding: "2rem", maxWidth: 420, width: "100%", textAlign: "center" }}
+                style={{ position: "relative", zIndex: 1, background: "#000000", border: "1px solid rgba(255,255,255,0.25)", borderRadius: "1.25rem", padding: "2rem", maxWidth: 420, width: "100%", textAlign: "center" }}
               >
-                <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1rem" }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <div style={{ width: 52, height: 52, borderRadius: "50%", background: "transparent", border: "1px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1rem" }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
                   </svg>
                 </div>
-                <h3 style={{ fontSize: "1.1rem", fontWeight: 800, margin: "0 0 0.5rem" }}>Disable the Timer?</h3>
-                <p style={{ fontSize: "0.82rem", color: "rgba(255,255,255,0.5)", margin: "0 0 1.5rem", lineHeight: 1.6 }}>
-                  This will immediately set the event as <strong style={{ color: "#4ade80" }}>live</strong> for all users — the countdown will disappear and the login portal will open.
+                <h3 style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.6rem", color: "#ffffff", margin: "0 0 0.5rem" }}>Disable the Timer?</h3>
+                <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: "0.85rem", color: "rgba(255,255,255,0.5)", margin: "0 0 1.5rem", lineHeight: 1.6 }}>
+                  This will immediately set the event as <strong style={{ color: "#a78bfa" }}>live</strong> for all users — the countdown will disappear and the login portal will open.
                 </p>
                 <div style={{ display: "flex", gap: "0.75rem" }}>
                   <button
                     onClick={() => setConfirmDisable(false)}
-                    style={{ flex: 1, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.65rem", padding: "0.65rem", color: "rgba(255,255,255,0.7)", fontWeight: 600, fontSize: "0.82rem", cursor: "pointer" }}
+                    style={{ flex: 1, fontFamily: "'Playfair Display', serif", background: "transparent", border: "1px solid #ffffff", borderRadius: "0.65rem", padding: "0.65rem", color: "#ffffff", fontSize: "0.95rem", cursor: "pointer", transition: "all 0.2s" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.1)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
                   >
                     Cancel
                   </button>
                   <button
                     onClick={confirmDisableTimer}
-                    style={{ flex: 1, background: "linear-gradient(135deg, #d97706, #f59e0b)", border: "none", borderRadius: "0.65rem", padding: "0.65rem", color: "#1c1917", fontWeight: 800, fontSize: "0.82rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(245,158,11,0.3)" }}
+                    style={{ flex: 1, fontFamily: "'Playfair Display', serif", background: "#ffffff", border: "1px solid #ffffff", borderRadius: "0.65rem", padding: "0.65rem", color: "#000000", fontSize: "0.95rem", cursor: "pointer", transition: "all 0.2s" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#e5e5e5"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#ffffff"; }}
                   >
                     Yes, Go Live Now
                   </button>

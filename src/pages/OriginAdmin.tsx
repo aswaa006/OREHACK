@@ -11,6 +11,40 @@ import {
 import { getAdminToken, loginAdmin, setAdminToken } from "@/lib/backend-api";
 import { uploadHackathonBanner } from "@/lib/storage";
 
+/* ─── Animated title (like Ideation word loop) ────────────── */
+const AnimatedAdminTitle = () => {
+  const text = "Admin Dashboard";
+  return (
+    <motion.h1
+      style={{
+        fontFamily: "'Instrument Serif', serif",
+        fontStyle: "italic",
+        fontWeight: 500,
+        fontSize: "clamp(1.6rem, 3vw, 2.4rem)",
+        color: "#7c3aed",
+        margin: "0 0 0.35rem",
+        letterSpacing: "-0.01em",
+        display: "flex",
+        flexWrap: "wrap",
+        gap: "0.05em",
+      }}
+    >
+      {text.split("").map((char, i) => (
+        <motion.span
+          key={i}
+          initial={{ opacity: 0, filter: "blur(8px)", y: -12 }}
+          animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+          transition={{ delay: 0.3 + i * 0.04, duration: 0.5, ease: "easeOut" }}
+          style={{ display: "inline-block", whiteSpace: char === " " ? "pre" : "normal" }}
+        >
+          {char}
+        </motion.span>
+      ))}
+    </motion.h1>
+  );
+};
+
+
 /* ─── Auth constants ─────────────────────────────────────── */
 const ADMIN_SESSION_KEY = "orehack_origin_admin_auth";
 
@@ -65,10 +99,11 @@ const INITIAL_EVENTS: HackathonCard[] = [
 ];
 
 /* ─── Status badge colours ───────────────────────────────── */
+/* LIVE = dark purple pill; UPCOMING/COMPLETED = light neon purple */
 const STATUS_STYLE: Record<HackathonStatus, { bg: string; text: string; label: string }> = {
-  Live:      { bg: "rgba(34,197,94,0.18)",  text: "#4ade80", label: "LIVE"      },
-  Upcoming:  { bg: "rgba(99,102,241,0.18)", text: "#818cf8", label: "UPCOMING"  },
-  Completed: { bg: "rgba(251,191,36,0.15)", text: "#fbbf24", label: "COMPLETED" },
+  Live:      { bg: "rgba(88,28,135,0.75)",   text: "#e9d5ff", label: "LIVE"      },
+  Upcoming:  { bg: "rgba(167,139,250,0.15)", text: "#c4b5fd", label: "UPCOMING"  },
+  Completed: { bg: "rgba(167,139,250,0.15)", text: "#c4b5fd", label: "COMPLETED" },
 };
 
 /* ─── Control-panel CTA ──────────────────────────────────── */
@@ -83,22 +118,23 @@ const ControlPanelBtn = ({ onClick }: { onClick: () => void }) => (
       justifyContent: "center",
       gap: "0.4rem",
       padding: "0.55rem 1rem",
-      border: "1px solid rgba(139,92,246,0.5)",
+      border: "1px solid #ffffff",
       borderRadius: "0.5rem",
-      background: "rgba(139,92,246,0.08)",
-      color: "#a78bfa",
-      fontSize: "0.78rem",
+      /* Font 1: Outfit semi-bold, black bg, white text */
+      fontFamily: "'Outfit', sans-serif",
       fontWeight: 600,
+      letterSpacing: "-0.05em",
+      fontSize: "0.96rem",
+      background: "#000000",
+      color: "#ffffff",
       cursor: "pointer",
       transition: "all 0.25s ease",
     }}
     onMouseEnter={(e) => {
-      (e.currentTarget as HTMLButtonElement).style.background = "rgba(139,92,246,0.22)";
-      (e.currentTarget as HTMLButtonElement).style.color = "#c4b5fd";
+      (e.currentTarget as HTMLButtonElement).style.background = "#1a1a1a";
     }}
     onMouseLeave={(e) => {
-      (e.currentTarget as HTMLButtonElement).style.background = "rgba(139,92,246,0.08)";
-      (e.currentTarget as HTMLButtonElement).style.color = "#a78bfa";
+      (e.currentTarget as HTMLButtonElement).style.background = "#000000";
     }}
   >
     Enter Control Panel
@@ -129,7 +165,7 @@ const EventCard = ({
         position: "relative",
         borderRadius: "0.85rem",
         border: "1px solid rgba(255,255,255,0.08)",
-        background: "rgba(15,18,30,0.85)",
+        background: "rgba(15,15,15,0.85)",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
@@ -153,16 +189,26 @@ const EventCard = ({
         />
       )}
       {/* Dark overlay */}
-      <div aria-hidden style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(8,10,20,0.55) 0%, rgba(8,10,20,0.85) 100%)" }} />
+      <div aria-hidden style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.85) 100%)" }} />
 
       {/* Card content */}
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", height: "100%", gap: "0.55rem" }}>
         {/* Top row: name + X */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "0.5rem" }}>
-          <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "#f1f5f9", lineHeight: 1.3, flex: 1 }}>{event.name}</span>
+          {/* Font 1: Outfit semi-bold, uppercase, size +1 */}
+          <span style={{
+            fontFamily: "'Outfit', sans-serif",
+            fontWeight: 600,
+            letterSpacing: "-0.04em",
+            fontSize: "1.05rem",
+            color: "#f1f5f9",
+            lineHeight: 1.3,
+            flex: 1,
+            textTransform: "uppercase",
+          }}>{event.name}</span>
           <button
             onClick={onRemove}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.35)", padding: "0 0 0 4px", lineHeight: 1, fontSize: "1rem", flexShrink: 0 }}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "#ffffff", padding: "0 0 0 4px", lineHeight: 1, fontSize: "1rem", flexShrink: 0 }}
             aria-label="Remove event"
           >
             ✕
@@ -178,12 +224,40 @@ const EventCard = ({
 
         {/* Stats */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)" }}>Participants:</span>
-          <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>{event.participants.toLocaleString()}</span>
+          {/* Font 2: Instrument Serif italic — label white */}
+          <span style={{
+            fontFamily: "'Instrument Serif', serif",
+            fontStyle: "italic",
+            fontWeight: 500,
+            fontSize: "1.14rem",
+            color: "#ffffff",
+          }}>Participants</span>
+          {/* Font 2: Instrument Serif italic — value neon purple */}
+          <span style={{
+            fontFamily: "'Instrument Serif', serif",
+            fontStyle: "italic",
+            fontWeight: 500,
+            fontSize: "1.18rem",
+            color: "#7c3aed",
+          }}>{event.participants.toLocaleString()}</span>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)" }}>Deadline:</span>
-          <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>{event.deadline}</span>
+          {/* Font 2: Instrument Serif italic — label white */}
+          <span style={{
+            fontFamily: "'Instrument Serif', serif",
+            fontStyle: "italic",
+            fontWeight: 500,
+            fontSize: "1.14rem",
+            color: "#ffffff",
+          }}>Deadline</span>
+          {/* Font 2: Instrument Serif italic — value neon purple */}
+          <span style={{
+            fontFamily: "'Instrument Serif', serif",
+            fontStyle: "italic",
+            fontWeight: 500,
+            fontSize: "1.18rem",
+            color: "#7c3aed",
+          }}>{event.deadline}</span>
         </div>
 
         {/* CTA */}
@@ -246,8 +320,8 @@ const LoginScreen = ({ onLogin }: { onLogin: () => void }) => {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#080b14", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
-      <form onSubmit={submit} autoComplete="off" style={{ width: "100%", maxWidth: 420, background: "rgba(15,18,30,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "1.2rem", padding: "2.5rem" }}>
+    <div style={{ minHeight: "100vh", background: "#000000", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
+      <form onSubmit={submit} autoComplete="off" style={{ width: "100%", maxWidth: 420, background: "rgba(15,15,15,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "1.2rem", padding: "2.5rem" }}>
         <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#a78bfa", marginBottom: "0.5rem" }}>Oregent Admin</p>
         <h1 style={{ fontSize: "1.8rem", fontWeight: 900, color: "#f1f5f9", marginBottom: "0.4rem" }}>Admin Dashboard</h1>
         <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.4)", marginBottom: "1.5rem" }}>Sign in to access the admin panel.</p>
@@ -379,7 +453,7 @@ const OriginAdmin = () => {
 
   if (authChecking) {
     return (
-      <div style={{ minHeight: "100vh", background: "#080b14", display: "flex", alignItems: "center", justifyContent: "center", color: "#f1f5f9" }}>
+      <div style={{ minHeight: "100vh", background: "#000000", display: "flex", alignItems: "center", justifyContent: "center", color: "#f1f5f9" }}>
         Verifying admin access...
       </div>
     );
@@ -389,20 +463,21 @@ const OriginAdmin = () => {
     return <LoginScreen onLogin={() => setIsAuthenticated(true)} />;
   }
 
-  /* ── shared input style ── */
+  /* ── shared input style — Font 5 Playfair Display, white text ── */
   const iStyle: React.CSSProperties = {
     background: "rgba(255,255,255,0.04)",
     border: "1px solid rgba(255,255,255,0.1)",
     borderRadius: "0.55rem",
     padding: "0.6rem 0.9rem",
-    color: "#f1f5f9",
+    color: "#ffffff",
+    fontFamily: "'Playfair Display', serif",
     fontSize: "0.82rem",
     outline: "none",
     width: "100%",
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#080b14", color: "#f1f5f9", fontFamily: "'Inter', system-ui, sans-serif", padding: "2.5rem 2rem" }}>
+    <div style={{ minHeight: "100vh", background: "#000000", color: "#f1f5f9", fontFamily: "'Inter', 'Outfit', sans-serif", padding: "2.5rem 2rem" }}>
       <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", flexDirection: "column", gap: "2rem" }}>
 
         {/* ── Header ── */}
@@ -413,7 +488,7 @@ const OriginAdmin = () => {
             display: "flex",
             alignItems: "flex-start",
             justifyContent: "space-between",
-            background: "rgba(15,18,30,0.7)",
+            background: "rgba(15,15,15,0.7)",
             border: "1px solid rgba(255,255,255,0.07)",
             borderRadius: "1rem",
             padding: "1.6rem 2rem",
@@ -421,15 +496,53 @@ const OriginAdmin = () => {
           }}
         >
           <div>
-            <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#a78bfa", marginBottom: "0.35rem" }}>Oregent Admin</p>
-            <h1 style={{ fontSize: "2rem", fontWeight: 900, letterSpacing: "-0.02em", margin: "0 0 0.35rem" }}>Admin Dashboard</h1>
-            <p style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.38)", margin: 0 }}>Select a hackathon to manage its details and submissions.</p>
+            {/* Oregent logo + Font 1 label, size +2 */}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.55rem", marginBottom: "0.35rem" }}>
+              <img
+                src="/oregent-logo.png"
+                alt="Oregent"
+                style={{ height: "1.35rem", width: "auto", objectFit: "contain" }}
+              />
+              <p style={{
+                fontFamily: "'Outfit', sans-serif",
+                fontWeight: 600,
+                letterSpacing: "-0.05em",
+                fontSize: "1.05rem",
+                textTransform: "uppercase",
+                color: "#ffffff",
+                margin: 0,
+              }}>Oregent Admin</p>
+            </div>
+            {/* Font 2: Instrument Serif italic — animated blur effect, neon purple */}
+            <AnimatedAdminTitle />
+            {/* Font 3: Outfit regular, size +2 */}
+            <p style={{
+              fontFamily: "'Outfit', sans-serif",
+              fontWeight: 400,
+              fontSize: "0.96rem",
+              color: "rgba(255,255,255,0.38)",
+              margin: 0,
+            }}>Select a hackathon to manage its details and submissions.</p>
           </div>
           <button
             onClick={logout}
-            style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "0.5rem", padding: "0.4rem 1.1rem", color: "rgba(255,255,255,0.7)", fontSize: "0.8rem", cursor: "pointer", transition: "all 0.2s ease", whiteSpace: "nowrap", marginTop: "0.25rem" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.3)"; (e.currentTarget as HTMLButtonElement).style.color = "#fff"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)"; (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.7)"; }}
+            style={{
+              background: "#ffffff",
+              border: "1px solid #ffffff",
+              borderRadius: "0.5rem",
+              padding: "0.4rem 1.1rem",
+              color: "#000000",
+              fontFamily: "'Outfit', sans-serif",
+              fontWeight: 600,
+              letterSpacing: "-0.05em",
+              fontSize: "0.85rem",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+              whiteSpace: "nowrap",
+              marginTop: "0.25rem",
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#e5e5e5"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#ffffff"; }}
           >
             Logout
           </button>
@@ -437,8 +550,23 @@ const OriginAdmin = () => {
 
         {/* ── Managed Events section ── */}
         <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <p style={{ fontSize: "0.95rem", fontWeight: 700, marginBottom: "0.2rem" }}>Managed Events</p>
-          <p style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.35)", marginBottom: "1.1rem" }}>Events displayed on the main landing page.</p>
+          {/* Font 1: Outfit semi-bold, size +3 */}
+          <p style={{
+            fontFamily: "'Outfit', sans-serif",
+            fontWeight: 600,
+            letterSpacing: "-0.05em",
+            fontSize: "1.25rem",
+            marginBottom: "0.2rem",
+            color: "#ffffff",
+          }}>Managed Events</p>
+          {/* Font 3: Outfit regular, size +2 */}
+          <p style={{
+            fontFamily: "'Outfit', sans-serif",
+            fontWeight: 400,
+            fontSize: "0.90rem",
+            color: "rgba(255,255,255,0.35)",
+            marginBottom: "1.1rem",
+          }}>Events displayed on the main landing page.</p>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem" }}>
             <AnimatePresence>
@@ -455,7 +583,15 @@ const OriginAdmin = () => {
 
         {/* ── Add Next Event ─────────────────────────────── */}
         <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <p style={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: "0.85rem" }}>Add Next Event</p>
+          {/* Font 1: Outfit semi-bold */}
+          <p style={{
+            fontFamily: "'Outfit', sans-serif",
+            fontWeight: 600,
+            letterSpacing: "-0.05em",
+            fontSize: "1.25rem",
+            color: "#ffffff",
+            marginBottom: "0.85rem",
+          }}>Add next event</p>
 
           {/* Form row */}
           <div style={{
@@ -463,7 +599,7 @@ const OriginAdmin = () => {
             gridTemplateColumns: "2fr 1fr 0.7fr 1.5fr 1.2fr",
             gap: "0.65rem",
             alignItems: "center",
-            background: "rgba(15,18,30,0.6)",
+            background: "rgba(15,15,15,0.6)",
             border: "1px solid rgba(255,255,255,0.07)",
             borderRadius: "0.85rem",
             padding: "1rem 1.1rem",
@@ -524,10 +660,10 @@ const OriginAdmin = () => {
               onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.18)"}
             >
               <div style={{ minWidth: 0 }}>
-                <p style={{ fontSize: "0.78rem", color: posterFileName ? "#c4b5fd" : "rgba(255,255,255,0.5)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <p style={{ fontFamily: "'Playfair Display', serif", fontSize: "0.82rem", color: "#ffffff", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {posterFileName || "Upload Banner"}
                 </p>
-                <p style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.25)", margin: "1px 0 0" }}>Recommend 16:9 ratio</p>
+                <p style={{ fontFamily: "'Playfair Display', serif", fontSize: "0.78rem", color: "rgba(255,255,255,0.45)", margin: "2px 0 0" }}>Recommend 16:9 ratio</p>
               </div>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -538,7 +674,7 @@ const OriginAdmin = () => {
             </div>
           </div>
 
-          {/* Add Event Button */}
+          {/* Add Event Button — white bg, black text, Font 1 */}
           <button
             onClick={handleAddEvent}
             disabled={!newName.trim() || savingEvent}
@@ -547,25 +683,23 @@ const OriginAdmin = () => {
               display: "inline-flex",
               alignItems: "center",
               gap: "0.4rem",
-              background: "linear-gradient(135deg, #059669, #10b981)",
-              border: "none",
+              background: "#ffffff",
+              border: "1px solid #ffffff",
               borderRadius: "0.6rem",
               padding: "0.65rem 1.5rem",
-              color: "#fff",
-              fontWeight: 700,
+              color: "#000000",
+              fontFamily: "'Outfit', sans-serif",
+              fontWeight: 600,
+              letterSpacing: "-0.05em",
               fontSize: "0.85rem",
               cursor: "pointer",
               opacity: newName.trim() ? 1 : 0.45,
               transition: "all 0.2s ease",
-              boxShadow: "0 4px 18px rgba(16,185,129,0.28)",
             }}
-            onMouseEnter={e => { if (newName.trim()) (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 6px 24px rgba(16,185,129,0.45)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 18px rgba(16,185,129,0.28)"; }}
+            onMouseEnter={e => { if (newName.trim()) (e.currentTarget as HTMLButtonElement).style.background = "#e5e5e5"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#ffffff"; }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            {savingEvent ? "Saving..." : "+ Add Event"}
+            {savingEvent ? "Saving..." : "Add Event"}
           </button>
           {(uploadingPoster || formError) && (
             <p style={{ marginTop: "0.65rem", fontSize: "0.72rem", color: formError ? "#f87171" : "#a78bfa" }}>
