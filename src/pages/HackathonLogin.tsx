@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { supabase } from "@/lib/supabase";
-import { verifyTeamCredentials } from "@/lib/team-auth";
+import { loginTeam, setTeamToken } from "@/lib/backend-api";
 
 const HackathonLogin = () => {
   const { hackathonId } = useParams();
@@ -38,21 +37,7 @@ const HackathonLogin = () => {
     setLoading(true);
     setAuthState("checking");
 
-    const { data: hackathon, error: hackathonError } = await supabase
-      .from("hackathons")
-      .select("id, slug, name, status")
-      .eq("slug", hackathonId)
-      .maybeSingle();
-
-    if (hackathonError) {
-      setError(hackathonError.message || "Login failed. Please try again.");
-      setAuthState("idle");
-      setLoading(false);
-      setShakeTick((prev) => prev + 1);
-      return;
-    }
-
-    if (!hackathon) {
+    if (!hackathonId) {
       setError("Hackathon not found.");
       setAuthState("idle");
       setLoading(false);
@@ -60,45 +45,30 @@ const HackathonLogin = () => {
       return;
     }
 
-    const verification = await verifyTeamCredentials({
-      hackathonId: hackathon.id,
-      teamCode: normalizedTeamId,
-      teamName: normalizedTeamName,
-      password: normalizedPassword,
-    });
+    let resolvedTeamId = normalizedTeamId;
+    let resolvedTeamDbId: string | null = null;
+    let resolvedTeamName = normalizedTeamName;
 
-    if (!verification.valid) {
-      setError(verification.error || "Invalid Team ID, Team Name, or password.");
+    try {
+      const response = await loginTeam(
+        hackathonId,
+        normalizedTeamId,
+        normalizedTeamName,
+        normalizedPassword,
+      );
+      setTeamToken(response.token);
+      resolvedTeamId = response.team.teamId;
+      resolvedTeamDbId = response.team.id;
+      resolvedTeamName = response.team.teamName;
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : "Login failed. Please try again.");
       setAuthState("idle");
       setLoading(false);
       setShakeTick((prev) => prev + 1);
       return;
     }
 
-    const resolvedTeamId = verification.teamCode || normalizedTeamId;
-    const resolvedTeamDbId = verification.teamDbId;
-    const resolvedTeamName = verification.teamName || normalizedTeamName;
-
-    if (resolvedTeamDbId) {
-      await supabase
-        .from("submissions")
-        .upsert(
-          {
-            hackathon_id: hackathon.id,
-            team_id: resolvedTeamDbId,
-            teamID: resolvedTeamId,
-            TeamID: resolvedTeamId,
-            Team_Name: resolvedTeamName,
-            Progress: "queued",
-          },
-          { onConflict: "team_id" },
-        );
-    } else {
-      await supabase
-        .from("submissions")
-        .update({ Team_Name: resolvedTeamName })
-        .eq("teamID", resolvedTeamId);
-    }
+    // Login no longer mutates submissions in the new schema.
 
     await new Promise((r) => setTimeout(r, 700));
     setAuthState("granted");
@@ -107,7 +77,7 @@ const HackathonLogin = () => {
       "orehack_team_session",
       JSON.stringify({
         hackathonSlug: hackathonId,
-        hackathonDbId: hackathon.id,
+        hackathonDbId: null,
         teamId: resolvedTeamId,
         teamDbId: resolvedTeamDbId,
         teamName: resolvedTeamName,
@@ -119,7 +89,7 @@ const HackathonLogin = () => {
         teamId: resolvedTeamId,
         teamDbId: resolvedTeamDbId,
         teamName: resolvedTeamName,
-        hackathonDbId: hackathon.id,
+        hackathonDbId: null,
       },
     });
   };

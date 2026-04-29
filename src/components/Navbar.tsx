@@ -48,6 +48,10 @@ const Navbar = () => {
   /* ── Scroll-active section detection ── */
   useEffect(() => {
     const handleScroll = () => {
+      if (location.pathname !== "/") {
+        setActiveSection("");
+        return;
+      }
       const offsets = NAV_SECTIONS.map(({ id }) => {
         const el = document.getElementById(id);
         if (!el) return { id, top: Infinity };
@@ -60,7 +64,7 @@ const Navbar = () => {
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [location.pathname]);
 
   /* ── Hidden admin key sequence ── */
   useEffect(() => {
@@ -264,8 +268,8 @@ const Navbar = () => {
 
         {/* JOIN US CTA Button */}
         <button
-          className="group relative inline-flex items-center gap-2 px-5 py-1.5 rounded-full overflow-hidden transition-all duration-300 hover:scale-[1.05] hover:shadow-lg active:scale-[0.98]"
           onClick={() => handleNavClick("contact")}
+          className="group relative inline-flex items-center gap-2 px-5 py-1.5 rounded-full overflow-hidden transition-all duration-300 hover:scale-[1.05] hover:shadow-lg active:scale-[0.98]"
           style={{
             background: ctaBg,
             color: ctaText,

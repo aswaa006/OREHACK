@@ -32,6 +32,13 @@ export interface ProblemSelection {
   created_at: string;
 }
 
+const derivePhaseFromRuntime = (runtime: Awaited<ReturnType<typeof loadHackathonRuntime>>["runtime"]): Phase => {
+  if (!runtime) return "VIEW";
+  if (runtime.stage5_active || runtime.status === "completed") return "RESULT";
+  if (runtime.stage2_active || runtime.stage3_active || runtime.stage4_active) return "SELECT";
+  return "VIEW";
+};
+
 export interface UseControlStateReturn {
   /** Current phase driven by Supabase */
   phase: Phase;
@@ -105,7 +112,7 @@ export function useControlState(teamId: string, isActive: boolean): UseControlSt
 
       const { runtime, runtimeError, controlState, controlStateError } = await loadHackathonRuntime(hackathon.id);
       if (runtimeError && runtimeError.code !== "PGRST116") throw runtimeError;
-      if (controlStateError && controlStateError.code !== "PGRST116") throw controlStateError;
+      if (controlStateError && (controlStateError as { code?: string }).code !== "PGRST116") throw controlStateError;
 
       const [problemsRes, selectionsRes] = await Promise.all([
         loadHackathonProblems(hackathon.id),
@@ -119,20 +126,22 @@ export function useControlState(teamId: string, isActive: boolean): UseControlSt
         id: problem.id,
         title: problem.title,
         description: problem.description,
-        slots: Number(problem.slots || 1),
-        slots_taken: Number(problem.slots_taken || 0),
+        slots: Number(problem.slot_limit || 1),
+        slots_taken: Math.max(0, Number(problem.slot_limit || 1) - Number(problem.slots_remaining || 0)),
       }));
 
       const loadedSelections = (selectionsRes.data || []).map((selection) => ({
         problem_id: selection.problem_id,
         team_id: selection.team_id,
-        team_name: selection.team_name,
+        team_name: selection.team_id,
         created_at: selection.created_at,
       }));
 
-      const currentPhase = runtime?.phase || controlState?.phase || "VIEW";
-      const currentProblem = runtime?.current_problem_id || controlState?.current_problem_id || null;
-      const currentPhaseEnd = runtime?.phase_end_time || controlState?.phase_end_time || null;
+      const currentPhase = derivePhaseFromRuntime(runtime);
+      const currentProblem = currentPhase === "SELECT"
+        ? loadedProblems.find((problem) => problem.slots_taken < problem.slots)?.id ?? null
+        : null;
+      const currentPhaseEnd = runtime?.end_time ?? null;
 
       setPhase(currentPhase);
       setCurrentProblemId(currentProblem);
@@ -140,12 +149,13 @@ export function useControlState(teamId: string, isActive: boolean): UseControlSt
       setProblems(loadedProblems);
       setSelections(loadedSelections);
       setHasSelected(loadedSelections.some((selection) => selection.team_id === teamIdRef.current));
+      setAllocationComplete(currentPhase === "RESULT");
     } catch (e: unknown) {
       setError((e as Error).message ?? "Unknown error");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getEventSlug]);
 
   useEffect(() => {
     fetchAll();
@@ -153,67 +163,64 @@ export function useControlState(teamId: string, isActive: boolean): UseControlSt
 
   // ── Auto-transition for testing ──────────────────────────────────────────
   useEffect(() => {
-    if (problemsRef.current.length === 0) return;
+    if (problemsRef.current.length === 0 || !isActive) return;
 
     let mounted = true;
+    let timer: ReturnType<typeof setInterval> | null = null;
 
-    const runSimulation = async () => {
-      if (!isActive) return;
+    const pollRuntime = async () => {
+      const { data: hackathon } = await resolveHackathonBySlug(hackathonSlugRef.current);
+      if (!hackathon || !mounted) return;
 
-      const pollRuntime = async () => {
-        const { data: hackathon } = await resolveHackathonBySlug(hackathonSlugRef.current);
-        if (!hackathon || !mounted) return;
+      const { runtime } = await loadHackathonRuntime(hackathon.id);
+      if (!mounted) return;
 
-        const { runtime, controlState } = await loadHackathonRuntime(hackathon.id);
-        if (!mounted) return;
+      const nextPhase = derivePhaseFromRuntime(runtime);
+      setPhase(nextPhase);
+      setPhaseEndTime(runtime?.end_time ?? null);
 
-        const nextPhase = runtime?.phase || controlState?.phase || "VIEW";
-        setPhase(nextPhase);
-        setCurrentProblemId(runtime?.current_problem_id || controlState?.current_problem_id || null);
-        setPhaseEndTime(runtime?.phase_end_time || controlState?.phase_end_time || null);
+      const { data: latestProblems } = await loadHackathonProblems(hackathon.id);
+      if (!mounted) return;
+      if (latestProblems) {
+        const mappedProblems = latestProblems.map((problem) => ({
+          id: problem.id,
+          title: problem.title,
+          description: problem.description,
+          slots: Number(problem.slot_limit || 1),
+          slots_taken: Math.max(0, Number(problem.slot_limit || 1) - Number(problem.slots_remaining || 0)),
+        }));
+        setProblems(mappedProblems);
+        setCurrentProblemId(
+          nextPhase === "SELECT"
+            ? mappedProblems.find((problem) => problem.slots_taken < problem.slots)?.id ?? null
+            : null,
+        );
+      }
 
-        const { data: latestProblems } = await loadHackathonProblems(hackathon.id);
-        if (!mounted) return;
-        if (latestProblems) {
-          setProblems(latestProblems.map((problem) => ({
-            id: problem.id,
-            title: problem.title,
-            description: problem.description,
-            slots: Number(problem.slots || 1),
-            slots_taken: Number(problem.slots_taken || 0),
-          })));
-        }
+      const { data: latestSelections } = await loadHackathonSelections(hackathon.id);
+      if (!mounted) return;
+      if (latestSelections) {
+        const mappedSelections = latestSelections.map((selection) => ({
+          problem_id: selection.problem_id,
+          team_id: selection.team_id,
+          team_name: selection.team_id,
+          created_at: selection.created_at,
+        }));
+        setSelections(mappedSelections);
+        setHasSelected(mappedSelections.some((selection) => selection.team_id === teamIdRef.current));
+      }
 
-        const { data: latestSelections } = await loadHackathonSelections(hackathon.id);
-        if (!mounted) return;
-        if (latestSelections) {
-          setSelections(latestSelections.map((selection) => ({
-            problem_id: selection.problem_id,
-            team_id: selection.team_id,
-            team_name: selection.team_name,
-            created_at: selection.created_at,
-          })));
-          setHasSelected(latestSelections.some((selection) => selection.team_id === teamIdRef.current));
-        }
-
-        if (nextPhase === "VIEW" && runtime?.stage1_active === false) {
-          setAllocationComplete(false);
-        }
-      };
-
-      await pollRuntime();
-      const timer = setInterval(() => {
-        void pollRuntime();
-      }, 2500);
-
-      return () => clearInterval(timer);
+      setAllocationComplete(nextPhase === "RESULT");
     };
 
-    const cleanup = runSimulation();
+    void pollRuntime();
+    timer = setInterval(() => {
+      void pollRuntime();
+    }, 2500);
 
     return () => {
       mounted = false;
-      if (typeof cleanup === "function") cleanup();
+      if (timer) clearInterval(timer);
     };
   }, [problems.length, isActive]);
 
@@ -232,14 +239,7 @@ export function useControlState(teamId: string, isActive: boolean): UseControlSt
         .channel(`control_state_changes_${hackathon.id}`)
         .on(
           "postgres_changes",
-          { event: "*", schema: "public", table: "control_state" },
-          () => {
-            void fetchAll();
-          },
-        )
-        .on(
-          "postgres_changes",
-          { event: "*", schema: "public", table: "hackathon_runtime" },
+          { event: "*", schema: "public", table: "hackathons", filter: `id=eq.${hackathon.id}` },
           () => {
             void fetchAll();
           },
@@ -250,7 +250,7 @@ export function useControlState(teamId: string, isActive: boolean): UseControlSt
         .channel(`problems_changes_${hackathon.id}`)
         .on(
           "postgres_changes",
-          { event: "*", schema: "public", table: "problems" },
+          { event: "*", schema: "public", table: "problems", filter: `hackathon_slug=eq.${hackathon.slug}` },
           () => {
             void fetchAll();
           },
@@ -261,7 +261,7 @@ export function useControlState(teamId: string, isActive: boolean): UseControlSt
         .channel(`problem_selections_changes_${hackathon.id}`)
         .on(
           "postgres_changes",
-          { event: "*", schema: "public", table: "problem_selections" },
+          { event: "*", schema: "public", table: "problem_selections", filter: `hackathon_slug=eq.${hackathon.slug}` },
           () => {
             void fetchAll();
           },
@@ -289,26 +289,26 @@ export function useControlState(teamId: string, isActive: boolean): UseControlSt
 
         const { data: problem } = await supabase
           .from("problems")
-          .select("id, slots, slots_taken")
-          .eq("hackathon_id", hackathon.id)
+          .select("id, slot_limit, slots_remaining")
+          .eq("hackathon_slug", hackathon.slug)
           .eq("id", problemId)
-          .maybeSingle<{ id: string; slots: number; slots_taken: number }>();
+          .maybeSingle<{ id: string; slot_limit: number; slots_remaining: number }>();
 
         if (!problem) {
           return { success: false, error: "Problem not found." };
         }
 
-        if (problem.slots_taken >= problem.slots) {
+        if (problem.slots_remaining <= 0) {
           return { success: false, error: "This problem is already full." };
         }
 
-        // Reserve a slot first using optimistic concurrency on slots_taken.
+        // Reserve a slot first using optimistic concurrency on slots_remaining.
         const { data: reservedRows, error: reserveError } = await supabase
           .from("problems")
-          .update({ slots_taken: problem.slots_taken + 1 })
-          .eq("hackathon_id", hackathon.id)
+          .update({ slots_remaining: problem.slots_remaining - 1 })
+          .eq("hackathon_slug", hackathon.slug)
           .eq("id", problemId)
-          .eq("slots_taken", problem.slots_taken)
+          .eq("slots_remaining", problem.slots_remaining)
           .select("id")
           .limit(1);
 
@@ -321,20 +321,19 @@ export function useControlState(teamId: string, isActive: boolean): UseControlSt
         }
 
         const { error: selectionError } = await supabase.from("problem_selections").insert({
-          hackathon_id: hackathon.id,
+          hackathon_slug: hackathon.slug,
           problem_id: problemId,
           team_id: tid,
-          team_name: `Team ${tid}`,
         });
 
         if (selectionError) {
           // Best-effort rollback if selection insert fails after reservation.
           await supabase
             .from("problems")
-            .update({ slots_taken: problem.slots_taken })
-            .eq("hackathon_id", hackathon.id)
+            .update({ slots_remaining: problem.slots_remaining })
+            .eq("hackathon_slug", hackathon.slug)
             .eq("id", problemId)
-            .eq("slots_taken", problem.slots_taken + 1);
+            .eq("slots_remaining", problem.slots_remaining - 1);
 
           return { success: false, error: selectionError.message || "Failed to save selection." };
         }

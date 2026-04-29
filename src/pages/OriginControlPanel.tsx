@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { AdminLockedBackground } from "./OriginAdmin";
 
 const ADMIN_SESSION_KEY = "orehack_origin_admin_auth";
 
@@ -94,7 +93,7 @@ const StageCard = ({ stage, index }: { stage: typeof STAGES[number]; index: numb
       onClick={() => isActive && "route" in stage && navigate(stage.route)}
       style={{
         position: "relative",
-        background: "rgba(10,10,15,0.6)",
+        background: stage.gradient,
         border: `1px solid ${stage.border}`,
         borderRadius: "1.25rem",
         padding: "2rem",
@@ -104,14 +103,11 @@ const StageCard = ({ stage, index }: { stage: typeof STAGES[number]; index: numb
         flexDirection: "column",
         gap: "1.1rem",
         overflow: "hidden",
-        backdropFilter: "blur(12px)",
         transition: "transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s ease, border-color 0.3s ease",
       }}
       whileHover={isActive ? { scale: 1.025, transition: { duration: 0.25 } } : undefined}
       whileTap={isActive ? { scale: 0.98 } : undefined}
     >
-      <div style={{ position: "absolute", inset: 0, background: stage.gradient, pointerEvents: "none" }} />
-      
       {/* Giant stage number watermark */}
       <span
         aria-hidden
@@ -119,7 +115,6 @@ const StageCard = ({ stage, index }: { stage: typeof STAGES[number]; index: numb
           position: "absolute",
           right: "1.25rem",
           top: "-0.5rem",
-          fontFamily: "'Space Mono', monospace",
           fontSize: "7rem",
           fontWeight: 900,
           color: stage.number_color,
@@ -129,19 +124,18 @@ const StageCard = ({ stage, index }: { stage: typeof STAGES[number]; index: numb
           letterSpacing: "-0.04em",
         }}
       >
-        0{stage.number}
+        {stage.number}
       </span>
 
       {/* Icon */}
       <div style={{
         width: 52, height: 52,
         borderRadius: "0.9rem",
-        background: "rgba(255,255,255,0.04)",
+        background: "rgba(255,255,255,0.06)",
         border: `1px solid ${stage.border}`,
         display: "flex", alignItems: "center", justifyContent: "center",
         color: isActive ? "#6ee7b7" : "rgba(255,255,255,0.5)",
         flexShrink: 0,
-        position: "relative", zIndex: 1
       }}>
         {stage.icon}
       </div>
@@ -149,19 +143,18 @@ const StageCard = ({ stage, index }: { stage: typeof STAGES[number]; index: numb
       {/* Text */}
       <div style={{ position: "relative", zIndex: 1 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.4rem", flexWrap: "wrap" }}>
-          <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", margin: 0 }}>
-            STAGE 0{stage.number}
+          <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", margin: 0 }}>
+            Stage {stage.number}
           </p>
           <span style={{
             display: "inline-block",
             padding: "0.15rem 0.55rem",
             borderRadius: "9999px",
-            fontFamily: "'Outfit', sans-serif",
             fontSize: "0.58rem",
             fontWeight: 700,
             letterSpacing: "0.12em",
             textTransform: "uppercase",
-            background: isActive ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.07)",
+            background: isActive ? "rgba(16,185,129,0.18)" : "rgba(255,255,255,0.07)",
             color: isActive ? "#6ee7b7" : "rgba(255,255,255,0.35)",
             border: isActive ? "1px solid rgba(16,185,129,0.3)" : "1px solid rgba(255,255,255,0.1)",
           }}>
@@ -169,28 +162,28 @@ const StageCard = ({ stage, index }: { stage: typeof STAGES[number]; index: numb
           </span>
         </div>
 
-        <h3 style={{ fontFamily: "'Outfit', sans-serif", fontSize: "1.4rem", fontWeight: 600, color: isActive ? "#ffffff" : "rgba(255,255,255,0.55)", margin: "0 0 0.2rem", letterSpacing: "-0.02em" }}>
+        <h3 style={{ fontSize: "1.3rem", fontWeight: 800, color: isActive ? "#f1f5f9" : "rgba(255,255,255,0.55)", margin: "0 0 0.2rem", letterSpacing: "-0.02em" }}>
           {stage.title}
         </h3>
-        <p style={{ fontFamily: "'Outfit', sans-serif", fontStyle: "italic", fontSize: "0.8rem", fontWeight: 400, color: isActive ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.3)", margin: "0 0 0.75rem" }}>
+        <p style={{ fontSize: "0.75rem", fontWeight: 600, color: isActive ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.3)", margin: "0 0 0.75rem" }}>
           {stage.subtitle}
         </p>
-        <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: "0.8rem", color: isActive ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.28)", lineHeight: 1.6, margin: 0 }}>
+        <p style={{ fontSize: "0.8rem", color: isActive ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.28)", lineHeight: 1.6, margin: 0 }}>
           {stage.description}
         </p>
       </div>
 
       {/* CTA row */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "0.5rem", position: "relative", zIndex: 1 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "0.5rem", pos: "relative", zIndex: 1 }}>
         {isActive ? (
-          <span style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontFamily: "'Outfit', sans-serif", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.05em", color: "#6ee7b7", textTransform: "uppercase" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.8rem", fontWeight: 700, color: "#6ee7b7" }}>
             Enter Stage
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
           </span>
         ) : (
-          <span style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontFamily: "'Outfit', sans-serif", fontSize: "0.75rem", color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.75rem", color: "rgba(255,255,255,0.25)" }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
               <path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -217,54 +210,47 @@ const OriginControlPanel = () => {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="relative z-0" style={{ minHeight: "100vh", padding: "2.5rem 2rem", background: "#050505" }}>
-      <AdminLockedBackground />
-      <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", flexDirection: "column", gap: "2.5rem", position: "relative", zIndex: 1 }}>
+    <div style={{ minHeight: "100vh", background: "#080b14", color: "#f1f5f9", fontFamily: "'Inter', system-ui, sans-serif", padding: "2.5rem 2rem" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", flexDirection: "column", gap: "2.5rem" }}>
 
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
           style={{
-            background: "rgba(8,8,12,0.8)",
-            border: "1px solid rgba(124,58,237,0.2)",
+            background: "rgba(15,18,30,0.7)",
+            border: "1px solid rgba(255,255,255,0.07)",
             borderRadius: "1rem",
             padding: "1.75rem 2rem",
             backdropFilter: "blur(16px)",
-            boxShadow: "0 0 40px rgba(124,58,237,0.05)",
           }}
         >
           {/* Breadcrumb */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontFamily: "'Outfit', sans-serif", fontSize: "0.7rem", color: "rgba(255,255,255,0.35)", marginBottom: "0.75rem" }}>
-            <button onClick={() => navigate("/orehackproject1924")} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontSize: "0.7rem", padding: 0, transition: "color 0.2s", fontFamily: "inherit" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.7rem", color: "rgba(255,255,255,0.35)", marginBottom: "0.75rem" }}>
+            <button onClick={() => navigate("/orehackproject1924")} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontSize: "0.7rem", padding: 0, transition: "color 0.2s" }}>
               Dashboard
             </button>
             <span>/</span>
             <span style={{ color: "#a78bfa", fontWeight: 600 }}>Select Stage</span>
           </div>
 
-          <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#c4b5fd", marginBottom: "0.35rem" }}>
-            Origin Control Panel
+          <p style={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "#a78bfa", marginBottom: "0.35rem" }}>
+            Origin 2K26 · Control Panel
           </p>
-          <div style={{ display: "flex", alignItems: "baseline", gap: "0.8rem" }}>
-            <h1 style={{ fontFamily: "'Outfit', sans-serif", fontSize: "2.2rem", fontWeight: 600, letterSpacing: "-0.05em", margin: "0 0 0.4rem", color: "#ffffff" }}>
-              Mission Modules
-            </h1>
-            <span style={{ fontFamily: "'Instrument Serif', serif", fontStyle: "italic", fontSize: "1.2rem", color: "rgba(255,255,255,0.4)" }}>
-              select a phase
-            </span>
-          </div>
-          <p style={{ fontFamily: "'Outfit', sans-serif", fontStyle: "italic", fontSize: "0.8rem", color: "rgba(255,255,255,0.5)", margin: "0 0 1.25rem" }}>
-            Choose the operational stage to manage the progression and lifecycle.
+          <h1 style={{ fontSize: "2rem", fontWeight: 900, letterSpacing: "-0.02em", margin: "0 0 0.4rem" }}>
+            Select a Stage
+          </h1>
+          <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.38)", margin: "0 0 1.25rem" }}>
+            Choose the operational stage to manage for this hackathon.
           </p>
 
           <button
             onClick={() => navigate("/orehackproject1924")}
-            style={{ background: "none", border: "1px solid rgba(124,58,237,0.3)", borderRadius: "0.5rem", padding: "0.4rem 1rem", color: "#c4b5fd", fontFamily: "'Outfit', sans-serif", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", cursor: "pointer", transition: "all 0.2s ease" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(124,58,237,0.6)"; (e.currentTarget as HTMLButtonElement).style.color = "#ffffff"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(124,58,237,0.3)"; (e.currentTarget as HTMLButtonElement).style.color = "#c4b5fd"; }}
+            style={{ background: "none", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "0.5rem", padding: "0.4rem 1rem", color: "rgba(255,255,255,0.6)", fontSize: "0.75rem", cursor: "pointer", transition: "all 0.2s ease" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.28)"; (e.currentTarget as HTMLButtonElement).style.color = "#fff"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.12)"; (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.6)"; }}
           >
-            ← Back to Origin
+            ← Back to Dashboard
           </button>
         </motion.div>
 
@@ -280,9 +266,9 @@ const OriginControlPanel = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.55 }}
-          style={{ fontFamily: "'Outfit', sans-serif", fontStyle: "italic", textAlign: "center", fontSize: "0.75rem", color: "rgba(255,255,255,0.2)", letterSpacing: "0.05em" }}
+          style={{ textAlign: "center", fontSize: "0.68rem", color: "rgba(255,255,255,0.2)", letterSpacing: "0.12em" }}
         >
-          Stages 1 – 4 are operational. System logic bound to individual modules.
+          Stages 1 – 4 are operational. Select a stage to manage.
         </motion.p>
       </div>
     </div>

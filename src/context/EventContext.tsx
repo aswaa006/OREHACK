@@ -144,13 +144,13 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       setState((prev) => ({
         ...prev,
-        timerEnabled: runtime.timer_enabled,
-        rulesEnabled: runtime.rules_enabled,
-        waitingRoomEnabled: runtime.waiting_room_enabled,
-        submissionEnabled: runtime.submission_enabled,
+        timerEnabled: runtime.login_enabled,
+        rulesEnabled: runtime.stage2_active,
+        waitingRoomEnabled: runtime.stage3_active,
+        submissionEnabled: runtime.stage4_active,
         stage1Active: runtime.stage1_active,
-        eventStartTime: runtime.event_start_time ? new Date(runtime.event_start_time).getTime() : prev.eventStartTime,
-        isEventLive: !runtime.timer_enabled || (runtime.event_start_time ? Date.now() >= new Date(runtime.event_start_time).getTime() : prev.isEventLive),
+        eventStartTime: runtime.start_time ? new Date(runtime.start_time).getTime() : prev.eventStartTime,
+        isEventLive: runtime.status === "live" || Date.now() >= new Date(runtime.start_time).getTime(),
       }));
     };
 
@@ -242,7 +242,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       void (async () => {
         const { data: hackathon } = await resolveHackathonBySlug(state.eventId || defaultState.eventId);
         if (hackathon) {
-          await upsertHackathonRuntime(hackathon.id, { event_start_time: new Date(ts).toISOString() });
+          await upsertHackathonRuntime(hackathon.id, { start_time: new Date(ts).toISOString() });
         }
       })();
       return next;
@@ -260,7 +260,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       void (async () => {
         const { data: hackathon } = await resolveHackathonBySlug(state.eventId || defaultState.eventId);
         if (hackathon) {
-          await upsertHackathonRuntime(hackathon.id, { timer_enabled: v });
+          await upsertHackathonRuntime(hackathon.id, { login_enabled: v });
         }
       })();
       return next;
@@ -278,7 +278,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       void (async () => {
         const { data: hackathon } = await resolveHackathonBySlug(state.eventId || defaultState.eventId);
         if (hackathon) {
-          await upsertHackathonRuntime(hackathon.id, { rules_enabled: v });
+          await upsertHackathonRuntime(hackathon.id, { stage2_active: v });
         }
       })();
       return next;
@@ -296,7 +296,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       void (async () => {
         const { data: hackathon } = await resolveHackathonBySlug(state.eventId || defaultState.eventId);
         if (hackathon) {
-          await upsertHackathonRuntime(hackathon.id, { waiting_room_enabled: v });
+          await upsertHackathonRuntime(hackathon.id, { stage3_active: v });
         }
       })();
       return next;
@@ -314,7 +314,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       void (async () => {
         const { data: hackathon } = await resolveHackathonBySlug(state.eventId || defaultState.eventId);
         if (hackathon) {
-          await upsertHackathonRuntime(hackathon.id, { submission_enabled: v });
+          await upsertHackathonRuntime(hackathon.id, { stage4_active: v });
         }
       })();
       return next;

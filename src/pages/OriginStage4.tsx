@@ -52,10 +52,8 @@ type TeamRow = {
 
 type ScoreRow = {
   submission_id: string;
-  final_score: number | null;
-  tech_score: number | null;
-  innovation_score: number | null;
-  completeness_score: number | null;
+  score: number | null;
+  generated_at: string | null;
 };
 
 const emptyForm: SubmissionRecord = {
@@ -174,9 +172,10 @@ const OriginStage4 = () => {
         : Promise.resolve({ data: [], error: null }),
       submissionIds.length > 0
         ? supabase
-            .from("submission_scores")
-            .select("submission_id, final_score, tech_score, innovation_score, completeness_score")
+            .from("evaluation_reports")
+            .select("submission_id, score, generated_at")
             .in("submission_id", submissionIds)
+            .order("generated_at", { ascending: false })
             .returns<ScoreRow[]>()
         : Promise.resolve({ data: [], error: null }),
     ]);
@@ -212,11 +211,10 @@ const OriginStage4 = () => {
         Problem_Statement: (row.Problem_Statement || "").trim(),
         Repo_URL: (row.Repo_URL || "").trim(),
         Progress: normalizeProgress(row.Progress || "queued"),
-        Total_Scores: toNumberOrNull(score?.final_score) ?? toNumberOrNull(row.Total_Scores),
-        Tech_Scores: toNumberOrNull(score?.tech_score) ?? toNumberOrNull(row.Tech_Scores),
-        Innov_Scores: toNumberOrNull(score?.innovation_score) ?? toNumberOrNull(row.Innov_Scores),
-        Completeness_Scores:
-          toNumberOrNull(score?.completeness_score) ?? toNumberOrNull(row.Completeness_Scores),
+        Total_Scores: toNumberOrNull(score?.score) ?? toNumberOrNull(row.Total_Scores),
+        Tech_Scores: toNumberOrNull(row.Tech_Scores),
+        Innov_Scores: toNumberOrNull(row.Innov_Scores),
+        Completeness_Scores: toNumberOrNull(row.Completeness_Scores),
       };
     });
 
@@ -243,7 +241,7 @@ const OriginStage4 = () => {
       .channel("origin-stage4-live")
       .on("postgres_changes", { event: "*", schema: "public", table: "submissions" }, refresh)
       .on("postgres_changes", { event: "*", schema: "public", table: "teams" }, refresh)
-      .on("postgres_changes", { event: "*", schema: "public", table: "submission_scores" }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "evaluation_reports" }, refresh)
       .subscribe();
 
     return () => {
@@ -435,20 +433,18 @@ const OriginStage4 = () => {
       }
 
       const { error: scoreError } = await supabase
-        .from("submission_scores")
-        .upsert(
+        .from("evaluation_reports")
+        .insert(
           {
             submission_id: editingRowId,
-            final_score: editForm.Total_Scores,
-            tech_score: editForm.Tech_Scores,
-            innovation_score: editForm.Innov_Scores,
-            completeness_score: editForm.Completeness_Scores,
-            max_total_score: 100,
-            max_tech_score: 100,
-            max_innovation_score: 100,
-            max_completeness_score: 100,
+            score: editForm.Total_Scores,
+            generated_at: new Date().toISOString(),
+            report_json: {
+              technical: editForm.Tech_Scores,
+              innovation: editForm.Innov_Scores,
+              completeness: editForm.Completeness_Scores,
+            },
           },
-          { onConflict: "submission_id" },
         );
 
       if (scoreError) {
@@ -512,20 +508,18 @@ const OriginStage4 = () => {
       }
 
       const { error: scoreError } = await supabase
-        .from("submission_scores")
-        .upsert(
+        .from("evaluation_reports")
+        .insert(
           {
             submission_id: insertedSubmission.id,
-            final_score: newForm.Total_Scores,
-            tech_score: newForm.Tech_Scores,
-            innovation_score: newForm.Innov_Scores,
-            completeness_score: newForm.Completeness_Scores,
-            max_total_score: 100,
-            max_tech_score: 100,
-            max_innovation_score: 100,
-            max_completeness_score: 100,
+            score: newForm.Total_Scores,
+            generated_at: new Date().toISOString(),
+            report_json: {
+              technical: newForm.Tech_Scores,
+              innovation: newForm.Innov_Scores,
+              completeness: newForm.Completeness_Scores,
+            },
           },
-          { onConflict: "submission_id" },
         );
 
       if (scoreError) {

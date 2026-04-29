@@ -1,3 +1,5 @@
+import { clearBackendTokens } from "@/lib/backend-api";
+
 export const ADMIN_SESSION_KEY = "orehack_admin_session";
 export const LEGACY_ADMIN_SESSION_KEY = "admin_session";
 
@@ -8,7 +10,7 @@ export interface StoredAdminSession {
   email: string | null;
   role: DashboardRole;
   hackathonId: string | null;
-  source: "supabase" | "legacy";
+  source: "supabase" | "legacy" | "backend";
   createdAt: number;
 }
 
@@ -85,4 +87,5 @@ export function clearAdminSession() {
   if (typeof window === "undefined") return;
   localStorage.removeItem(ADMIN_SESSION_KEY);
   localStorage.removeItem(LEGACY_ADMIN_SESSION_KEY);
+  clearBackendTokens();
 }

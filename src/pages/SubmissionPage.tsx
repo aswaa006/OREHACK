@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import "../components/Stepper.css";
-import { supabase } from "@/lib/supabase";
 import { useEvent } from "@/context/EventContext";
 import { uploadSubmissionArtifact } from "@/lib/storage";
+import { createSubmission } from "@/lib/backend-api";
 
 type Phase = "form" | "processing" | "done";
 
@@ -106,24 +106,17 @@ const SubmissionPage = () => {
     setSubmitting(true);
     setPhase("processing");
 
-    const submissionPayload = {
-      hackathon_id: effectiveSession?.hackathonDbId || null,
-      team_id: effectiveSession?.teamDbId || null,
-      teamID: teamId,
-      Team_Name: teamName.trim(),
-      Repo_URL: repoUrl.trim(),
-      Problem_Statement: problemStatement.trim() || "",
-      Progress: "queued",
-    };
-
-    const { data: submissionRow, error: submissionError } = await supabase
-      .from("submissions")
-      .upsert(submissionPayload, { onConflict: effectiveSession?.teamDbId ? "team_id" : "teamID" })
-      .select("id")
-      .single<{ id: string }>();
-
-    if (submissionError || !submissionRow) {
-      setError(submissionError.message || "Submission failed. Please try again.");
+    let createdSubmissionId = "";
+    try {
+      const created = await createSubmission({
+        hackathonSlug: effectiveHackathonId,
+        teamId,
+        repoLink: repoUrl.trim(),
+        problemStatement: problemStatement.trim() || undefined,
+      });
+      createdSubmissionId = created.submissionId;
+    } catch (submissionError) {
+      setError(submissionError instanceof Error ? submissionError.message : "Submission failed. Please try again.");
       setPhase("form");
       setSubmitting(false);
       return;
@@ -136,21 +129,7 @@ const SubmissionPage = () => {
           teamId,
           file: artifactFile,
         });
-
-        const artifactMetaRes = await supabase
-          .from("submissions")
-          .update({
-            artifact_url: uploaded.publicUrl,
-            artifact_path: uploaded.path,
-          })
-          .eq("id", submissionRow.id);
-
-        if (artifactMetaRes.error) {
-          console.warn("Artifact uploaded but metadata columns are unavailable:", artifactMetaRes.error.message);
-          setArtifactStatus("Artifact uploaded to storage. Metadata columns are missing in submissions table.");
-        } else {
-          setArtifactStatus("Artifact uploaded successfully.");
-        }
+        setArtifactStatus(`Artifact uploaded successfully (${uploaded.path}) for submission ${createdSubmissionId}.`);
       } catch (artifactError) {
         setError(artifactError instanceof Error ? artifactError.message : "Artifact upload failed.");
         setPhase("form");

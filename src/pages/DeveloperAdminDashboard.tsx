@@ -31,7 +31,6 @@ import {
 import { supabase } from "@/lib/supabase";
 import {
   clearAdminSession,
-  normalizeDashboardRole,
   readLegacyAdminSession,
 } from "@/lib/dashboard-routing";
 
@@ -163,49 +162,15 @@ const DeveloperAdminDashboard = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (user) {
-          const { data: profile } = await supabase
-            .from("users")
-            .select("id, default_role, is_active")
-            .eq("id", user.id)
-            .maybeSingle();
-
-          const roleRows = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", user.id)
-            .order("created_at", { ascending: false })
-            .limit(1);
-
-          const resolvedRole = normalizeDashboardRole(roleRows.data?.[0]?.role ?? profile?.default_role);
-          const isDeveloper = resolvedRole === "developer_admin";
-
-          if (!profile || profile.is_active === false || !isDeveloper) {
-            clearAdminSession();
-            await supabase.auth.signOut();
-            navigate("/admin/auth");
-            return;
-          }
-
-          setIsAuthChecking(false);
-          return;
-        }
-
         const legacySession = readLegacyAdminSession();
         if (!legacySession) {
           navigate("/admin/auth");
           return;
         }
 
-        if (legacySession.role && legacySession.role !== "unknown") {
-          if (legacySession.role !== "developer_admin") {
-            navigate("/admin/auth");
-            return;
-          }
+        if (legacySession.role !== "developer_admin") {
+          navigate("/admin/auth");
+          return;
         }
 
         setIsAuthChecking(false);
@@ -220,12 +185,12 @@ const DeveloperAdminDashboard = () => {
   const loadDashboardData = useCallback(async () => {
     setSyncError("");
 
-    const [hackathonsRes, usersRes] = await Promise.all([
+    const [hackathonsRes, teamsRes] = await Promise.all([
       supabase
         .from("hackathons")
-        .select("name, slug, theme, start_date, duration_hours, status, submissions_count, evaluated_count")
+        .select("name, slug, theme, start_time, duration_hours, status, total_submissions, total_evaluated")
         .order("created_at", { ascending: false }),
-      supabase.from("users").select("id", { count: "exact", head: true }),
+      supabase.from("teams").select("id", { count: "exact", head: true }),
     ]);
 
     if (hackathonsRes.error) {
@@ -242,10 +207,10 @@ const DeveloperAdminDashboard = () => {
           name: hackathon.name || "Untitled Hackathon",
           slug: hackathon.slug || slugify(hackathon.name || "hackathon"),
           theme: hackathon.theme || "General",
-          startDate: hackathon.start_date || "",
+          startDate: hackathon.start_time || "",
           durationHours: Number(hackathon.duration_hours || 24),
-          submissions: Number(hackathon.submissions_count || 0),
-          evaluated: Number(hackathon.evaluated_count || 0),
+          submissions: Number(hackathon.total_submissions || 0),
+          evaluated: Number(hackathon.total_evaluated || 0),
           status: hackathon.status === "scheduled" ? "scheduled" : "live",
         };
       },
@@ -254,7 +219,7 @@ const DeveloperAdminDashboard = () => {
     setHackathons(
       mappedHackathons.length ? mappedHackathons : defaultHackathons,
     );
-    setUserCount(usersRes.count || 0);
+    setUserCount(teamsRes.count || 0);
   }, []);
 
   useEffect(() => {
@@ -276,7 +241,7 @@ const DeveloperAdminDashboard = () => {
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "users" },
+        { event: "*", schema: "public", table: "teams" },
         loadDashboardData,
       )
       .subscribe();
@@ -333,7 +298,7 @@ const DeveloperAdminDashboard = () => {
     {
       label: "Registered Users",
       value: String(userCount),
-      delta: "Live from users database",
+      delta: "Live from teams database",
       progress: Math.min(100, userCount ? 40 + userCount : 25),
       icon: Activity,
       tone: "from-emerald-500/25 via-emerald-500/10 to-transparent",
@@ -362,11 +327,11 @@ const DeveloperAdminDashboard = () => {
       name: newHackathon.name.trim(),
       slug,
       theme: newHackathon.theme.trim() || "General",
-      start_date: newHackathon.startDate || null,
+      start_time: newHackathon.startDate ? new Date(newHackathon.startDate).toISOString() : new Date().toISOString(),
       duration_hours: Number(newHackathon.durationHours || 24),
       status: "live",
-      submissions_count: 0,
-      evaluated_count: 0,
+      total_submissions: 0,
+      total_evaluated: 0,
     });
 
     if (error) {
@@ -384,15 +349,8 @@ const DeveloperAdminDashboard = () => {
   };
 
   const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      clearAdminSession();
-      navigate("/admin/auth");
-    } catch (error) {
-      // Force logout even if signOut fails
-      clearAdminSession();
-      navigate("/admin/auth");
-    }
+    clearAdminSession();
+    navigate("/admin/auth");
   };
 
   if (isAuthChecking) {

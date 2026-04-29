@@ -3,9 +3,8 @@ import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEvent } from "@/context/EventContext";
 import { useEventState } from "@/hooks/useEventState";
-import { supabase } from "@/lib/supabase";
 import { resolveHackathonBySlug } from "@/lib/event-db";
-import { verifyTeamCredentials } from "@/lib/team-auth";
+import { loginTeam, setTeamToken } from "@/lib/backend-api";
 import PageTransition from "@/components/PageTransition";
 
 const Login = () => {
@@ -68,40 +67,23 @@ const Login = () => {
       return;
     }
 
-    const verification = await verifyTeamCredentials({
-      hackathonId: hackathon.id,
-      teamCode: id,
-      teamName: name,
-      password: pass,
-    });
+    let resolvedTeamId = id;
+    let resolvedTeamName = name;
 
-    if (!verification.valid) {
-      setError(verification.error || "Invalid Team ID, Team Name, or password.");
+    try {
+      const response = await loginTeam(hackathon.slug, id, name, pass);
+      setTeamToken(response.token);
+      resolvedTeamId = response.team.teamId;
+      resolvedTeamName = response.team.teamName;
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : "Invalid Team ID, Team Name, or password.");
       setAuthState("idle");
       setLoading(false);
       setShakeTick((n) => n + 1);
       return;
     }
 
-    const resolvedTeamId = verification.teamCode || id;
-    const resolvedTeamDbId = verification.teamDbId;
-    const resolvedTeamName = verification.teamName || name;
-
-    if (resolvedTeamDbId) {
-      await supabase.from("submissions").upsert(
-        {
-          hackathon_id: hackathon.id,
-          team_id: resolvedTeamDbId,
-          teamID: resolvedTeamId,
-          TeamID: resolvedTeamId,
-          Team_Name: resolvedTeamName,
-          Progress: "queued",
-        },
-        { onConflict: "team_id" },
-      );
-    } else {
-      await supabase.from("submissions").update({ Team_Name: resolvedTeamName }).eq("teamID", resolvedTeamId);
-    }
+    // Login no longer mutates submissions in the new schema.
 
     await new Promise((r) => setTimeout(r, 700));
     setAuthState("granted");
