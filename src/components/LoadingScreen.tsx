@@ -79,7 +79,7 @@ export function LoadingScreen({ onReveal }: Props) {
             clearTimeout(tDone);
             clearTimeout(tBurst);
         };
-    }, [onReveal]);
+    }, []);
 
     if (typeof document === 'undefined' || phase === 'done') return null;
 
