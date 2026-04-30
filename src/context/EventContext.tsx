@@ -32,7 +32,7 @@ interface EventContextValue {
   logout: () => void;
 }
 
-const DEFAULT_EVENT_START = new Date("2026-04-27T00:00:00").getTime();
+const DEFAULT_EVENT_START = new Date("2026-04-30T17:00:00").getTime();
 
 // Admin timer + flow config — persists in localStorage across refreshes
 const TIMER_STORAGE_KEY = "orehack_admin_timer_config";

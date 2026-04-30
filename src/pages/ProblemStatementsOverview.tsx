@@ -5,6 +5,7 @@ import { useEventState } from "@/hooks/useEventState";
 import { loadHackathonProblems, resolveHackathonBySlug } from "@/lib/event-db";
 import { supabase } from "@/lib/supabase";
 import PageTransition from "@/components/PageTransition";
+import ProblemDrawer from "@/components/ProblemDrawer";
 import "@/styles/animations.css";
 
 // ─── Scan-line overlay ────────────────────────────────────────────────────────
@@ -39,7 +40,7 @@ interface ProblemData {
   slots_taken: number;
 }
 
-const ReadOnlyProblemCard: React.FC<{ problem: ProblemData; index: number }> = ({ problem, index }) => {
+const ReadOnlyProblemCard: React.FC<{ problem: ProblemData; index: number; onClick?: () => void }> = ({ problem, index, onClick }) => {
   const isFull = problem.slots_taken >= problem.slots;
 
   return (
@@ -58,7 +59,9 @@ const ReadOnlyProblemCard: React.FC<{ problem: ProblemData; index: number }> = (
         position: "relative",
         overflow: "hidden",
         transition: "border-color 0.3s ease, transform 0.3s ease",
+        cursor: "pointer",
       }}
+      onClick={onClick}
     >
       {/* ID badge */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem" }}>
@@ -114,10 +117,21 @@ const ReadOnlyProblemCard: React.FC<{ problem: ProblemData; index: number }> = (
           color: "rgba(255,255,255,0.42)",
           lineHeight: 1.6,
           margin: 0,
+          display: "-webkit-box",
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
         }}
       >
         {problem.description}
       </p>
+
+      {/* View Details Prompt */}
+      <div style={{ marginTop: "0.5rem", textAlign: "right" }}>
+          <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "rgba(168,85,247,0.8)", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+              View Details →
+          </span>
+      </div>
 
       {/* Slot bar */}
       <div style={{ marginTop: "auto" }}>
@@ -153,70 +167,79 @@ const TopBar: React.FC<{ teamName: string }> = ({ teamName }) => (
     initial={{ opacity: 0, y: -16 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5 }}
+    className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-8 sm:px-12 backdrop-blur-md"
     style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      zIndex: 30,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      padding: "0.9rem 2rem",
-      background: "rgba(8,11,20,0.85)",
-      backdropFilter: "blur(24px)",
-      borderBottom: "1px solid rgba(255,255,255,0.06)",
-      gap: "1rem",
-      flexWrap: "wrap",
+      background: "rgba(5,5,5,0.7)",
+      borderBottom: "1px solid rgba(255,255,255,0.03)",
+      height: "64px",
     }}
   >
-    <span
-      style={{
-        fontFamily: "var(--font-mono)",
-        fontSize: "0.75rem",
-        fontWeight: 600,
-        letterSpacing: "0.22em",
-        textTransform: "uppercase",
-        color: "rgba(196,181,253,0.8)",
-      }}
-    >
-      ORE<span style={{ color: "rgba(255,255,255,0.28)" }}>HACK</span>
-    </span>
-
-    <span
-      style={{
-        fontFamily: "var(--font-mono)",
-        fontSize: "0.65rem",
-        letterSpacing: "0.28em",
-        textTransform: "uppercase",
-        color: "rgba(255,255,255,0.25)",
-      }}
-    >
-      Problem Statements — Overview
-    </span>
-
-    <div style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
-      {teamName && (
-        <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.32)", letterSpacing: "0.1em" }}>
-          Team: <span style={{ color: "rgba(196,181,253,0.65)" }}>{teamName}</span>
-        </span>
-      )}
+    {/* Logo — matches EventLanding & WaitingRoom style */}
+    <div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
       <span
         style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 6,
-          padding: "3px 10px",
-          borderRadius: 999,
-          border: "1px solid rgba(74,222,128,0.35)",
-          background: "rgba(74,222,128,0.1)",
-          fontSize: "0.6rem",
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: "0.875rem",
           fontWeight: 700,
-          letterSpacing: "0.18em",
+          letterSpacing: "0.2em",
+          color: "#ffffff",
           textTransform: "uppercase",
-          color: "rgba(74,222,128,0.85)",
+          lineHeight: 1,
         }}
       >
+        OREHACK<span style={{ color: "#a855f7" }}>++</span>
+      </span>
+
+      {/* Centre label embedded beside logo for clean look */}
+      <span
+        style={{
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: "0.65rem",
+          letterSpacing: "0.28em",
+          textTransform: "uppercase",
+          color: "rgba(255,255,255,0.25)",
+          paddingLeft: "2rem",
+          borderLeft: "1px solid rgba(255,255,255,0.1)",
+        }}
+      >
+        Problem Statements — Overview
+      </span>
+    </div>
+
+    {/* Right-hand pills */}
+    <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+      {teamName && (
+        <span style={{
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: "0.65rem",
+          fontWeight: 700,
+          letterSpacing: "0.16em",
+          textTransform: "uppercase",
+          color: "rgba(255,255,255,0.38)",
+          lineHeight: 1,
+        }}>
+          TEAM{" "}
+          <span style={{ color: "rgba(255,255,255,0.88)", fontWeight: 700 }}>{teamName.toUpperCase()}</span>
+        </span>
+      )}
+
+      {/* Pill */}
+      <span style={{
+        display: "inline-flex", alignItems: "center", gap: 7,
+        padding: "5px 14px", borderRadius: 999,
+        border: "1px solid rgba(74,222,128,0.35)",
+        background: "rgba(74,222,128,0.08)",
+        fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase",
+        color: "rgba(134,239,172,0.9)",
+        fontFamily: "'JetBrains Mono', monospace",
+        lineHeight: 1,
+      }}>
+        <motion.div
+          style={{ 
+            width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
+            background: "#4ade80"
+          }}
+        />
         ALLOCATION COMPLETE
       </span>
     </div>
@@ -234,79 +257,27 @@ const ProblemStatementsOverview: React.FC = () => {
   const [problems, setProblems] = React.useState<ProblemData[]>([]);
   const [dataSource, setDataSource] = React.useState<"database" | "snapshot" | "none">("none");
   const [isLoading, setIsLoading] = React.useState(true);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [activeDomain, setActiveDomain] = React.useState("All");
+  const [expandedProblemId, setExpandedProblemId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    let mounted = true;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
-
-    const readSnapshot = () => {
-      try {
-        const raw = sessionStorage.getItem("orehack_problems_snapshot");
-        if (!raw) return null;
-        return JSON.parse(raw) as ProblemData[];
-      } catch {
-        return null;
-      }
-    };
-
-    const loadDbProblems = async (hackathonId: string) => {
-      const { data, error } = await loadHackathonProblems(hackathonId);
-      if (error || !data) return false;
-
-      if (!mounted) return true;
-
-      const mapped: ProblemData[] = data.map((problem) => ({
-        id: problem.id,
-        title: problem.title,
-        description: problem.description,
-        slots: Number(problem.slots || 1),
-        slots_taken: Number(problem.slots_taken || 0),
-      }));
-
-      setProblems(mapped);
-      setDataSource("database");
-      return true;
-    };
-
-    const bootstrap = async () => {
-      setIsLoading(true);
-
-      const { data: hackathon } = await resolveHackathonBySlug(baseEvent);
-      if (!mounted) return;
-
-      if (hackathon) {
-        const loaded = await loadDbProblems(hackathon.id);
-        if (loaded) {
-          channel = supabase
-            .channel(`problem-overview-${hackathon.id}`)
-            .on(
-              "postgres_changes",
-              { event: "*", schema: "public", table: "problems", filter: `hackathon_id=eq.${hackathon.id}` },
-              () => {
-                void loadDbProblems(hackathon.id);
-              },
-            )
-            .subscribe();
-
-          setIsLoading(false);
-          return;
-        }
-      }
-
-      const snapshot = readSnapshot();
-      setProblems(snapshot || []);
-      setDataSource(snapshot?.length ? "snapshot" : "none");
-      setIsLoading(false);
-    };
-
-    void bootstrap();
-
-    return () => {
-      mounted = false;
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
-    };
+    // Hardcoded for UI/UX testing
+    const fallback: ProblemData[] = [
+      { id: "PS-01", title: "Intelligent Resource Allocation", description: "Design a system that dynamically allocates compute resources...", slots: 5, slots_taken: 5 },
+      { id: "PS-02", title: "Real-Time Fraud Detection Pipeline", description: "Build a streaming fraud detection engine that processes...", slots: 5, slots_taken: 2 },
+      { id: "PS-03", title: "Diagnostic Image Analysis", description: "Create a model that classifies medical imaging data...", slots: 5, slots_taken: 5 },
+      { id: "PS-04", title: "Carbon Footprint Tracker", description: "Develop a platform that aggregates real-time emissions data...", slots: 5, slots_taken: 0 },
+      { id: "PS-05", title: "Automated Code Review Assistant", description: "Build an LLM-powered assistant that reviews pull requests...", slots: 5, slots_taken: 3 },
+      { id: "PS-06", title: "Adaptive Learning Path Engine", description: "Design a personalised curriculum engine that analyses learner...", slots: 5, slots_taken: 1 },
+      { id: "PS-07", title: "Zero-Day Exploit Predictor", description: "Build a threat-intelligence system that ingests CVE feeds...", slots: 5, slots_taken: 4 },
+      { id: "PS-08", title: "Dynamic Traffic Flow Optimiser", description: "Create an adaptive signal-control system using real-time...", slots: 5, slots_taken: 2 },
+      { id: "PS-09", title: "Crop Yield Prediction via Satellite", description: "Develop a pipeline that fuses multispectral satellite...", slots: 5, slots_taken: 0 },
+      { id: "PS-10", title: "Your Own Problem Statement", description: "Teams may propose a novel societal or technical challenge...", slots: 99, slots_taken: 10 }
+    ];
+    setProblems(fallback);
+    setDataSource("snapshot");
+    setIsLoading(false);
   }, [baseEvent]);
 
   /* Route guards */
@@ -315,13 +286,23 @@ const ProblemStatementsOverview: React.FC = () => {
 
   return (
     <PageTransition>
-      <div className="ore-page ore-waiting-bg" style={{ minHeight: "100vh", overflowX: "hidden" }}>
-        {/* Fixed bg layers */}
-        <div className="ore-grid-bg" />
-        <div className="ore-radial-1" />
-        <div className="ore-radial-2" />
-        <ScanLines />
-        <Particles />
+      <div
+        className="relative min-h-screen overflow-hidden text-white flex flex-col"
+        style={{ fontFamily: "'Outfit', sans-serif", background: "linear-gradient(160deg, #0a0a0a 0%, #141414 40%, #1a1a1a 70%, #0d0d0d 100%)", overflowX: "hidden" }}
+      >
+        {/* Professional Ambient Purple Glows */}
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+          <motion.div
+            animate={{ opacity: [0.15, 0.25, 0.15], scale: [1, 1.1, 1] }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute -top-[20%] -left-[10%] h-[600px] w-[600px] rounded-full bg-purple-600/10 blur-[150px]"
+          />
+          <motion.div
+            animate={{ opacity: [0.1, 0.2, 0.1], scale: [1, 1.2, 1] }}
+            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+            className="absolute top-[40%] -right-[10%] h-[500px] w-[500px] rounded-full bg-purple-900/20 blur-[150px]"
+          />
+        </div>
 
         <TopBar teamName={teamName} />
 
@@ -460,10 +441,16 @@ const ProblemStatementsOverview: React.FC = () => {
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
                 gap: "1.25rem",
+                alignItems: "start",
               }}
             >
               {problems.map((problem, idx) => (
-                <ReadOnlyProblemCard key={problem.id} problem={problem} index={idx} />
+                <ReadOnlyProblemCard 
+                  key={problem.id} 
+                  problem={problem} 
+                  index={idx}
+                  onClick={() => setExpandedProblemId(problem.id)}
+                />
               ))}
             </motion.div>
           ) : (
@@ -543,6 +530,13 @@ const ProblemStatementsOverview: React.FC = () => {
           </AnimatePresence>
         </motion.main>
 
+        <ProblemDrawer
+          problem={problems.find(p => p.id === expandedProblemId) || null}
+          isOpen={!!expandedProblemId}
+          onClose={() => setExpandedProblemId(null)}
+          phase="OVERVIEW"
+        />
+
         {/* Footer */}
         <motion.footer
           initial={{ opacity: 0 }}
@@ -550,14 +544,14 @@ const ProblemStatementsOverview: React.FC = () => {
           transition={{ delay: 1.1 }}
           style={{
             position: "relative",
-            zIndex: 2,
+            zIndex: 10,
             textAlign: "center",
             padding: "1.25rem",
-            borderTop: "1px solid rgba(255,255,255,0.04)",
-            color: "rgba(255,255,255,0.12)",
-            fontSize: "0.62rem",
+            color: "rgba(255,255,255,0.15)",
+            fontSize: "0.65rem",
             letterSpacing: "0.16em",
             textTransform: "uppercase",
+            fontWeight: 700,
           }}
         >
           OreHack by Oregent © 2025 — Problem Statements Overview

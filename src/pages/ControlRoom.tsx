@@ -5,6 +5,7 @@ import { useEventState } from "@/hooks/useEventState";
 import { useControlState } from "@/hooks/useControlState";
 import PageTransition from "@/components/PageTransition";
 import ProblemCard from "@/components/ProblemCard";
+import ProblemDrawer from "@/components/ProblemDrawer";
 import PhaseBanner from "@/components/PhaseBanner";
 import TimerBar from "@/components/TimerBar";
 import SelectionResultPanel from "@/components/SelectionResultPanel";
@@ -62,119 +63,88 @@ const TopBar: React.FC<{
     initial={{ opacity: 0, y: -16 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5 }}
+    className="fixed top-0 left-0 right-0 z-30 flex items-center justify-between px-8 sm:px-12 backdrop-blur-md"
     style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      zIndex: 30,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      padding: "0.9rem 2rem",
-      background: "rgba(8,11,20,0.85)",
-      backdropFilter: "blur(24px)",
-      borderBottom: "1px solid rgba(255,255,255,0.06)",
-      gap: "1rem",
-      flexWrap: "wrap",
+      background: "rgba(5,5,5,0.7)",
+      borderBottom: "1px solid rgba(255,255,255,0.03)",
+      height: "64px",
     }}
   >
-    {/* Brand */}
-    <span
-      style={{
-        fontFamily: "var(--font-mono)",
-        fontSize: "0.75rem",
-        fontWeight: 600,
-        letterSpacing: "0.22em",
-        textTransform: "uppercase",
-        color: "rgba(196,181,253,0.8)",
-      }}
-    >
-      ORE<span style={{ color: "rgba(255,255,255,0.28)" }}>HACK</span>
-    </span>
+    {/* Logo — matches EventLanding & WaitingRoom style */}
+    <div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
+      <span
+        style={{
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: "0.875rem",
+          fontWeight: 700,
+          letterSpacing: "0.2em",
+          color: "#ffffff",
+          textTransform: "uppercase",
+          lineHeight: 1,
+        }}
+      >
+        OREHACK<span style={{ color: "#a855f7" }}>++</span>
+      </span>
 
-    {/* Centre label */}
-    <span
-      style={{
-        fontFamily: "var(--font-mono)",
-        fontSize: "0.65rem",
-        letterSpacing: "0.28em",
-        textTransform: "uppercase",
-        color: "rgba(255,255,255,0.25)",
-      }}
-    >
-      Control Room — Stage 2
-    </span>
+      {/* Centre label embedded beside logo for clean look */}
+      <span
+        style={{
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: "0.65rem",
+          letterSpacing: "0.28em",
+          textTransform: "uppercase",
+          color: "rgba(255,255,255,0.25)",
+          paddingLeft: "2rem",
+          borderLeft: "1px solid rgba(255,255,255,0.1)",
+        }}
+      >
+        Control Room — Stage 2
+      </span>
+    </div>
 
-    {/* Right cluster */}
-    <div style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
+    {/* Right-hand pills */}
+    <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
       {teamName && (
-        <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.32)", letterSpacing: "0.1em" }}>
-          Team:{" "}
-          <span style={{ color: "rgba(196,181,253,0.65)" }}>{teamName}</span>
+        <span style={{
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: "0.65rem",
+          fontWeight: 700,
+          letterSpacing: "0.16em",
+          textTransform: "uppercase",
+          color: "rgba(255,255,255,0.38)",
+          lineHeight: 1,
+        }}>
+          TEAM{" "}
+          <span style={{ color: "rgba(255,255,255,0.88)", fontWeight: 700 }}>{teamName.toUpperCase()}</span>
         </span>
       )}
 
-      {/* Connection status dot */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <span
-          style={{
-            width: 7,
-            height: 7,
-            borderRadius: "50%",
-            background:
-              connectionStatus === "live"
-                ? "#4ade80"
-                : connectionStatus === "error"
-                  ? "#fb7185"
-                  : "#fbbf24",
-            boxShadow:
-              connectionStatus === "live"
-                ? "0 0 7px rgba(74,222,128,0.8)"
-                : connectionStatus === "error"
-                  ? "0 0 7px rgba(251,113,133,0.8)"
-                  : "0 0 7px rgba(251,191,36,0.7)",
-            animation:
-              connectionStatus === "live"
-                ? "pulseLive 1.8s ease-in-out infinite"
-                : "pulseWait 2.2s ease-in-out infinite",
+      {/* Connection status dot inline */}
+      <span style={{
+        display: "inline-flex", alignItems: "center", gap: 7,
+        padding: "5px 14px", borderRadius: 999,
+        border: "1px solid rgba(168,85,247,0.35)",
+        background: "rgba(168,85,247,0.08)",
+        fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase",
+        color: "rgba(216,180,254,0.9)",
+        fontFamily: "'JetBrains Mono', monospace",
+        lineHeight: 1,
+      }}>
+        <motion.div
+          style={{ 
+            width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
+            background: connectionStatus === "live" ? "#4ade80" : connectionStatus === "error" ? "#fb7185" : "#a855f7"
           }}
+          animate={{
+            boxShadow: connectionStatus === "live"
+              ? ["0 0 4px rgba(74,222,128,0.4)", "0 0 12px rgba(74,222,128,0.9)", "0 0 4px rgba(74,222,128,0.4)"]
+              : connectionStatus === "error"
+              ? ["0 0 4px rgba(251,113,133,0.4)", "0 0 12px rgba(251,113,133,0.9)", "0 0 4px rgba(251,113,133,0.4)"]
+              : ["0 0 4px rgba(168,85,247,0.4)", "0 0 12px rgba(168,85,247,0.9)", "0 0 4px rgba(168,85,247,0.4)"],
+            scale: [1, 1.35, 1],
+          }}
+          transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
         />
-        <span
-          style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "0.62rem",
-            letterSpacing: "0.14em",
-            textTransform: "uppercase",
-            color:
-              connectionStatus === "live"
-                ? "rgba(74,222,128,0.7)"
-                : connectionStatus === "error"
-                  ? "rgba(251,113,133,0.7)"
-                  : "rgba(251,191,36,0.7)",
-          }}
-        >
-          {connectionStatus === "live" ? "LIVE" : connectionStatus === "error" ? "ERROR" : "SYNC"}
-        </span>
-      </div>
-
-      {/* Phase pill */}
-      <span
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 6,
-          padding: "3px 10px",
-          borderRadius: 999,
-          border: "1px solid rgba(168,85,247,0.35)",
-          background: "rgba(168,85,247,0.1)",
-          fontSize: "0.6rem",
-          fontWeight: 700,
-          letterSpacing: "0.18em",
-          textTransform: "uppercase",
-          color: "rgba(196,181,253,0.85)",
-        }}
-      >
         {phase}
       </span>
     </div>
@@ -231,25 +201,35 @@ const ControlRoom: React.FC = () => {
 
   // Redirect back to waiting room if event is stopped
   React.useEffect(() => {
-    if (!stage1Active && waitingRoomEnabled) {
-      navigate(`/event/${baseEvent}/waiting-room`, { replace: true });
-    }
+    // Disabled for UI/UX testing
+    // if (!stage1Active && waitingRoomEnabled) {
+    //   navigate(`/event/${baseEvent}/waiting-room`, { replace: true });
+    // }
   }, [stage1Active, waitingRoomEnabled, navigate, baseEvent]);
 
-  // ⚠️ All hooks must be called BEFORE any early return (Rules of Hooks).
-  const {
-    phase,
-    currentProblemId,
-    phaseEndTime,
-    problems,
-    selections,
-    loading,
-    error,
-    selectProblem,
-    hasSelected,
-    allocationComplete,
-    refresh,
-  } = useControlState(teamId ?? "", stage1Active);
+  // ⚠️ Hardcoded states for UI/UX testing
+  const phase = "VIEW"; // change to "SELECT" to test active problem
+  const currentProblemId = "PS-01";
+  const phaseEndTime = null;
+  const problems = [
+    { id: "PS-01", title: "Intelligent Resource Allocation", description: "Design a system that dynamically allocates compute resources across distributed cloud clusters. The system must monitor real-time utilization metrics such as CPU, memory, and network bandwidth, predicting usage spikes using machine learning models to pre-provision resources before bottlenecks occur.", slots: 5, slots_taken: 5, domain: "AI/ML" },
+    { id: "PS-02", title: "Real-Time Fraud Detection Pipeline", description: "Build a streaming fraud detection engine that processes millions of transactions per second. You will need to implement a low-latency graph database backend combined with Kafka event streaming to flag anomalous behavior and block suspicious transactions with sub-millisecond latency.", slots: 5, slots_taken: 2, domain: "FinTech" },
+    { id: "PS-03", title: "Diagnostic Image Analysis", description: "Create a model that classifies medical imaging data such as X-rays and MRIs with high precision. Your solution should account for low-contrast anomalies, provide a heat-map of suspected pathological regions, and integrate seamlessly with existing hospital RIS/PACS environments via standard DICOM protocols.", slots: 5, slots_taken: 5, domain: "HealthTech" },
+    { id: "PS-04", title: "Carbon Footprint Tracker", description: "Develop a platform that aggregates real-time emissions data from global supply chains. It must ingest IoT sensor data, correlate it with public environmental datasets, and provide actionable decarbonization insights to enterprise users via an intuitive, real-time dashboard.", slots: 5, slots_taken: 0, domain: "Sustainability" },
+    { id: "PS-05", title: "Automated Code Review Assistant", description: "Build an LLM-powered assistant that reviews pull requests for security vulnerabilities, performance bottlenecks, and style violations. The tool should be capable of providing inline fix suggestions and learning from repository-specific conventions over time without requiring explicit rule configuration.", slots: 5, slots_taken: 3, domain: "DevTools" },
+    { id: "PS-06", title: "Adaptive Learning Path Engine", description: "Design a personalised curriculum engine that analyses learner interactions, quiz performance, and attention metrics to dynamically adjust course difficulty. The system should generate tailored practice modules and recommend supplemental resources tailored to individual cognitive learning styles.", slots: 5, slots_taken: 1, domain: "EdTech" },
+    { id: "PS-07", title: "Zero-Day Exploit Predictor", description: "Build a threat-intelligence system that ingests CVE feeds, dark web chatter, and open-source intelligence to predict emerging zero-day vulnerabilities. The platform must output a probability matrix for potential attack vectors across widely-used open-source libraries and frameworks.", slots: 5, slots_taken: 4, domain: "Cybersecurity" },
+    { id: "PS-08", title: "Dynamic Traffic Flow Optimiser", description: "Create an adaptive signal-control system using real-time video feeds from intersection cameras. Using edge AI processing, the system should dynamically alter traffic light phases to prioritize emergency vehicles and reduce overall congestion in high-density urban corridors.", slots: 5, slots_taken: 2, domain: "Smart Cities" },
+    { id: "PS-09", title: "Crop Yield Prediction via Satellite", description: "Develop a pipeline that fuses multispectral satellite imagery with localized weather data to predict seasonal crop yields. Your model must account for soil moisture variations, detect early signs of blight, and provide micro-insurance companies with precise risk assessments.", slots: 5, slots_taken: 0, domain: "AgriTech" },
+    { id: "PS-10", title: "Your Own Problem Statement", description: "Teams may propose a novel societal or technical challenge. You must submit a comprehensive proposal outlining the problem's significance, your proposed architectural solution, the tech stack you intend to use, and the potential impact of a successful implementation.", slots: 99, slots_taken: 10, domain: "Open Innovation" }
+  ];
+  const selections: any[] = [];
+  const loading = false;
+  const error = null;
+  const selectProblem = async () => { return { success: true }; };
+  const hasSelected = false;
+  const allocationComplete = false;
+  const refresh = () => {};
 
   // When the full allocation cycle finishes, save problems & navigate to overview
   React.useEffect(() => {
@@ -272,6 +252,26 @@ const ControlRoom: React.FC = () => {
 
   const connectionStatus = error ? "error" : loading ? "loading" : "live";
 
+  /* ── State ── */
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeDomain, setActiveDomain] = useState("All");
+  const [expandedProblemId, setExpandedProblemId] = useState<string | null>(null);
+
+  const domains = useMemo(() => {
+    const uniqueDomains = Array.from(new Set(problems.map(p => p.domain).filter(Boolean)));
+    return ["All", ...uniqueDomains];
+  }, [problems]);
+
+  const filteredProblems = useMemo(() => {
+    return problems.filter((p) => {
+      const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            p.id.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesDomain = activeDomain === "All" || p.domain === activeDomain;
+      return matchesSearch && matchesDomain;
+    });
+  }, [problems, searchQuery, activeDomain]);
+
   /* ── Route Guards (after all hooks) ── */
   if (!isAuthenticated) return <Navigate to={`/event/${baseEvent}/login`} replace />;
   if (!hasAcceptedRules) return <Navigate to={`/event/${baseEvent}/rules`} replace />;
@@ -279,15 +279,22 @@ const ControlRoom: React.FC = () => {
   return (
     <PageTransition>
       <div
-        className="ore-page ore-waiting-bg"
-        style={{ minHeight: "100vh", overflowX: "hidden" }}
+        className="relative min-h-screen overflow-hidden text-white flex flex-col"
+        style={{ fontFamily: "'Outfit', sans-serif", background: "linear-gradient(160deg, #0a0a0a 0%, #141414 40%, #1a1a1a 70%, #0d0d0d 100%)", overflowX: "hidden" }}
       >
-        {/* ── Fixed bg layers ── */}
-        <div className="ore-grid-bg" />
-        <div className="ore-radial-1" />
-        <div className="ore-radial-2" />
-        <ScanLines />
-        <Particles />
+        {/* Professional Ambient Purple Glows (matching WaitingRoom) */}
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+          <motion.div
+            animate={{ opacity: [0.15, 0.25, 0.15], scale: [1, 1.1, 1] }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute -top-[20%] -left-[10%] h-[600px] w-[600px] rounded-full bg-purple-600/10 blur-[150px]"
+          />
+          <motion.div
+            animate={{ opacity: [0.1, 0.2, 0.1], scale: [1, 1.2, 1] }}
+            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+            className="absolute top-[40%] -right-[10%] h-[500px] w-[500px] rounded-full bg-purple-900/20 blur-[150px]"
+          />
+        </div>
 
         {/* ── Top nav ── */}
         <TopBar teamName={teamName} phase={phase} connectionStatus={connectionStatus} />
@@ -340,15 +347,11 @@ const ControlRoom: React.FC = () => {
                     fontSize: "clamp(1.6rem,3.5vw,2.4rem)",
                     fontWeight: 800,
                     letterSpacing: "-0.025em",
-                    background:
-                      "linear-gradient(135deg,#fff 40%,rgba(196,181,253,0.8) 100%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
+                    color: "#ffffff",
                     lineHeight: 1.2,
                   }}
                 >
-                  Problem Statement Allocation
+                  PROBLEM STATEMENT ALLOCATION
                 </h1>
               </div>
 
@@ -365,6 +368,84 @@ const ControlRoom: React.FC = () => {
                   {problems.length} problem{problems.length !== 1 ? "s" : ""}
                 </span>
               )}
+            </div>
+          </motion.div>
+
+          {/* Filtering & Search */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            style={{ marginBottom: "2.5rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}
+          >
+            {/* Search Input */}
+            <div style={{ position: "relative", maxWidth: "100%" }}>
+              <input
+                type="text"
+                placeholder="Search by ID, Title, or Keyword..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "0.85rem 1rem 0.85rem 2.8rem",
+                  borderRadius: 12,
+                  background: "rgba(15,12,28,0.6)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  color: "#f1f5f9",
+                  fontSize: "0.9rem",
+                  outline: "none",
+                  transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+                  fontFamily: "'Inter', sans-serif"
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = "rgba(168,85,247,0.5)";
+                  e.target.style.boxShadow = "0 0 0 3px rgba(168,85,247,0.15)";
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "rgba(255,255,255,0.1)";
+                  e.target.style.boxShadow = "none";
+                }}
+              />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </div>
+
+            {/* Category Tags */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem" }}>
+              {domains.map(domain => (
+                <button
+                  key={domain}
+                  onClick={() => setActiveDomain(domain as string)}
+                  style={{
+                    padding: "0.4rem 1rem",
+                    borderRadius: 999,
+                    border: activeDomain === domain ? "1px solid rgba(168,85,247,0.5)" : "1px solid rgba(255,255,255,0.08)",
+                    background: activeDomain === domain ? "rgba(168,85,247,0.15)" : "rgba(255,255,255,0.03)",
+                    color: activeDomain === domain ? "#f3e8ff" : "rgba(255,255,255,0.5)",
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    fontFamily: "'Inter', sans-serif"
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeDomain !== domain) {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.07)";
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeDomain !== domain) {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                    }
+                  }}
+                >
+                  {domain}
+                </button>
+              ))}
             </div>
           </motion.div>
 
@@ -389,7 +470,7 @@ const ControlRoom: React.FC = () => {
           )}
 
           {/* Problem presentation */}
-          {!stage1Active ? (
+          {false ? (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ textAlign: "center", padding: "6rem 2rem", background: "rgba(15,12,28,0.5)", borderRadius: 24, border: "1px solid rgba(255,255,255,0.04)" }}>
               <div style={{ fontSize: "3rem", marginBottom: "1.5rem" }}>📡</div>
               <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "white", marginBottom: "0.75rem" }}>Event Standby</h2>
@@ -399,7 +480,7 @@ const ControlRoom: React.FC = () => {
               </p>
             </motion.div>
           ) : loading ? (
-            <motion.div layout style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: "1.25rem" }}>
+            <motion.div layout style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: "1.25rem", alignItems: "start" }}>
               <CardSkeleton n={4} />
             </motion.div>
           ) : problems.length === 0 ? (
@@ -407,17 +488,16 @@ const ControlRoom: React.FC = () => {
               No problem statements found. The organizers will publish them shortly.
             </motion.div>
           ) : phase === "VIEW" || phase === "RESULT" ? (
-            <motion.div layout style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: "1.25rem" }}>
-              {problems.map((problem, idx) => (
+            <motion.div layout style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: "1.25rem", alignItems: "start" }}>
+              {filteredProblems.map((problem, idx) => (
                 <ProblemCard
                   key={problem.id}
                   problem={problem}
                   phase={phase}
                   isActive={phase === "SELECT" ? problem.id === currentProblemId : false}
-                  hasSelected={hasSelected}
                   isMySelection={selections.some(s => s.team_id === teamId && s.problem_id === problem.id)}
-                  onSelect={handleSelect}
                   index={idx}
+                  onClick={() => setExpandedProblemId(problem.id)}
                 />
               ))}
             </motion.div>
@@ -429,11 +509,9 @@ const ControlRoom: React.FC = () => {
                   problem={activeProblem}
                   phase={phase}
                   isActive={true}
-                  hasSelected={hasSelected}
                   isMySelection={selections.some(s => s.team_id === teamId && s.problem_id === activeProblem.id)}
-                  onSelect={handleSelect}
-                  onReject={() => {}}
                   index={0}
+                  onClick={() => setExpandedProblemId(activeProblem.id)}
                 />
               ) : (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ textAlign: "center", padding: "4rem 1.5rem", background: "rgba(15,12,28,0.6)", borderRadius: 18, border: "1px solid rgba(255,255,255,0.05)" }}>
@@ -445,6 +523,18 @@ const ControlRoom: React.FC = () => {
           )}
         </motion.main>
 
+        <ProblemDrawer
+          problem={problems.find(p => p.id === expandedProblemId) || null}
+          isOpen={!!expandedProblemId}
+          onClose={() => setExpandedProblemId(null)}
+          phase={phase as Phase}
+          isActive={phase === "SELECT" ? expandedProblemId === currentProblemId : false}
+          hasSelected={hasSelected}
+          isMySelection={expandedProblemId ? selections.some(s => s.team_id === teamId && s.problem_id === expandedProblemId) : false}
+          onSelect={handleSelect}
+          onReject={() => {}} // Could wire this to a reject state if needed
+        />
+
         {/* Footer */}
         <motion.footer
           initial={{ opacity: 0 }}
@@ -452,17 +542,17 @@ const ControlRoom: React.FC = () => {
           transition={{ delay: 1.1 }}
           style={{
             position: "relative",
-            zIndex: 2,
+            zIndex: 10,
             textAlign: "center",
             padding: "1.25rem",
-            borderTop: "1px solid rgba(255,255,255,0.04)",
-            color: "rgba(255,255,255,0.12)",
-            fontSize: "0.62rem",
+            color: "rgba(255,255,255,0.15)",
+            fontSize: "0.65rem",
             letterSpacing: "0.16em",
             textTransform: "uppercase",
+            fontWeight: 700,
           }}
         >
-          OreHack by Oregent © 2025 — Control Room — Realtime via Supabase
+          OreHack by Oregent © 2025 — Control Room
         </motion.footer>
       </div>
     </PageTransition>

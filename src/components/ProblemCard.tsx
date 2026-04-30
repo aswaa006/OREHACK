@@ -1,26 +1,19 @@
-import React, { memo, useState, useCallback } from "react";
+import React, { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Phase, Problem } from "@/hooks/useControlState";
-
-// ─── Spinner ─────────────────────────────────────────────────────────────────
-const Spinner: React.FC = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 16 16"
-    fill="none"
-    style={{ animation: "spinRing 0.7s linear infinite", flexShrink: 0 }}
-    aria-hidden="true"
-  >
-    <circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.25)" strokeWidth="2" />
-    <path d="M8 2A6 6 0 0 1 14 8" stroke="#a855f7" strokeWidth="2" strokeLinecap="round" />
-  </svg>
-);
 
 // ─── Slot Bar ─────────────────────────────────────────────────────────────────
 const SlotBar: React.FC<{ slots: number; slotsTaken: number }> = memo(({ slots, slotsTaken }) => {
   const pct = slots > 0 ? Math.min(1, slotsTaken / slots) : 0;
   const isFull = slotsTaken >= slots;
+  
+  let bgGradient = "linear-gradient(90deg, #3b82f6, #8b5cf6)"; // Neutral Blue/Purple for 0-50%
+  if (pct >= 1) {
+    bgGradient = "linear-gradient(90deg, #ef4444, #dc2626)"; // Solid Red for 100%
+  } else if (pct >= 0.5) {
+    bgGradient = "linear-gradient(90deg, #f59e0b, #ea580c)"; // Warning Orange for 50-90%
+  }
+
   return (
     <div style={{ marginTop: "0.85rem" }}>
       <div
@@ -46,7 +39,7 @@ const SlotBar: React.FC<{ slots: number; slotsTaken: number }> = memo(({ slots, 
           style={{
             fontSize: "0.72rem",
             fontFamily: "var(--font-mono)",
-            color: isFull ? "rgba(251,113,133,0.85)" : "rgba(196,181,253,0.7)",
+            color: isFull ? "rgba(239,68,68,0.85)" : "rgba(196,181,253,0.7)",
             fontWeight: 600,
           }}
         >
@@ -69,9 +62,7 @@ const SlotBar: React.FC<{ slots: number; slotsTaken: number }> = memo(({ slots, 
             height: "100%",
             borderRadius: 2,
             transformOrigin: "left",
-            background: isFull
-              ? "linear-gradient(90deg,#fb7185,#f43f5e)"
-              : "linear-gradient(90deg,#7c3aed,#a855f7,#6366f1)",
+            background: bgGradient,
           }}
         />
       </div>
@@ -84,51 +75,17 @@ SlotBar.displayName = "SlotBar";
 export interface ProblemCardProps {
   problem: Problem;
   phase: Phase;
-  isActive: boolean;      // this is the currentProblemId match
-  hasSelected: boolean;   // current team already locked in globally
-  isMySelection: boolean; // team locked firmly into this specific card
-  onSelect: (problemId: string) => Promise<void>;
-  index: number;          // for staggered entrance
-  onReject?: () => void;
+  isActive: boolean;
+  isMySelection: boolean;
+  index: number;
+  onClick: () => void;
 }
 
 // ─── ProblemCard ──────────────────────────────────────────────────────────────
 export const ProblemCard: React.FC<ProblemCardProps> = memo(
-  ({ problem, phase, isActive, hasSelected, isMySelection, onSelect, index, onReject }) => {
-    const [selecting, setSelecting] = useState(false);
-    const [selError, setSelError] = useState<string | null>(null);
-    const [isExpanded, setIsExpanded] = useState(false);
-    const [localRejected, setLocalRejected] = useState(false);
-
+  ({ problem, phase, isActive, isMySelection, index, onClick }) => {
     const isFull = problem.slots_taken >= problem.slots;
-    const canSelect =
-      phase === "SELECT" &&
-      isActive &&
-      !hasSelected &&
-      !localRejected &&
-      !isFull &&
-      !selecting;
-
     const dimmed = phase === "SELECT" && !isActive;
-
-    const handleSelect = useCallback(async () => {
-      if (!canSelect) return;
-      setSelecting(true);
-      setSelError(null);
-      try {
-        await onSelect(problem.id);
-      } catch {
-        setSelError("Failed. Try again.");
-      } finally {
-        setSelecting(false);
-      }
-    }, [canSelect, onSelect, problem.id]);
-
-    // Active problem gets a pulsing glow ring + scale animation
-    const activeAnimation =
-      isActive && phase === "SELECT"
-        ? { scale: [1, 1.03, 1] }
-        : {};
 
     return (
       <motion.div
@@ -138,15 +95,14 @@ export const ProblemCard: React.FC<ProblemCardProps> = memo(
           opacity: dimmed ? 0.38 : 1,
           y: 0,
           scale: dimmed ? 0.96 : 1,
-          ...activeAnimation,
         }}
-        transition={
-          isActive && phase === "SELECT"
-            ? { scale: { repeat: Infinity, duration: 1.8, ease: "easeInOut" }, opacity: { duration: 0.4 }, y: { duration: 0.45, delay: index * 0.07 } }
-            : { duration: 0.45, delay: index * 0.07 }
-        }
+        transition={{ duration: 0.45, delay: index * 0.07 }}
         style={{
           position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          alignSelf: "start",
+          minHeight: 220,
           borderRadius: 18,
           padding: "1.4rem 1.6rem",
           background: isActive && phase === "SELECT"
@@ -156,22 +112,20 @@ export const ProblemCard: React.FC<ProblemCardProps> = memo(
             ? "1px solid rgba(168,85,247,0.55)"
             : "1px solid rgba(255,255,255,0.07)",
           backdropFilter: "blur(22px)",
-          boxShadow: isActive && phase === "SELECT"
-            ? "0 0 0 1px rgba(168,85,247,0.2), 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(124,58,237,0.18)"
-            : "0 12px 40px rgba(0,0,0,0.4)",
           cursor: "pointer",
           overflow: "hidden",
-          transition: "box-shadow 300ms, border-color 300ms",
+          transition: "border-color 300ms",
           willChange: "transform",
         }}
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={onClick}
         whileHover={
-          phase !== "VIEW" && !dimmed
-            ? { y: -6, boxShadow: "0 20px 60px rgba(0,0,0,0.55), 0 0 30px rgba(124,58,237,0.15)" }
-            : {}
+          dimmed ? {} : { 
+            y: -2, 
+            borderColor: "rgba(168,85,247,0.4)",
+          }
         }
       >
-        {/* Active glow overlay */}
+        {/* Active border overlay instead of glow */}
         <AnimatePresence>
           {isActive && phase === "SELECT" && (
             <motion.div
@@ -183,8 +137,7 @@ export const ProblemCard: React.FC<ProblemCardProps> = memo(
                 position: "absolute",
                 inset: 0,
                 borderRadius: "inherit",
-                background:
-                  "radial-gradient(ellipse at 50% 0%, rgba(124,58,237,0.2) 0%, transparent 65%)",
+                border: "1px solid rgba(168,85,247,0.8)",
               }}
             />
           )}
@@ -223,20 +176,23 @@ export const ProblemCard: React.FC<ProblemCardProps> = memo(
           </span>
 
           {/* Live / Full indicator */}
-          {isFull && (
+          {isFull ? (
             <span
               style={{
                 fontSize: "0.6rem",
                 letterSpacing: "0.16em",
                 textTransform: "uppercase",
-                color: "rgba(251,113,133,0.8)",
-                fontWeight: 600,
+                color: "#fca5a5",
+                background: "rgba(239,68,68,0.15)",
+                padding: "3px 10px",
+                borderRadius: 999,
+                fontWeight: 700,
+                border: "1px solid rgba(239,68,68,0.3)"
               }}
             >
               FULL
             </span>
-          )}
-          {isActive && phase === "SELECT" && !isFull && (
+          ) : isActive && phase === "SELECT" ? (
             <span
               style={{
                 display: "inline-flex",
@@ -245,21 +201,39 @@ export const ProblemCard: React.FC<ProblemCardProps> = memo(
                 fontSize: "0.6rem",
                 letterSpacing: "0.16em",
                 textTransform: "uppercase",
-                color: "rgba(74,222,128,0.85)",
-                fontWeight: 600,
+                color: "#86efac",
+                background: "rgba(34,197,94,0.12)",
+                padding: "3px 10px",
+                borderRadius: 999,
+                fontWeight: 700,
+                border: "1px solid rgba(34,197,94,0.3)"
               }}
             >
               <span
                 style={{
-                  width: 6,
-                  height: 6,
+                  width: 5,
+                  height: 5,
                   borderRadius: "50%",
                   background: "#4ade80",
-                  boxShadow: "0 0 8px rgba(74,222,128,0.8)",
-                  animation: "pulseLive 1.8s ease-in-out infinite",
                 }}
               />
               ACTIVE
+            </span>
+          ) : (
+            <span
+              style={{
+                fontSize: "0.6rem",
+                letterSpacing: "0.16em",
+                textTransform: "uppercase",
+                color: "#93c5fd",
+                background: "rgba(59,130,246,0.12)",
+                padding: "3px 10px",
+                borderRadius: 999,
+                fontWeight: 700,
+                border: "1px solid rgba(59,130,246,0.25)"
+              }}
+            >
+              OPEN
             </span>
           )}
         </div>
@@ -267,10 +241,10 @@ export const ProblemCard: React.FC<ProblemCardProps> = memo(
         {/* Title */}
         <h3
           style={{
-            fontSize: "1rem",
-            fontWeight: 700,
+            fontSize: "1.1rem",
+            fontWeight: 800,
             letterSpacing: "-0.01em",
-            color: "rgba(255,255,255,0.92)",
+            color: "rgba(255,255,255,0.95)",
             marginBottom: "0.55rem",
             lineHeight: 1.35,
           }}
@@ -278,18 +252,19 @@ export const ProblemCard: React.FC<ProblemCardProps> = memo(
           {problem.title}
         </h3>
 
-        {/* Description */}
+        {/* Description (Always Clamped) */}
         <p
           style={{
-            fontSize: "0.82rem",
-            color: "rgba(255,255,255,0.44)",
+            fontSize: "0.85rem",
+            color: "rgba(255,255,255,0.75)",
             lineHeight: 1.65,
-            ...(isExpanded ? {} : {
-              display: "-webkit-box",
-              WebkitLineClamp: 3,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-            })
+            flexGrow: 1,
+            fontFamily: "'Inter', sans-serif",
+            margin: 0,
+            display: "-webkit-box",
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
           }}
         >
           {problem.description}
@@ -300,119 +275,12 @@ export const ProblemCard: React.FC<ProblemCardProps> = memo(
           <SlotBar slots={problem.slots} slotsTaken={problem.slots_taken ?? 0} />
         )}
 
-        {/* Selection button — only rendered in SELECT phase */}
-        <AnimatePresence>
-          {phase === "SELECT" && isActive && (
-            <motion.div
-              initial={{ opacity: 0, height: 0, marginTop: 0 }}
-              animate={{ opacity: 1, height: "auto", marginTop: "1.1rem" }}
-              exit={{ opacity: 0, height: 0, marginTop: 0 }}
-              transition={{ duration: 0.28 }}
-            >
-              <div style={{ display: "flex", gap: "0.8rem", width: "100%" }}>
-                <motion.button
-                  id={`select-btn-${problem.id}`}
-                  whileHover={canSelect ? { scale: 1.03 } : {}}
-                  whileTap={canSelect ? { scale: 0.97 } : {}}
-                  onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleSelect(); }}
-                  disabled={!canSelect}
-                  style={{
-                    flex: 1,
-                    padding: "0.72rem 1.5rem",
-                    borderRadius: 12,
-                    border: "none",
-                    fontFamily: "var(--font-sans)",
-                    fontSize: "0.83rem",
-                    fontWeight: 700,
-                    letterSpacing: "0.06em",
-                    cursor: canSelect ? "pointer" : "not-allowed",
-                    background: canSelect
-                      ? "linear-gradient(135deg,#7c3aed 0%,#a855f7 55%,#6366f1 100%)"
-                      : "rgba(255,255,255,0.06)",
-                    color: canSelect ? "#fff" : "rgba(255,255,255,0.28)",
-                    boxShadow: canSelect
-                      ? "0 4px 24px rgba(124,58,237,0.45)"
-                      : "none",
-                    transition: "all 280ms",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    overflow: "hidden",
-                    position: "relative",
-                  }}
-                >
-                  {selecting && <Spinner />}
-                  {hasSelected
-                    ? isMySelection ? "Selection Locked ✓" : "Already Locked In ✕"
-                    : localRejected
-                      ? "Problem Rejected ✕"
-                      : isFull
-                        ? "No Slots Available"
-                        : selecting
-                          ? "Locking In…"
-                          : "Select This Problem"}
-
-                  {/* Shimmer on active */}
-                  {canSelect && (
-                    <motion.span
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        background:
-                          "linear-gradient(110deg,transparent 25%,rgba(255,255,255,0.25) 50%,transparent 75%)",
-                        pointerEvents: "none",
-                      }}
-                      animate={{ x: ["-140%", "140%"] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                  )}
-                </motion.button>
-                
-                {onReject && !hasSelected && !localRejected && (
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={(e) => { 
-                      e.stopPropagation(); 
-                      setLocalRejected(true);
-                      if (onReject) onReject(); 
-                    }}
-                    style={{
-                      padding: "0.72rem 1.5rem",
-                      borderRadius: 12,
-                      border: "1px solid rgba(251,113,133,0.3)",
-                      fontFamily: "var(--font-sans)",
-                      fontSize: "0.83rem",
-                      fontWeight: 700,
-                      letterSpacing: "0.06em",
-                      cursor: "pointer",
-                      background: "rgba(251,113,133,0.1)",
-                      color: "rgba(251,113,133,0.9)",
-                      transition: "all 280ms",
-                    }}
-                  >
-                    Reject
-                  </motion.button>
-                )}
-              </div>
-
-              {/* Inline error */}
-              {selError && (
-                <p
-                  style={{
-                    marginTop: 8,
-                    fontSize: "0.73rem",
-                    color: "rgba(251,113,133,0.85)",
-                    textAlign: "center",
-                  }}
-                >
-                  {selError}
-                </p>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* View Details Prompt */}
+        <div style={{ marginTop: "1rem", textAlign: "right" }}>
+            <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "rgba(168,85,247,0.8)", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                View Details →
+            </span>
+        </div>
 
         {/* RESULT phase: greyed out selection done state */}
         {phase === "RESULT" && isMySelection && (

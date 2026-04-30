@@ -23,6 +23,7 @@ export interface Problem {
   description: string;
   slots: number;
   slots_taken: number;
+  domain?: string;
 }
 
 export interface ProblemSelection {
