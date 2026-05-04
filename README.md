@@ -62,19 +62,34 @@ This project is built with:
 
 ## How can I deploy this project?
 
-This repo is set up for Vercel deployment.
+This repo is set up for Firebase Hosting with Cloud Functions.
 
-1. Push the repository to GitHub.
-2. Import the repository into Vercel.
-3. Vercel will auto-detect the configuration from [vercel.json](vercel.json).
-4. Set the backend environment variables in Vercel Project Settings:
-	- `DATABASE_URL`
-	- `JWT_SECRET`
-	- `SUPABASE_URL`
-	- `SUPABASE_SERVICE_ROLE_KEY`
-	- `JWT_EXPIRES_IN` if you want a custom token lifetime
+### Prerequisites
+- Firebase CLI installed (`npm install -g firebase-tools`)
+- Firebase project created in the console
 
-The frontend builds to `dist/`, and the Express backend is exposed through a Vercel serverless function at `api/[...slug].ts`. In production, the frontend talks to `/api` which Vercel automatically routes to the API function.
+### Deployment Steps
+
+1. Initialize Firebase (if not already done):
+   ```bash
+   firebase init
+   ```
+
+2. Set environment variables in Firebase:
+   ```bash
+   firebase functions:config:set backend.database_url="your_database_url"
+   firebase functions:config:set backend.jwt_secret="your_jwt_secret"
+   firebase functions:config:set backend.supabase_url="your_supabase_url"
+   firebase functions:config:set backend.supabase_service_role_key="your_service_role_key"
+   ```
+
+3. Deploy to Firebase:
+   ```bash
+   npm run build
+   firebase deploy
+   ```
+
+The frontend builds to `dist/` and is hosted on Firebase Hosting. The Express backend is exposed as a Cloud Function (`api`) that handles all `/api/**` requests. In production, the frontend talks to `/api` which Firebase automatically rewrites to the Cloud Function.
 
 ## Can I connect a custom domain to my Lovable project?
 
