@@ -1,6 +1,6 @@
 export const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ||
-  "http://localhost:4000/api";
+  (import.meta.env.DEV ? "http://localhost:4000/api" : "/api");
 
 export const ADMIN_TOKEN_KEY = "orehack_admin_token";
 export const TEAM_TOKEN_KEY = "orehack_team_token";

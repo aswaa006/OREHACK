@@ -62,7 +62,19 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+This repo is set up for Vercel deployment.
+
+1. Push the repository to GitHub.
+2. Import the repository into Vercel.
+3. Vercel will auto-detect the configuration from [vercel.json](vercel.json).
+4. Set the backend environment variables in Vercel Project Settings:
+	- `DATABASE_URL`
+	- `JWT_SECRET`
+	- `SUPABASE_URL`
+	- `SUPABASE_SERVICE_ROLE_KEY`
+	- `JWT_EXPIRES_IN` if you want a custom token lifetime
+
+The frontend builds to `dist/`, and the Express backend is exposed through a Vercel serverless function at `api/[...slug].ts`. In production, the frontend talks to `/api` which Vercel automatically routes to the API function.
 
 ## Can I connect a custom domain to my Lovable project?
 
