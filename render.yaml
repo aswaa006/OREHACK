@@ -2,10 +2,11 @@ services:
   - type: static
     name: orehack-web
     plan: free
-    nodeVersion: 20
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     envVars:
+      - key: NODE_VERSION
+        value: 20.10.0
       - key: VITE_SUPABASE_URL
         scope: build
       - key: VITE_SUPABASE_ANON_KEY
@@ -17,6 +18,8 @@ services:
     buildCommand: npm install
     startCommand: npm run server:start
     envVars:
+      - key: NODE_VERSION
+        value: 20.10.0
       - key: NODE_ENV
         value: production
       - key: PORT
