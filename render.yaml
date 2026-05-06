@@ -2,6 +2,7 @@ services:
   - type: static
     name: orehack-web
     plan: free
+    nodeVersion: 20
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     envVars:
