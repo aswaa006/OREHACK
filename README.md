@@ -73,7 +73,6 @@ This repo is configured for Render deployment.
 
 1. **Connect to Render:**
    - Go to https://dashboard.render.com
-   - Click "New +" → "Web Service"
    - Connect your GitHub account and select this repository
    - Render will auto-detect `render.yaml`
 
@@ -87,15 +86,18 @@ This repo is configured for Render deployment.
 
 3. **Deploy:**
    - Click "Deploy" in Render
-   - Render will build (`npm run build`) and start the server
-   - Your site will be live at: `https://<your-service-name>.onrender.com`
+   - Render will create two services from `render.yaml`:
+     - `orehack-web` for the React frontend
+     - `orehack-api` for the Express API
+   - Your frontend will be live at the Render static site URL
+   - Your API will be live at the Render web service URL
 
 ### Architecture
-- **Frontend:** React app built to `dist/` and served by Express
-- **Backend:** Node.js Express server on Render at `/api/**`
+- **Frontend:** React app built to `dist/` and hosted as a Render static site
+- **Backend:** Node.js Express API hosted as a separate Render web service at `/api/**`
 - **Database:** Supabase (frontend connects directly for read/write, backend for admin operations)
 
-The Express server runs on port 10000 (default for Render free tier) and serves both the static React app and API endpoints.
+The frontend and API are deployed together from the same repo, but as separate Render services.
 
 ## Can I connect a custom domain to my Lovable project?
 
