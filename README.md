@@ -62,34 +62,40 @@ This project is built with:
 
 ## How can I deploy this project?
 
-This repo is set up for Firebase Hosting with Cloud Functions.
+This repo is configured for Render deployment.
 
 ### Prerequisites
-- Firebase CLI installed (`npm install -g firebase-tools`)
-- Firebase project created in the console
+- GitHub account (repo already connected)
+- Render account (free tier available at render.com)
+- Supabase project with credentials
 
 ### Deployment Steps
 
-1. Initialize Firebase (if not already done):
-   ```bash
-   firebase init
-   ```
+1. **Connect to Render:**
+   - Go to https://dashboard.render.com
+   - Click "New +" → "Web Service"
+   - Connect your GitHub account and select this repository
+   - Render will auto-detect `render.yaml`
 
-2. Set environment variables in Firebase:
-   ```bash
-   firebase functions:config:set backend.database_url="your_database_url"
-   firebase functions:config:set backend.jwt_secret="your_jwt_secret"
-   firebase functions:config:set backend.supabase_url="your_supabase_url"
-   firebase functions:config:set backend.supabase_service_role_key="your_service_role_key"
-   ```
+2. **Set Environment Variables in Render:**
+   - `DATABASE_URL` — PostgreSQL/Supabase connection string
+   - `JWT_SECRET` — Secret key for token signing
+   - `SUPABASE_URL` — Your Supabase project URL
+   - `SUPABASE_SERVICE_ROLE_KEY` — Supabase service role key (for backend operations)
+   - `VITE_SUPABASE_URL` — Same as `SUPABASE_URL` (for frontend)
+   - `VITE_SUPABASE_ANON_KEY` — Supabase anonymous/public key (for frontend)
 
-3. Deploy to Firebase:
-   ```bash
-   npm run build
-   firebase deploy
-   ```
+3. **Deploy:**
+   - Click "Deploy" in Render
+   - Render will build (`npm run build`) and start the server
+   - Your site will be live at: `https://<your-service-name>.onrender.com`
 
-The frontend builds to `dist/` and is hosted on Firebase Hosting. The Express backend is exposed as a Cloud Function (`api`) that handles all `/api/**` requests. In production, the frontend talks to `/api` which Firebase automatically rewrites to the Cloud Function.
+### Architecture
+- **Frontend:** React app built to `dist/` and served by Express
+- **Backend:** Node.js Express server on Render at `/api/**`
+- **Database:** Supabase (frontend connects directly for read/write, backend for admin operations)
+
+The Express server runs on port 10000 (default for Render free tier) and serves both the static React app and API endpoints.
 
 ## Can I connect a custom domain to my Lovable project?
 

@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: orehack-api
+    runtime: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm run server:start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        scope: run
+      - key: JWT_SECRET
+        scope: run
+      - key: SUPABASE_URL
+        scope: run
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        scope: run
+      - key: VITE_SUPABASE_URL
+        scope: run
+      - key: VITE_SUPABASE_ANON_KEY
+        scope: run
