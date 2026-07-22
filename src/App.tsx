@@ -37,6 +37,7 @@ import HackathonsPage from "./pages/Hackathons";
 import ThePage from "./pages/ThePage";
 import { runStartupHealthCheck } from "@/lib/health-check";
 import { ThemeProvider } from "./context/ThemeContext";
+import DesktopOnlyGuard from "./components/DesktopOnlyGuard";
 
 const queryClient = new QueryClient();
 
@@ -234,16 +235,18 @@ const App = () => {
           <Sonner />
 
           <EventProvider>
-            <div
-              className={isRevealed ? 'site-ready' : ''}
-              style={{
-                opacity: isRevealed ? 1 : 0,
-                transition: 'opacity 0.5s ease-in',
-                minHeight: '100vh'
-              }}
-            >
-              <AnimatedRoutes />
-            </div>
+            <DesktopOnlyGuard>
+              <div
+                className={isRevealed ? 'site-ready' : ''}
+                style={{
+                  opacity: isRevealed ? 1 : 0,
+                  transition: 'opacity 0.5s ease-in',
+                  minHeight: '100vh'
+                }}
+              >
+                <AnimatedRoutes />
+              </div>
+            </DesktopOnlyGuard>
           </EventProvider>
         </BrowserRouter>
         </TooltipProvider>
