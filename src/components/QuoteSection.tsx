@@ -121,7 +121,7 @@ const QuoteSection = () => {
                 className="text-sm md:text-base uppercase tracking-[0.3em] text-[#7c3aed] font-semibold m-0"
                 style={{ fontFamily: "'Outfit', sans-serif", position: "relative", zIndex: 1 }}
               >
-                The OreHack Philosophy
+                The Oregent Philosophy
               </p>
             </div>
 

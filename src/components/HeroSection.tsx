@@ -83,13 +83,13 @@ const HeroSection = () => {
   const subTextColor = isDayMode ? "#555555" : "#a1a1aa";
   const ctaBg = isDayMode ? "#000000" : "#ffffff";
   const ctaText = isDayMode ? "#ffffff" : "#000000";
-  const glowShadow = isDayMode 
-    ? "0 0 60px rgba(124, 58, 237, 0.2), 0 0 120px rgba(124, 58, 237, 0.1)" 
+  const glowShadow = isDayMode
+    ? "0 0 60px rgba(124, 58, 237, 0.2), 0 0 120px rgba(124, 58, 237, 0.1)"
     : "0 0 60px rgba(124, 58, 237, 0.45), 0 0 120px rgba(124, 58, 237, 0.2)";
 
   return (
-    <section 
-      id="home" 
+    <section
+      id="home"
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
       style={{
         background: sectionBg,
@@ -101,7 +101,7 @@ const HeroSection = () => {
       <FloatingOrb delay={0} size={400} x="5%" y="15%" color="bg-primary/10" />
       <FloatingOrb delay={2} size={300} x="75%" y="55%" color="bg-pink-500/10" />
       <FloatingOrb delay={4} size={250} x="45%" y="5%" color="bg-blue-500/5" />
-      
+
       <GridLine direction="h" position="20%" delay={0} />
       <GridLine direction="v" position="15%" delay={1} />
 
@@ -171,7 +171,7 @@ const HeroSection = () => {
             wordSpacing: "0.15em"
           }}>
             <span className="orehack-liquid-text">
-              OreHack
+              Oregent
               <img
                 src={isDayMode ? "/globeday.png" : "/globe.png"}
                 alt=""
@@ -191,22 +191,22 @@ const HeroSection = () => {
 
         {/* Glow divider */}
         <div style={{ position: "relative", marginTop: "2rem", height: "2px", width: "100%", maxWidth: "600px" }}>
-            <div style={{
-              width: "100%",
-              height: "1px",
-              background: `linear-gradient(to right, transparent, rgba(124,58,237,0.6), ${isDayMode ? "rgba(124,58,237,0.8)" : "rgba(255,255,255,0.3)"}, rgba(124,58,237,0.6), transparent)`,
-            }} />
-            <div style={{
-              position: "absolute",
-              top: "-12px",
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: "60%",
-              height: "24px",
-              background: `radial-gradient(ellipse at center, rgba(124,58,237, ${isDayMode ? "0.2" : "0.35"}) 0%, transparent 70%)`,
-              filter: isDayMode ? "blur(4px)" : "blur(6px)",
-              pointerEvents: "none",
-            }} />
+          <div style={{
+            width: "100%",
+            height: "1px",
+            background: `linear-gradient(to right, transparent, rgba(124,58,237,0.6), ${isDayMode ? "rgba(124,58,237,0.8)" : "rgba(255,255,255,0.3)"}, rgba(124,58,237,0.6), transparent)`,
+          }} />
+          <div style={{
+            position: "absolute",
+            top: "-12px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "60%",
+            height: "24px",
+            background: `radial-gradient(ellipse at center, rgba(124,58,237, ${isDayMode ? "0.2" : "0.35"}) 0%, transparent 70%)`,
+            filter: isDayMode ? "blur(4px)" : "blur(6px)",
+            pointerEvents: "none",
+          }} />
         </div>
 
         <motion.div
@@ -254,7 +254,7 @@ const HeroSection = () => {
             }}
           >
             <span className="relative z-10 flex items-center gap-2">
-              ENTER ARENA
+              OREHACK++
               <svg
                 className="w-4 h-4 transition-transform duration-300 -rotate-45 group-hover:rotate-0"
                 fill="none"

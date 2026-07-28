@@ -1,8 +1,9 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { Plus } from "lucide-react";
 import emailjs from "@emailjs/browser";
 import { useTheme } from "@/context/ThemeContext";
+import BlurText from "./BlurText";
 
 // ✅ Fill in your EmailJS credentials below
 const EMAILJS_SERVICE_ID = "service_2ao7hsi";   // e.g. "service_abc123"
@@ -69,6 +70,15 @@ const Contact = () => {
   const [error, setError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string>("");
   const { isDayMode } = useTheme();
+
+  const [brandSuffix, setBrandSuffix] = useState("HACK");
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBrandSuffix((prev) => (prev === "HACK" ? "GENT" : "HACK"));
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -224,7 +234,7 @@ const Contact = () => {
             <h3 className="text-2xl font-bold mb-8" style={{ color: headingColor }}>How can we help?</h3>
             <div className="space-y-3">
               {[
-                "I want to sponsor OREHACK",
+                "I want to sponsor OREGENT",
                 "I'm a mentor or want to contribute",
                 "I'm a current or former participant",
                 "I want to volunteer for OREHACK",
@@ -480,7 +490,7 @@ const Contact = () => {
             <div className="flex flex-col justify-between">
               <div>
                 <span className="text-xl font-bold tracking-tight" style={{ color: footerTextColor }}>
-                  Ore<span className="text-gradient-primary">hack</span>
+                  ORE<span className="text-gradient-primary">GENT</span>
                 </span>
                 <p className="text-sm mt-2 leading-relaxed" style={{ color: footerMutedColor }}>
                   A Controlled Technical Evaluation System — engineered by Oregent.
@@ -525,7 +535,17 @@ const Contact = () => {
               display: "block",
             }}
           >
-            OREHACK
+            ORE<span style={{ display: "inline-block", verticalAlign: "bottom" }}>
+              <BlurText
+                key={brandSuffix}
+                text={brandSuffix}
+                delay={150}
+                animateBy="letters"
+                direction="top"
+                className="inline-block"
+                stepDuration={0.8}
+              />
+            </span>
           </h2>
         </div>
       </div>
