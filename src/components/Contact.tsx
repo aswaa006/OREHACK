@@ -1,9 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
 import emailjs from "@emailjs/browser";
 import { useTheme } from "@/context/ThemeContext";
+import BlurText from "./BlurText";
 
 // ✅ Fill in your EmailJS credentials below
 const EMAILJS_SERVICE_ID = "service_2ao7hsi";   // e.g. "service_abc123"
@@ -70,6 +71,15 @@ const Contact = () => {
   const [error, setError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string>("");
   const { isDayMode } = useTheme();
+
+  const [brandSuffix, setBrandSuffix] = useState("HACK");
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBrandSuffix((prev) => (prev === "HACK" ? "GENT" : "HACK"));
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -225,7 +235,7 @@ const Contact = () => {
             <h3 className="text-xl font-bold mb-6" style={{ color: headingColor }}>How can we help?</h3>
             <div className="space-y-4">
               {[
-                "I want to sponsor OREHACK",
+                "I want to sponsor OREGENT",
                 "I'm a mentor or want to contribute",
                 "I'm a current or former participant",
                 "I want to volunteer for OREHACK",
@@ -567,7 +577,17 @@ const Contact = () => {
               display: "block",
             }}
           >
-            OREHACK
+            ORE<span style={{ display: "inline-block", verticalAlign: "bottom" }}>
+              <BlurText
+                key={brandSuffix}
+                text={brandSuffix}
+                delay={150}
+                animateBy="letters"
+                direction="top"
+                className="inline-block"
+                stepDuration={0.8}
+              />
+            </span>
           </h2>
         </div>
       </div>

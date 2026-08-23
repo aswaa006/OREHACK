@@ -152,7 +152,7 @@ const Navbar = () => {
               fontSize: "2rem",
             }}
           >
-            OREHACK ++
+            OREGENT .
           </span>
         </div>
       </Link>

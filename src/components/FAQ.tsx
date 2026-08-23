@@ -10,8 +10,8 @@ interface FAQItem {
 
 const faqs: FAQItem[] = [
   {
-    question: "What does OreHack specialize in?",
-    answer: "OreHack specializes in bridging the gap between learning and execution. We build high-performance digital products, orchestrate high-impact hackathons, and provide automated evaluation infrastructure for institutions and enterprises.",
+    question: "What does Oregent specialize in?",
+    answer: "Oregent specializes in bridging the gap between learning and execution. We build high-performance digital products, orchestrate high-impact hackathons, and provide automated evaluation infrastructure for institutions and enterprises.",
   },
   {
     question: "What is your development process like?",
