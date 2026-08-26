@@ -108,7 +108,7 @@ export async function adminLogin(input: AdminLoginInput) {
       [email],
     );
 
-    if (result.rowCount > 0) {
+    if ((result.rowCount ?? 0) > 0) {
       admin = result.rows[0] as Admin;
     }
   } catch (error) {

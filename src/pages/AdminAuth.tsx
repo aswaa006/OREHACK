@@ -1,179 +1,161 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginAdmin, setAdminToken } from "@/lib/backend-api";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Lock, Eye, EyeOff } from "lucide-react";
-import {
-  clearAdminSession,
-  normalizeDashboardRole,
-  resolveAdminRoute,
-  storeAdminSession,
-} from "@/lib/dashboard-routing";
+import { useAdminAuth } from "@/context/AdminAuthContext";
+import { motion, AnimatePresence } from "framer-motion";
+import { Eye, EyeOff, Lock, Mail, AlertCircle, Zap } from "lucide-react";
 
-const AdminAuth = () => {
+export default function AdminAuth() {
+  const { login, isAuthenticated } = useAdminAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [showPwd, setShowPwd] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
+
+  // Already logged in — redirect
+  React.useEffect(() => {
+    if (isAuthenticated) navigate("/admin/v2/dashboard", { replace: true });
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    if (!email || !password) {
+      setError("Please enter your email and password.");
+      return;
+    }
+    setLoading(true);
     setError("");
-
     try {
-      const data = await loginAdmin(email.trim(), password);
-      const resolvedRole = normalizeDashboardRole(data.admin.role);
-      const roleRoute = resolveAdminRoute(resolvedRole);
-
-      if (resolvedRole === "unknown") {
-        clearAdminSession();
-        setError("No dashboard role is assigned to this account.");
-        return;
-      }
-
-      setAdminToken(data.token);
-      storeAdminSession({
-        userId: data.admin.id,
-        email: data.admin.email ?? null,
-        role: resolvedRole,
-        hackathonId: data.admin.hackathonSlug ?? null,
-        source: "backend",
-        createdAt: Date.now(),
-      });
-
-      navigate(roleRoute, { replace: true });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Authentication failed. Please try again.");
+      await login(email, password);
+      navigate("/admin/v2/dashboard", { replace: true });
+    } catch (err: any) {
+      setError(err.message || "Invalid credentials. Please try again.");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden px-6">
-      <div className="absolute inset-0 grid-bg opacity-20" />
+    <div className="min-h-screen bg-[#080810] flex items-center justify-center relative overflow-hidden">
+      {/* Animated background grid */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f0f1a_1px,transparent_1px),linear-gradient(to_bottom,#0f0f1a_1px,transparent_1px)] bg-[size:48px_48px] opacity-60" />
 
-      <div className="absolute inset-0 overflow-hidden">
-        <motion.div
-          className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-500 via-purple-600 to-transparent rounded-full blur-3xl"
-          animate={{
-            x: [0, 50, -50, 0],
-            y: [0, 50, 0, 50],
-            scale: [1, 1.1, 1, 1.05],
-            opacity: [0.3, 0.4, 0.3, 0.35],
-          }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute top-1/4 right-0 w-80 h-80 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full blur-3xl"
-          animate={{
-            x: [-50, 50, 0, 50],
-            y: [0, -50, 50, 0],
-            scale: [1, 1.05, 1.1, 1],
-            opacity: [0.25, 0.35, 0.3, 0.28],
-          }}
-          transition={{
-            duration: 14,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 2,
-          }}
-        />
-      </div>
+      {/* Glowing orbs */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-violet-600/10 rounded-full blur-3xl animate-pulse delay-1000" />
 
-      <motion.main
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45 }}
-        className="relative z-10 w-full max-w-md"
+      <motion.div
+        initial={{ opacity: 0, y: 24, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 w-full max-w-md mx-4"
       >
-        <section className="surface-elevated rounded-2xl border border-amber-300/30 bg-amber-500/10 p-8">
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Lock className="w-8 h-8 text-amber-400" />
+        {/* Card */}
+        <div className="bg-[#0d0d1a]/80 border border-white/[0.07] rounded-2xl shadow-2xl shadow-black/60 backdrop-blur-xl p-8">
+          {/* Logo + title */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 mb-4 shadow-lg shadow-indigo-500/30">
+              <Zap className="w-7 h-7 text-white" />
             </div>
-            <p className="text-sm font-semibold uppercase tracking-widest text-amber-200">
-              Admin Access
-            </p>
-            <h1 className="mt-3 text-3xl font-black text-amber-50 leading-tight">
-              OREGENT Admin
-            </h1>
-            <p className="mt-2 text-sm text-amber-100/90">
-              Enter your admin password to access the dashboard
+            <h1 className="text-2xl font-bold text-white tracking-tight">OREHACK Admin</h1>
+            <p className="text-sm text-white/40 mt-1 font-medium tracking-wide uppercase">
+              Platform Control Center
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-amber-200">
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email */}
+            <div>
+              <label className="block text-xs font-semibold text-white/50 uppercase tracking-widest mb-2">
                 Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@company.com"
-                className="bg-amber-500/5 border-amber-300/30 text-amber-50 placeholder:text-amber-300/50"
-                required
-              />
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                <input
+                  id="admin-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@orehack.com"
+                  autoComplete="email"
+                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl pl-10 pr-4 py-3 text-white placeholder-white/20 text-sm focus:outline-none focus:border-indigo-500/60 focus:bg-white/[0.06] transition-all"
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-amber-200">
-                Admin Password
-              </Label>
+            {/* Password */}
+            <div>
+              <label className="block text-xs font-semibold text-white/50 uppercase tracking-widest mb-2">
+                Password
+              </label>
               <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                <input
+                  id="admin-password"
+                  type={showPwd ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter admin password"
-                  className="pr-10 bg-amber-500/5 border-amber-300/30 text-amber-50 placeholder:text-amber-300/50"
-                  required
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl pl-10 pr-12 py-3 text-white placeholder-white/20 text-sm focus:outline-none focus:border-indigo-500/60 focus:bg-white/[0.06] transition-all"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-amber-300/70 hover:text-amber-200"
+                  onClick={() => setShowPwd((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
                 >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
+                  {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
-            {error && (
-              <Alert className="border-red-500/30 bg-red-500/10">
-                <AlertDescription className="text-red-200">
-                  {error}
-                </AlertDescription>
-              </Alert>
-            )}
+            {/* Error */}
+            <AnimatePresence mode="wait">
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3"
+                >
+                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                  <p className="text-sm text-red-400">{error}</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-            <Button
+            {/* Submit */}
+            <button
+              id="admin-login-submit"
               type="submit"
-              disabled={isLoading}
-              className="w-full bg-amber-500 hover:bg-amber-600 text-amber-50 font-semibold"
+              disabled={loading}
+              className="w-full relative bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:from-indigo-800 disabled:to-violet-800 text-white font-semibold py-3 rounded-xl transition-all duration-200 shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 disabled:cursor-not-allowed text-sm tracking-wide mt-2"
             >
-              {isLoading ? "Authenticating..." : "Access Admin Dashboard"}
-            </Button>
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Authenticating...
+                </span>
+              ) : (
+                "Sign in to Admin"
+              )}
+            </button>
           </form>
-        </section>
-      </motion.main>
+
+          {/* Footer */}
+          <p className="text-center text-xs text-white/20 mt-6">
+            OREHACK Platform · Restricted Access
+          </p>
+        </div>
+
+        {/* Decorative corner accent */}
+        <div className="absolute -top-px left-0 right-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
+      </motion.div>
     </div>
   );
-};
-
-export default AdminAuth;
+}

@@ -11,7 +11,7 @@ export type ApiFailure = {
 
 export type ApiResponse<T> = ApiSuccess<T> | ApiFailure;
 
-export type UserRole = "developer_admin" | "hackathon_admin" | "jury" | "team";
+export type UserRole = "developer_admin" | "hackathon_admin" | "jury" | "team" | "SUPER_ADMIN" | "EVENT_ADMIN" | "PARTICIPANT";
 
 export type JwtClaims = {
   sub: string;

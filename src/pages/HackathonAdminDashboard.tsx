@@ -178,15 +178,6 @@ const HackathonAdminDashboard = () => {
       tone: "from-cyan-500/25 via-cyan-500/10 to-transparent",
       iconTone: "from-cyan-500 to-sky-600",
     },
-    {
-      label: "Avg Score",
-      value: avgScore ? avgScore.toFixed(1) : "0.0",
-      delta: "Calculated from evaluated submissions",
-      progress: Math.min(100, Math.round(avgScore)),
-      icon: TrendingUp,
-      tone: "from-violet-500/25 via-violet-500/10 to-transparent",
-      iconTone: "from-violet-500 to-fuchsia-600",
-    },
   ];
 
   const tableSubmissions = submissions.map((submission, index) => ({
@@ -222,9 +213,17 @@ const HackathonAdminDashboard = () => {
               <h1 className="text-xl font-bold text-foreground">Hackathon Admin</h1>
               <p className="mt-1 text-xs text-muted-foreground">Origin 2K26</p>
             </motion.div>
-            <Link to="/" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-              ← Exit
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link
+                to="/admin/hackathon/create"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
+              >
+                + Create New Hackathon
+              </Link>
+              <Link to="/" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                ← Exit
+              </Link>
+            </div>
           </div>
         </header>
 
@@ -461,6 +460,24 @@ const HackathonAdminDashboard = () => {
                                 className="border-b border-border/60 bg-card/30"
                               >
                                 <td colSpan={5} className="px-5 py-4">
+                                  <div className="mb-4 rounded-lg border border-border/60 bg-background/50 p-4">
+                                    <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Team Details</h4>
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                      <div>
+                                        <p className="text-xs text-muted-foreground">Leader Name</p>
+                                        <p className="text-sm font-medium text-foreground">{submission.leader_name || "N/A"}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs text-muted-foreground">Leader Phone</p>
+                                        <p className="text-sm font-medium text-foreground">{submission.leader_phone || "N/A"}</p>
+                                      </div>
+                                      <div className="md:col-span-2">
+                                        <p className="text-xs text-muted-foreground">Problem Statement</p>
+                                        <p className="text-sm text-foreground mt-1 bg-card p-2 rounded border border-border/40">{submission.problem_statement || "No statement provided"}</p>
+                                      </div>
+                                    </div>
+                                  </div>
+
                                   <div className="grid gap-4 md:grid-cols-3">
                                     {/* Technical Scores */}
                                     <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">

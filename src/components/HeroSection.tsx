@@ -254,7 +254,7 @@ const HeroSection = () => {
             }}
           >
             <span className="relative z-10 flex items-center gap-2">
-              OREHACK++
+              OREHACK
               <svg
                 className="w-4 h-4 transition-transform duration-300 -rotate-45 group-hover:rotate-0"
                 fill="none"

@@ -18,12 +18,35 @@ import HackathonAdminDashboard from "./pages/HackathonAdminDashboard";
 import DeveloperAdminDashboard from "./pages/DeveloperAdminDashboard";
 import AdminHealth from "./pages/AdminHealth";
 import CreateHackathon from "./pages/CreateHackathon";
-import OriginAdmin from "./pages/OriginAdmin";
-import OriginControlPanel from "./pages/OriginControlPanel";
-import OriginStage4 from "./pages/OriginStage4";
-import OriginStage1 from "./pages/OriginStage1";
-import OriginStage2 from "./pages/OriginStage2";
+
+import SuperAdminDashboard from "./pages/SuperAdminDashboard";
+import BackendCliPage from "./pages/BackendCliPage";
+import EventsAdminDashboard from "./pages/EventsAdminDashboard";
+import EventScoreManager from "./pages/EventScoreManager";
+import DataSeederPage from "./pages/DataSeederPage";
 import { LoadingScreen } from "./components/LoadingScreen";
+
+// New V2 Routes
+import AdminLayout from "./pages/admin/AdminLayout";
+import SuperAdminDashboardV2 from "./pages/admin/SuperAdminDashboard";
+import ScoreManagerV2 from "./pages/admin/ScoreManager";
+import SubmissionWizard from "./pages/hackathon/SubmissionWizard";
+import ParticipantDashboard from "./pages/hackathon/ParticipantDashboard";
+import Register from "./pages/hackathon/Register";
+import { AdminAuthProvider } from "./context/AdminAuthContext";
+// V2 Admin Pages
+import HackathonsAdminPage from "./pages/admin/hackathons/HackathonsPage";
+import CreateHackathonPage from "./pages/admin/hackathons/CreateHackathonPage";
+import HackathonDetailPage from "./pages/admin/hackathons/HackathonDetailPage";
+import TeamsAdminPage from "./pages/admin/teams/TeamsPage";
+import TeamDetailPage from "./pages/admin/teams/TeamDetailPage";
+import ImportScoresPage from "./pages/admin/evaluation/ImportScoresPage";
+import ImportHistoryPage from "./pages/admin/evaluation/ImportHistoryPage";
+import LeaderboardAdminPage from "./pages/admin/evaluation/LeaderboardPage";
+import ExportsAdminPage from "./pages/admin/exports/ExportsPage";
+import UsersAdminPage from "./pages/admin/users/UsersPage";
+import AuditLogsAdminPage from "./pages/admin/audit/AuditLogsPage";
+import SettingsAdminPage from "./pages/admin/settings/SettingsPage";
 // Phase 1 — Event flow
 import { EventProvider } from "./context/EventContext";
 import EventLanding from "./pages/EventLanding";
@@ -32,7 +55,7 @@ import Rules from "./pages/Rules";
 import WaitingRoom from "./pages/WaitingRoom";
 import ControlRoom from "./pages/ControlRoom";
 import ProblemStatementsOverview from "./pages/ProblemStatementsOverview";
-import OriginStage3 from "./pages/OriginStage3";
+
 import HackathonsPage from "./pages/Hackathons";
 import ThePage from "./pages/ThePage";
 import { runStartupHealthCheck } from "@/lib/health-check";
@@ -156,12 +179,36 @@ const AnimatedRoutes = () => {
         <Route path="/admin/hackathon/create" element={<CreateHackathon />} />
         <Route path="/admin/developer" element={<DeveloperAdminDashboard />} />
         <Route path="/admin/health" element={<AdminHealth />} />
-        <Route path="/orehackproject1924" element={<OriginAdmin />} />
-        <Route path="/orehackproject1924/panel" element={<OriginControlPanel />} />
-        <Route path="/orehackproject1924/panel/stage-1" element={<OriginStage1 />} />
-        <Route path="/orehackproject1924/panel/stage-2" element={<OriginStage2 />} />
-        <Route path="/orehackproject1924/panel/stage-3" element={<OriginStage3 />} />
-        <Route path="/orehackproject1924/panel/stage-4" element={<OriginStage4 />} />
+        <Route path="/admin/super" element={<SuperAdminDashboard />} />
+        <Route path="/admin/cli" element={<BackendCliPage />} />
+        <Route path="/admin/events" element={<EventsAdminDashboard />} />
+        <Route path="/admin/events/:slug" element={<EventScoreManager />} />
+        <Route path="/admin/seed" element={<DataSeederPage />} />
+
+        {/* --- New V2 Admin Routes --- */}
+        <Route path="/admin/v2" element={<AdminLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<SuperAdminDashboardV2 />} />
+          <Route path="hackathons" element={<HackathonsAdminPage />} />
+          <Route path="hackathons/create" element={<CreateHackathonPage />} />
+          <Route path="hackathons/:hackathonId" element={<HackathonDetailPage />} />
+          <Route path="teams" element={<TeamsAdminPage />} />
+          <Route path="teams/:id" element={<TeamDetailPage />} />
+          <Route path="evaluation/scores" element={<ScoreManagerV2 />} />
+          <Route path="evaluation/import" element={<ImportScoresPage />} />
+          <Route path="evaluation/imports" element={<ImportHistoryPage />} />
+          <Route path="evaluation/leaderboard" element={<LeaderboardAdminPage />} />
+          <Route path="exports" element={<ExportsAdminPage />} />
+          <Route path="users" element={<UsersAdminPage />} />
+          <Route path="audit-logs" element={<AuditLogsAdminPage />} />
+          <Route path="settings" element={<SettingsAdminPage />} />
+        </Route>
+
+        {/* --- New V2 Hackathon Routes --- */}
+        <Route path="/hackathon/v2/submit" element={<SubmissionWizard />} />
+        <Route path="/hackathon/v2/dashboard" element={<ParticipantDashboard />} />
+        <Route path="/hackathon/v2/:eventId/register" element={<Register />} />
+
 
         {/* ── Phase 1: Event flow ── */}
         <Route path="/event/:eventId" element={<EventLanding />} />
@@ -219,6 +266,7 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <AdminAuthProvider>
       <ThemeProvider>
         <TooltipProvider>
         <BrowserRouter>
@@ -248,6 +296,7 @@ const App = () => {
         </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>
+      </AdminAuthProvider>
     </QueryClientProvider>
   );
 };

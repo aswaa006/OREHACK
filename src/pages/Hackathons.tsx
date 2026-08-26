@@ -2,18 +2,12 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 
+import { useQuery } from "@tanstack/react-query";
+import { getPublicEvents } from "@/lib/backend-api";
+
 /* ══════════════════════════════════════════════════════════
-   DATA
-   (Keep same data as ActiveHackathons)
+   DATA & CONFIG
 ═══════════════════════════════════════════════════════════ */
-const hackathons = [
-  { id: "origin-2k26", name: "Origin 2K26", status: "Live", participants: 413, deadline: "10th April 10.00 am" },
-  { id: "buildcore-v3", name: "BuildCore v3", status: "Upcoming", participants: 0, deadline: "3rd May 11.15 am" },
-  { id: "devstrike-24", name: "DevStrike '24", status: "Completed", participants: 256, deadline: "Ended" },
-  { id: "codeblitz-1", name: "CodeBlitz 1.0", status: "Upcoming", participants: 190, deadline: "9th May 4.40 pm" },
-  { id: "simats-open", name: "SIMATS Open Challenge", status: "Live", participants: 275, deadline: "17th May 8.20 pm" },
-  { id: "hackfest-2026", name: "HackFest 2026", status: "Upcoming", participants: 142, deadline: "26th May 2.55 pm" },
-];
 
 const STATUS = {
   Live: { badge: "LIVE", card: "hsl(142 71% 45%)", glow: "hsl(142 71% 45% / 0.30)", bg: "hsl(142 71% 45% / 0.08)", border: "hsl(142 71% 45% / 0.45)", dot: true, pulse: true },
@@ -62,7 +56,7 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
   );
 }
 
-interface CardProps { h: typeof hackathons[0]; assembled: boolean; active: boolean }
+interface CardProps { h: any; assembled: boolean; active: boolean }
 
 function ExplodingCard({ h, assembled, active }: CardProps) {
   const navigate = useNavigate();
@@ -80,8 +74,10 @@ function ExplodingCard({ h, assembled, active }: CardProps) {
     return () => clearTimeout(t);
   }, [assembled]);
 
-  let sc = STATUS[h.status as keyof typeof STATUS];
-  if (h.id === "origin-2k26") {
+  let statusKey = h.status === 'EVALUATION' ? 'Live' : h.status === 'COMPLETED' ? 'Completed' : 'Upcoming';
+  let sc = STATUS[statusKey as keyof typeof STATUS] || STATUS.Upcoming;
+  
+  if (h.slug === "origin-2k26" || h.id === "origin-2k26") {
     sc = { ...sc, card: "hsl(0 0% 75%)", glow: "hsl(0 0% 75% / 0.30)", bg: "hsl(0 0% 75% / 0.15)", border: "hsl(0 0% 75% / 0.45)" };
   }
 
@@ -166,7 +162,7 @@ function ExplodingCard({ h, assembled, active }: CardProps) {
         onClick={() => {
           if (assembled) {
             window.dispatchEvent(new Event('logoTurbo'));
-            navigate(`/event/${h.id}`);
+            navigate(`/hackathon/v2/${h.slug || h.id}/register`);
           }
         }}
         style={{
@@ -211,8 +207,8 @@ function ExplodingCard({ h, assembled, active }: CardProps) {
         <div style={{ height: 1, background: `linear-gradient(90deg, ${sc.border}, transparent)` }} />
 
         <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
-          <StatRow label="Participants" value={h.participants.toLocaleString()} color={sc.card} />
-          <StatRow label="Deadline" value={h.deadline} color={sc.card} />
+          <StatRow label="Max Team Size" value={h.max_team_size?.toString() || "4"} color={sc.card} />
+          <StatRow label="End Date" value={h.end_date ? new Date(h.end_date).toLocaleDateString() : "TBD"} color={sc.card} />
         </div>
 
         <div style={{ display: "flex", justifyContent: "center", paddingTop: "0.5rem" }}>
@@ -254,15 +250,25 @@ function StatRow({ label, value, color }: { label: string; value: string; color:
   );
 }
 
-const N = hackathons.length;
-const TRACK_VH = N;
-
 const HackathonsPage = () => {
+  const { data: hackathons = [], isLoading } = useQuery({
+    queryKey: ["public_events"],
+    queryFn: getPublicEvents,
+  });
+
+  const N = hackathons.length;
+  const TRACK_VH = N === 0 ? 1 : N;
   const trackRef = useRef<HTMLDivElement>(null);
   const railRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const [hoveredDot, setHoveredDot] = useState<number | null>(null);
-  const [assembled, setAssembled] = useState<boolean[]>(() => hackathons.map(() => false));
+  
+  // Update assembled state when data loads
+  const [assembled, setAssembled] = useState<boolean[]>([]);
+  useEffect(() => {
+    setAssembled(hackathons.map(() => false));
+  }, [hackathons.length]);
+  
   const [activeIdx, setActiveIdx] = useState(0);
 
   const assembledRef = useRef(assembled);
@@ -283,26 +289,26 @@ const HackathonsPage = () => {
     const firstCard = rail.firstElementChild as HTMLElement | null;
     const cw = firstCard ? firstCard.offsetWidth : 400;
     const GAP = 32;
-    const maxOffset = (N - 1) * (cw + GAP);
+    const maxOffset = Math.max(0, N - 1) * (cw + GAP);
 
     rail.style.transform = `translateX(${-p * maxOffset}px)`;
     if (pBar) pBar.style.width = `${p * 100}%`;
 
-    const raw = p * (N - 1);
+    const raw = p * Math.max(0, N - 1);
     const idx = Math.round(raw);
     setActiveIdx(Math.min(N - 1, idx));
 
     const next = [...assembledRef.current];
     hackathons.forEach((_, i) => {
-        const targetP = i / (N - 1);
+        const targetP = N > 1 ? i / (N - 1) : 0;
         const dist = Math.abs(p - targetP);
-        next[i] = dist < 0.85 / (N - 1);
+        next[i] = dist < (N > 1 ? 0.85 / (N - 1) : 1);
     });
 
     if (next.some((v, i) => v !== assembledRef.current[i])) {
       setAssembled([...next]);
     }
-  }, []);
+  }, [N, hackathons]);
 
   useEffect(() => {
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -369,8 +375,11 @@ const HackathonsPage = () => {
               </p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                {hackathons.map((h, i) => {
-                  const sc = STATUS[h.status as keyof typeof STATUS];
+                {isLoading ? (
+                  <div style={{ color: "hsl(218 11% 44%)" }}>Loading hackathons...</div>
+                ) : hackathons.map((h: any, i: number) => {
+                  let statusKey = h.status === 'EVALUATION' ? 'Live' : h.status === 'COMPLETED' ? 'Completed' : 'Upcoming';
+                  const sc = STATUS[statusKey as keyof typeof STATUS] || STATUS.Upcoming;
                   const isActive = activeIdx === i;
                   return (
                     <button
@@ -382,7 +391,7 @@ const HackathonsPage = () => {
                         const track = trackRef.current;
                         if (!track) return;
                         const scrollable = track.offsetHeight - window.innerHeight;
-                        const targetP = i / (N - 1);
+                        const targetP = N > 1 ? i / (N - 1) : 0;
                         window.scrollTo({ top: track.offsetTop + targetP * scrollable, behavior: "smooth" });
                       }}
                       style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}
@@ -404,9 +413,17 @@ const HackathonsPage = () => {
 
             <div style={{ marginLeft: "clamp(280px, 36vw, 420px)", padding: "4rem 0", marginTop: "-4rem", overflow: "hidden", maskImage: "linear-gradient(90deg, black 0%, black 90%, transparent 100%)" }}>
               <div ref={railRef} style={{ display: "flex", gap: "2rem", paddingRight: "clamp(2rem, 5vw, 6rem)", willChange: "transform", perspective: "1000px" }}>
-                {hackathons.map((h, i) => (
+                {isLoading ? (
+                  <div style={{ width: "100%", color: "hsl(218 11% 44%)", fontSize: "1.2rem", padding: "2rem" }}>
+                    Loading active hackathons...
+                  </div>
+                ) : hackathons.length === 0 ? (
+                  <div style={{ width: "100%", color: "hsl(218 11% 44%)", fontSize: "1.2rem", padding: "2rem" }}>
+                    No active hackathons found.
+                  </div>
+                ) : hackathons.map((h: any, i: number) => (
                   <div key={h.id} style={{ width: "clamp(300px, 38vw, 480px)", height: "clamp(280px, 46vh, 380px)", flexShrink: 0 }}>
-                    <ExplodingCard h={h} assembled={assembled[i]} active={activeIdx === i} />
+                    <ExplodingCard h={h} assembled={assembled[i] || false} active={activeIdx === i} />
                   </div>
                 ))}
               </div>

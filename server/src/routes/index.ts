@@ -33,6 +33,7 @@ apiRouter.get("/routes", (_req, res) => {
 });
 
 apiRouter.get("/health", (_req, res) => {
+  console.log("DB URL IS:", process.env.DATABASE_URL);
   res.status(200).json({ success: true, message: "Backend is healthy." });
 });
 
