@@ -171,12 +171,16 @@ export default function TeamsPage() {
                     <td className="px-5 py-4 text-white/50 text-sm whitespace-nowrap">{team.event_name ?? "—"}</td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
-                          team.demo_url ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20" : "bg-white/[0.02] text-white/20 border-white/[0.05]"
-                        }`} title="Stage 1: Presentation">PPT</span>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
-                          team.repo_url ? "bg-purple-500/10 text-purple-400 border-purple-500/20" : "bg-white/[0.02] text-white/20 border-white/[0.05]"
-                        }`} title="Stage 2: Repository">Repo</span>
+                        {team.demo_url ? (
+                          <a href={team.demo_url} target="_blank" rel="noopener noreferrer" className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-indigo-500/10 text-indigo-400 border-indigo-500/20 hover:bg-indigo-500/20 hover:text-indigo-300 transition-colors" title="Stage 1: Presentation (Click to open)">PPT</a>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-white/[0.02] text-white/20 border-white/[0.05]" title="Stage 1: Presentation (Not submitted)">PPT</span>
+                        )}
+                        {team.repo_url ? (
+                          <a href={team.repo_url} target="_blank" rel="noopener noreferrer" className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-purple-500/10 text-purple-400 border-purple-500/20 hover:bg-purple-500/20 hover:text-purple-300 transition-colors" title="Stage 2: Repository (Click to open)">Repo</a>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-white/[0.02] text-white/20 border-white/[0.05]" title="Stage 2: Repository (Not submitted)">Repo</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-5 py-4 font-mono text-sm">

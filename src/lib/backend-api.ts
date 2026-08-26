@@ -225,11 +225,11 @@ export async function getTeamDashboard(teamId: string) {
   return data.data;
 }
 
-export async function submitStageLinks(teamId: string, pptLink: string, repoLink: string) {
+export async function submitStageLinks(teamId: string, pptLink: string, repoLink: string, problemStatement: string) {
   const res = await fetch(`${API_BASE}/teams/${teamId}/submit`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ pptLink, repoLink }),
+    body: JSON.stringify({ pptLink, repoLink, problemStatement }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Failed to submit links");

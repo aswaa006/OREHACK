@@ -42,7 +42,7 @@ export async function registerTeam(req: Request, res: Response) {
 
     // Insert team
     const teamInsert = await client.query(
-      `INSERT INTO teams (team_code, team_name, institution, event_id) VALUES ($1, $2, $3, $4) RETURNING id`,
+      `INSERT INTO teams (team_code, name, institution, event_id) VALUES ($1, $2, $3, $4) RETURNING id`,
       [teamCode, teamName, institution || null, eventId]
     );
     const teamId = teamInsert.rows[0].id;
@@ -87,7 +87,7 @@ export async function loginTeam(req: Request, res: Response) {
   }
 
   const query = `
-    SELECT t.id, t.team_code, t.team_name, e.slug, e.id as event_id
+    SELECT t.id, t.team_code, t.name AS team_name, e.slug, e.id as event_id
     FROM teams t
     JOIN events e ON t.event_id = e.id
     WHERE t.team_code = $1 AND t.event_id = $2
@@ -117,7 +117,7 @@ export async function loginTeam(req: Request, res: Response) {
 
 export async function submitStageLinks(req: Request, res: Response) {
   const { teamId } = req.params;
-  const { pptLink, repoLink } = req.body; // stage 1 and stage 2
+  const { pptLink, repoLink, problemStatement } = req.body; // stage 1 and stage 2
   
   if (!pptLink && !repoLink) {
     throw new HttpError(400, "Must provide at least one link");
@@ -126,7 +126,7 @@ export async function submitStageLinks(req: Request, res: Response) {
   const client = await pool.connect();
   try {
     // Check if team exists
-    const teamResult = await client.query("SELECT id FROM teams WHERE id = $1 OR team_code = $1", [teamId]);
+    const teamResult = await client.query("SELECT id FROM teams WHERE id::text = $1 OR team_code = $1", [teamId]);
     if (teamResult.rowCount === 0) {
       throw new HttpError(404, "Team not found");
     }
@@ -139,14 +139,14 @@ export async function submitStageLinks(req: Request, res: Response) {
       // Update
       const subId = subResult.rows[0].id;
       await client.query(
-        "UPDATE submissions SET demo_url = COALESCE($1, demo_url), repo_url = COALESCE($2, repo_url) WHERE id = $3",
-        [pptLink || null, repoLink || null, subId]
+        "UPDATE submissions SET demo_url = COALESCE($1, demo_url), repo_url = COALESCE($2, repo_url), problem_statement = COALESCE($4, problem_statement) WHERE id = $3",
+        [pptLink || null, repoLink || null, subId, problemStatement || null]
       );
     } else {
       // Insert
       await client.query(
-        "INSERT INTO submissions (team_id, demo_url, repo_url, status) VALUES ($1, $2, $3, 'SUBMITTED')",
-        [internalTeamId, pptLink || null, repoLink || null]
+        "INSERT INTO submissions (team_id, demo_url, repo_url, problem_statement, status) VALUES ($1, $2, $3, $4, 'SUBMITTED')",
+        [internalTeamId, pptLink || null, repoLink || null, problemStatement || null]
       );
     }
 
@@ -162,7 +162,7 @@ export async function getTeamDashboard(req: Request, res: Response) {
   // This query uses the submission_scores view to grab all data at once
   const query = `
     SELECT 
-      t.id, t.team_code, t.team_name, t.institution, t.event_id,
+      t.id, t.team_code, t.name AS team_name, t.institution, t.event_id,
       e.name as event_name,
       s.demo_url as ppt_link,
       s.repo_url,
@@ -173,7 +173,7 @@ export async function getTeamDashboard(req: Request, res: Response) {
     JOIN events e ON t.event_id = e.id
     LEFT JOIN submissions s ON s.team_id = t.id
     LEFT JOIN submission_scores ss ON ss.team_id = t.id
-    WHERE t.id = $1 OR t.team_code = $1
+    WHERE t.id::text = $1 OR t.team_code = $1
   `;
   
   const result = await pool.query(query, [teamId]);

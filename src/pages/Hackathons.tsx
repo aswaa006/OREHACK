@@ -284,7 +284,7 @@ const HackathonsPage = () => {
     const trackHeight = track.offsetHeight;
     const scrollable = trackHeight - window.innerHeight;
     const scrolledIn = Math.max(0, -rect.top);
-    const p = Math.min(1, scrolledIn / scrollable);
+    const p = scrollable > 0 ? Math.min(1, scrolledIn / scrollable) : 0;
 
     const firstCard = rail.firstElementChild as HTMLElement | null;
     const cw = firstCard ? firstCard.offsetWidth : 400;

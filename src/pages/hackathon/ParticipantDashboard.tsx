@@ -16,6 +16,7 @@ export default function ParticipantDashboard() {
   const queryClient = useQueryClient();
   const [pptLink, setPptLink] = useState("");
   const [repoLink, setRepoLink] = useState("");
+  const [problemStatement, setProblemStatement] = useState("");
 
   const token = getTeamToken();
   const teamCode = token ? token.split(":")[1] : null;
@@ -37,11 +38,12 @@ export default function ParticipantDashboard() {
     if (dashboard) {
       setPptLink(dashboard.ppt_link || "");
       setRepoLink(dashboard.repo_url || "");
+      setProblemStatement(dashboard.problem_statement || "");
     }
   }, [dashboard]);
 
   const mutation = useMutation({
-    mutationFn: () => submitStageLinks(teamCode as string, pptLink, repoLink),
+    mutationFn: () => submitStageLinks(teamCode as string, pptLink, repoLink, problemStatement),
     onSuccess: () => {
       toast.success("Submissions updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["team_dashboard", teamCode] });
@@ -63,7 +65,6 @@ export default function ParticipantDashboard() {
   if (!dashboard) return null;
 
   const status = dashboard.evaluation_status || "PENDING";
-  const problemStatement = dashboard.problem_statement || "No problem statement assigned yet. Please check back later.";
 
   return (
     <div className="min-h-screen bg-[#080c14] text-foreground">
@@ -102,13 +103,23 @@ export default function ParticipantDashboard() {
                   <CardDescription>Submit the link to your slide deck (e.g., Google Slides, Canva, Pitch).</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="p-4 rounded-lg bg-black/40 border border-white/5 mb-4">
-                    <h4 className="text-sm font-semibold text-indigo-300 uppercase tracking-wider mb-2">Problem Statement</h4>
-                    <p className="text-neutral-300 text-sm leading-relaxed">{problemStatement}</p>
+                  <div className="space-y-2 mb-4">
+                    <Label htmlFor="problemStatement" className="text-indigo-300">Problem Statement (Required)</Label>
+                    <p className="text-xs text-neutral-400 mb-2">Please describe the problem you have chosen to solve.</p>
+                    <Input 
+                      id="problemStatement" 
+                      placeholder="e.g., AI-powered Healthcare Assistant..." 
+                      value={problemStatement}
+                      onChange={(e) => setProblemStatement(e.target.value)}
+                      className="bg-background/50 border-white/10 focus:border-indigo-500"
+                    />
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="pptLink">Presentation URL</Label>
+                    <p className="text-xs text-orange-400 font-medium mb-1">
+                      ⚠️ Note: Submit a Drive/Canva link and ensure you give 'Everyone with the link' access to view. Failure to do so will result in disqualification.
+                    </p>
                     <Input 
                       id="pptLink" 
                       placeholder="https://docs.google.com/presentation/..." 
@@ -131,11 +142,6 @@ export default function ParticipantDashboard() {
                   <CardDescription>Submit the link to your project's code repository.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="p-4 rounded-lg bg-black/40 border border-white/5 mb-4">
-                    <h4 className="text-sm font-semibold text-purple-300 uppercase tracking-wider mb-2">Problem Statement</h4>
-                    <p className="text-neutral-300 text-sm leading-relaxed">{problemStatement}</p>
-                  </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="repoLink">Repository URL</Label>
                     <Input 

@@ -3,7 +3,7 @@ import { pool } from "../db/pool";
 import { HttpError } from "../utils/http-error";
 
 export async function createEvent(req: Request, res: Response) {
-  const { name, institution, description, theme, start_date, end_date, registration_start, registration_end, max_team_size } = req.body;
+  const { name, institution, description, theme, start_date, end_date, registration_start, registration_end, max_team_size, status } = req.body;
 
   if (!name) {
     throw new HttpError(400, "Event name is required");
@@ -11,17 +11,18 @@ export async function createEvent(req: Request, res: Response) {
 
   const result = await pool.query(
     `INSERT INTO events (name, institution, description, theme, start_date, end_date, registration_start, registration_end, max_team_size, status) 
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'DRAFT') RETURNING *`,
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
     [
       name, 
-      institution ?? null, 
-      description ?? null, 
-      theme ?? null, 
-      start_date ?? null, 
-      end_date ?? null, 
-      registration_start ?? null, 
-      registration_end ?? null, 
-      max_team_size || 4
+      institution || null, 
+      description || null, 
+      theme || null, 
+      start_date || null, 
+      end_date || null, 
+      registration_start || null, 
+      registration_end || null, 
+      max_team_size || 4,
+      status || 'DRAFT'
     ]
   );
 
@@ -120,16 +121,16 @@ export async function updateEvent(req: Request, res: Response) {
          updated_at = CURRENT_TIMESTAMP
      WHERE id = $11 RETURNING *`,
     [
-      name ?? null, 
-      institution ?? null, 
-      description ?? null, 
-      theme ?? null, 
-      start_date ?? null, 
-      end_date ?? null, 
-      registration_start ?? null, 
-      registration_end ?? null, 
-      max_team_size ?? null, 
-      status ?? null, 
+      name || null, 
+      institution || null, 
+      description || null, 
+      theme || null, 
+      start_date || null, 
+      end_date || null, 
+      registration_start || null, 
+      registration_end || null, 
+      max_team_size || null, 
+      status || null, 
       id
     ]
   );
