@@ -15,6 +15,7 @@ import EvaluationTab from "./tabs/EvaluationTab";
 import ParticipantsTab from "./tabs/ParticipantsTab";
 import LeaderboardTab from "./tabs/LeaderboardTab";
 import ExportsTab from "./tabs/ExportsTab";
+import SettingsTab from "./tabs/SettingsTab";
 
 const TABS = [
   { id: "overview", label: "Overview", icon: BarChart3 },
@@ -23,6 +24,7 @@ const TABS = [
   { id: "evaluation", label: "Evaluation", icon: Trophy },
   { id: "leaderboard", label: "Leaderboard", icon: Medal },
   { id: "exports", label: "Exports", icon: Download },
+  { id: "settings", label: "Settings", icon: Settings },
 ];
 
 function StatusBadge({ status }: { status: string }) {
@@ -200,6 +202,7 @@ export default function HackathonDetailPage() {
         {activeTab === "evaluation" && hackathonId && <EvaluationTab eventId={hackathonId} />}
         {activeTab === "leaderboard" && hackathonId && <LeaderboardTab eventId={hackathonId} />}
         {activeTab === "exports" && hackathonId && <ExportsTab eventId={hackathonId} />}
+        {activeTab === "settings" && event && <SettingsTab event={event} onUpdate={setEvent} />}
       </div>
     </div>
   );

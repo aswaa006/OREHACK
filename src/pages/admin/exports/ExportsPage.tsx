@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Download, FileText, BarChart3, Medal, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useEffect } from "react";
-import { getEvents, downloadParticipantsCsv, downloadEvaluationCsv, downloadLeaderboardCsv, type Event } from "@/lib/admin-api";
+import { getEvents, downloadParticipantsCsv, downloadEvaluationCsv, downloadLeaderboardCsv, downloadBackendCsv, type Event } from "@/lib/admin-api";
 
 export default function ExportsPage() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -33,7 +33,7 @@ export default function ExportsPage() {
     {
       id: "participants",
       title: "Participant Export",
-      subtitle: "Python CLI input",
+      subtitle: "Clean Data",
       desc: "Clean CSV: submission_id, teamID, Team_Name, Problem_Statement, Repo_URL, Progress. No scores. No passwords.",
       icon: FileText,
       iconColor: "text-blue-400",
@@ -59,6 +59,16 @@ export default function ExportsPage() {
       iconColor: "text-amber-400",
       iconBg: "bg-amber-400/10",
       action: () => downloadLeaderboardCsv(selectedEvent),
+    },
+    {
+      id: "backend",
+      title: "Backend Export",
+      subtitle: "Python CLI input",
+      desc: "Formatted specifically for the Python backend with all scores, reasoning, and leader email as password.",
+      icon: Download,
+      iconColor: "text-emerald-400",
+      iconBg: "bg-emerald-400/10",
+      action: () => downloadBackendCsv(selectedEvent),
     },
   ];
 

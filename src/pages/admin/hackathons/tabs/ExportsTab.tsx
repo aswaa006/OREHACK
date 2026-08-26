@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { downloadParticipantsCsv, downloadEvaluationCsv, downloadLeaderboardCsv } from "@/lib/admin-api";
-import { Download, FileText, BarChart3, Medal, CheckCircle2, AlertCircle } from "lucide-react";
+import { downloadParticipantsCsv, downloadEvaluationCsv, downloadLeaderboardCsv, downloadBackendCsv } from "@/lib/admin-api";
+import { Download, FileText, BarChart3, Medal, CheckCircle2, AlertCircle, Database } from "lucide-react";
 
 interface ExportOption {
   id: string;
@@ -63,6 +63,16 @@ export default function ExportsTab({ eventId }: { eventId: string }) {
       iconBg: "bg-amber-400/10",
       action: () => downloadLeaderboardCsv(eventId),
       note: "Only includes evaluated teams.",
+    },
+    {
+      id: "backend",
+      title: "Backend Export",
+      desc: "Formatted specifically for the Python backend with all scores, reasoning, and leader email as password.",
+      icon: Database,
+      iconColor: "text-emerald-400",
+      iconBg: "bg-emerald-400/10",
+      action: () => downloadBackendCsv(eventId),
+      note: "Used for system-level data migration and backup.",
     },
   ];
 

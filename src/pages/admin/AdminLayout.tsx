@@ -73,6 +73,8 @@ const navSections: NavSection[] = [
     label: "Administration",
     defaultOpen: false,
     items: [
+      { label: "Backend Data", path: "/admin/v2/backend-data", icon: Download },
+      { label: "Backend Import", path: "/admin/v2/backend-import", icon: Upload },
       { label: "Users", path: "/admin/v2/users", icon: Shield },
       { label: "Audit Logs", path: "/admin/v2/audit-logs", icon: ScrollText },
       { label: "Settings", path: "/admin/v2/settings", icon: Settings },
@@ -214,6 +216,8 @@ function getBreadcrumb(pathname: string): string {
     "/admin/v2/evaluation/imports": "Import History",
     "/admin/v2/evaluation/leaderboard": "Leaderboard",
     "/admin/v2/exports": "Export Center",
+    "/admin/v2/backend-data": "Backend Export Data",
+    "/admin/v2/backend-import": "Backend Import Center",
     "/admin/v2/users": "Users",
     "/admin/v2/audit-logs": "Audit Logs",
     "/admin/v2/settings": "Settings",

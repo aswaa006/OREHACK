@@ -1,11 +1,14 @@
 import { Router } from "express";
 import { asyncHandler } from "../utils/async-handler";
-import { getPublicEvents, registerTeam, loginTeam, submitStageLinks, getTeamDashboard } from "../controllers/v2.public.controller";
+import { getPublicEvents, getPublicEvent, registerTeam, loginTeam, submitStageLinks, getTeamDashboard } from "../controllers/v2.public.controller";
 
 export const v2PublicRouter = Router();
 
 // Get active hackathons
 v2PublicRouter.get("/events", asyncHandler(getPublicEvents));
+
+// Get single active hackathon
+v2PublicRouter.get("/events/:id", asyncHandler(getPublicEvent));
 
 // Register a team for a hackathon
 v2PublicRouter.post("/events/:id/register", asyncHandler(registerTeam));

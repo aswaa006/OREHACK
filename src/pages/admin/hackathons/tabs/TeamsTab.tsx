@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getTeams, type Team } from "@/lib/admin-api";
+import { ensureAbsoluteUrl } from "@/lib/utils";
 import { ExternalLink, Search, ChevronRight } from "lucide-react";
 
 export default function TeamsTab({ eventId }: { eventId: string }) {
@@ -66,7 +67,7 @@ export default function TeamsTab({ eventId }: { eventId: string }) {
                   <td className="px-4 py-3 text-white/50 text-sm">{team.member_count}</td>
                   <td className="px-4 py-3">
                     {team.repo_url ? (
-                      <a href={team.repo_url} target="_blank" rel="noreferrer" className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                      <a href={ensureAbsoluteUrl(team.repo_url)} target="_blank" rel="noreferrer" className="text-indigo-400 hover:text-indigo-300 transition-colors">
                         <ExternalLink className="w-4 h-4" />
                       </a>
                     ) : <span className="text-white/20 text-xs">—</span>}

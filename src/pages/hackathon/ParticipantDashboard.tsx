@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getTeamToken, getTeamDashboard, submitStageLinks } from "@/lib/backend-api";
+import { getTeamToken, getTeamDashboard, submitStageLinks, clearBackendTokens } from "@/lib/backend-api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CheckCircle2, Clock, Github, ExternalLink, Presentation, Code2 } from "lucide-react";
+import { CheckCircle2, Clock, Github, ExternalLink, Presentation, Code2, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,6 +58,11 @@ export default function ParticipantDashboard() {
     mutation.mutate();
   };
 
+  const handleLogout = () => {
+    clearBackendTokens();
+    navigate("/hackathons");
+  };
+
   if (isLoading) {
     return <div className="min-h-screen bg-[#080c14] flex items-center justify-center text-white">Loading dashboard...</div>;
   }
@@ -80,9 +85,15 @@ export default function ParticipantDashboard() {
             </h1>
             <p className="text-muted-foreground mt-1 text-lg">{dashboard.event_name} • {dashboard.institution}</p>
           </div>
-          <div className="bg-white/5 border border-white/10 rounded-xl px-5 py-3 flex flex-col items-end backdrop-blur-sm">
-            <span className="text-xs text-muted-foreground font-semibold uppercase tracking-widest mb-1">Team Code</span>
-            <span className="text-xl font-mono text-indigo-400 font-bold">{dashboard.team_code}</span>
+          <div className="flex items-center gap-4">
+            <div className="bg-white/5 border border-white/10 rounded-xl px-5 py-3 flex flex-col items-end backdrop-blur-sm">
+              <span className="text-xs text-muted-foreground font-semibold uppercase tracking-widest mb-1">Team Code</span>
+              <span className="text-xl font-mono text-indigo-400 font-bold">{dashboard.team_code}</span>
+            </div>
+            <Button onClick={handleLogout} variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20">
+              <LogOut className="w-4 h-4 mr-2" />
+              Log Out
+            </Button>
           </div>
         </div>
 
@@ -170,6 +181,26 @@ export default function ParticipantDashboard() {
           <div className="space-y-6">
             <Card className="bg-card/30 border-white/10 backdrop-blur-md">
               <CardHeader>
+                <CardTitle className="text-xl">Team Profile</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 text-sm">
+                <div>
+                  <span className="text-neutral-500 block mb-1">Team Name</span>
+                  <span className="text-white font-medium">{dashboard.team_name}</span>
+                </div>
+                <div>
+                  <span className="text-neutral-500 block mb-1">Institution</span>
+                  <span className="text-white font-medium">{dashboard.institution || "N/A"}</span>
+                </div>
+                <div>
+                  <span className="text-neutral-500 block mb-1">Hackathon</span>
+                  <span className="text-white font-medium">{dashboard.event_name}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card/30 border-white/10 backdrop-blur-md">
+              <CardHeader>
                 <CardTitle className="text-xl">Evaluation Status</CardTitle>
               </CardHeader>
               <CardContent>
@@ -187,14 +218,7 @@ export default function ParticipantDashboard() {
                       <CheckCircle2 className="h-6 w-6 text-green-400" />
                     </div>
                     <h3 className="text-white font-bold text-lg mb-1">Evaluated</h3>
-                    <p className="text-sm text-neutral-400 mb-4">Your project has been successfully reviewed by the jury.</p>
-                    
-                    <div className="w-full bg-black/40 rounded-lg p-4 border border-white/5">
-                      <span className="block text-xs text-neutral-500 font-bold uppercase tracking-wider mb-1">Total Score</span>
-                      <span className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-br from-green-400 to-emerald-600">
-                        {dashboard.total_score || "0"}
-                      </span>
-                    </div>
+                    <p className="text-sm text-neutral-400">Your project has been successfully reviewed by the jury.</p>
                   </div>
                 )}
 

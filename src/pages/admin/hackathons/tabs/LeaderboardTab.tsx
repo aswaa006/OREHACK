@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getLeaderboard, toggleLeaderboardVisibility, type LeaderboardTeam } from "@/lib/admin-api";
+import { ensureAbsoluteUrl } from "@/lib/utils";
 import { Medal, Eye, EyeOff, ExternalLink, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -118,7 +119,7 @@ export default function LeaderboardTab({ eventId }: { eventId: string }) {
                     </td>
                     <td className="px-4 py-3">
                       {team.repo_url && (
-                        <a href={team.repo_url} target="_blank" rel="noreferrer" className="text-white/30 hover:text-indigo-400 transition-colors">
+                        <a href={ensureAbsoluteUrl(team.repo_url)} target="_blank" rel="noreferrer" className="text-white/30 hover:text-indigo-400 transition-colors">
                           <ExternalLink className="w-4 h-4" />
                         </a>
                       )}

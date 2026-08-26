@@ -284,3 +284,28 @@ export async function evaluateTeam(req: Request, res: Response) {
     client.release();
   }
 }
+
+export async function updateTeam(req: Request, res: Response) {
+  const { id } = req.params;
+  const { team_name, institution, team_code } = req.body;
+
+  if (!team_name) {
+    throw new HttpError(400, "Team name is required");
+  }
+
+  const result = await pool.query(
+    `UPDATE teams 
+     SET name = $1, 
+         institution = COALESCE($2, institution), 
+         team_code = COALESCE($3, team_code)
+     WHERE id = $4
+     RETURNING *`,
+    [team_name, institution || null, team_code || null, id]
+  );
+
+  if (result.rowCount === 0) {
+    throw new HttpError(404, "Team not found");
+  }
+
+  res.json({ success: true, message: "Team updated successfully", data: result.rows[0] });
+}

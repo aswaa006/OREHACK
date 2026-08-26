@@ -2,16 +2,47 @@ import type { Request, Response } from "express";
 import { pool } from "../db/pool";
 import { HttpError } from "../utils/http-error";
 
+// Generate a random permanent ID, e.g. SUB-2026-000001
+async function generateSubmissionId(client: any): Promise<string> {
+  const year = new Date().getFullYear();
+  let unique = false;
+  let id = "";
+  
+  while (!unique) {
+    const randomNum = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+    id = `SUB-${year}-${randomNum}`;
+    const result = await client.query("SELECT id FROM submissions WHERE submission_id = $1", [id]);
+    if (result.rowCount === 0) {
+      unique = true;
+    }
+  }
+  return id;
+}
+
 export async function getPublicEvents(req: Request, res: Response) {
   // Return all events that are not DRAFT or ARCHIVED
   const query = `
-    SELECT id, name, institution, description, theme, start_date, end_date, max_team_size, status, slug 
+    SELECT id, name, institution, description, theme, start_date, end_date, max_team_size, status, slug, ppt_submission_open, git_submission_open 
     FROM events 
     WHERE status NOT IN ('DRAFT', 'ARCHIVED') 
     ORDER BY created_at DESC
   `;
   const result = await pool.query(query);
   res.json({ success: true, data: result.rows });
+}
+
+export async function getPublicEvent(req: Request, res: Response) {
+  const { id } = req.params;
+  const query = `
+    SELECT id, name, institution, description, theme, start_date, end_date, max_team_size, status, slug, ppt_submission_open, git_submission_open 
+    FROM events 
+    WHERE (id::text = $1 OR slug = $1) AND status NOT IN ('DRAFT', 'ARCHIVED')
+  `;
+  const result = await pool.query(query, [id]);
+  if (result.rowCount === 0) {
+    throw new HttpError(404, "Hackathon not found or not active");
+  }
+  res.json({ success: true, data: result.rows[0] });
 }
 
 export async function registerTeam(req: Request, res: Response) {
@@ -144,9 +175,10 @@ export async function submitStageLinks(req: Request, res: Response) {
       );
     } else {
       // Insert
+      const submissionId = await generateSubmissionId(client);
       await client.query(
-        "INSERT INTO submissions (team_id, demo_url, repo_url, problem_statement, status) VALUES ($1, $2, $3, $4, 'SUBMITTED')",
-        [internalTeamId, pptLink || null, repoLink || null, problemStatement || null]
+        "INSERT INTO submissions (submission_id, team_id, demo_url, repo_url, problem_statement, status) VALUES ($1, $2, $3, $4, $5, 'SUBMITTED')",
+        [submissionId, internalTeamId, pptLink || null, repoLink || null, problemStatement || null]
       );
     }
 

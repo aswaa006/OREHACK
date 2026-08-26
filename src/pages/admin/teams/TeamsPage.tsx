@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Search, ChevronRight, ChevronLeft, Lock, Download, Eye, Edit2, Trash2, Inbox } from "lucide-react";
 import { getTeams, getEvents, type Team, type Event } from "@/lib/admin-api";
+import { ensureAbsoluteUrl } from "@/lib/utils";
 
 export default function TeamsPage() {
   const [searchParams] = useSearchParams();
@@ -172,12 +173,12 @@ export default function TeamsPage() {
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
                         {team.demo_url ? (
-                          <a href={team.demo_url} target="_blank" rel="noopener noreferrer" className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-indigo-500/10 text-indigo-400 border-indigo-500/20 hover:bg-indigo-500/20 hover:text-indigo-300 transition-colors" title="Stage 1: Presentation (Click to open)">PPT</a>
+                          <a href={ensureAbsoluteUrl(team.demo_url)} target="_blank" rel="noopener noreferrer" className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-indigo-500/10 text-indigo-400 border-indigo-500/20 hover:bg-indigo-500/20 hover:text-indigo-300 transition-colors" title="Stage 1: Presentation (Click to open)">PPT</a>
                         ) : (
                           <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-white/[0.02] text-white/20 border-white/[0.05]" title="Stage 1: Presentation (Not submitted)">PPT</span>
                         )}
                         {team.repo_url ? (
-                          <a href={team.repo_url} target="_blank" rel="noopener noreferrer" className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-purple-500/10 text-purple-400 border-purple-500/20 hover:bg-purple-500/20 hover:text-purple-300 transition-colors" title="Stage 2: Repository (Click to open)">Repo</a>
+                          <a href={ensureAbsoluteUrl(team.repo_url)} target="_blank" rel="noopener noreferrer" className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-purple-500/10 text-purple-400 border-purple-500/20 hover:bg-purple-500/20 hover:text-purple-300 transition-colors" title="Stage 2: Repository (Click to open)">Repo</a>
                         ) : (
                           <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-white/[0.02] text-white/20 border-white/[0.05]" title="Stage 2: Repository (Not submitted)">Repo</span>
                         )}
@@ -205,12 +206,9 @@ export default function TeamsPage() {
                         <Link to={`/admin/v2/teams/${team.id}`} className="p-1.5 text-white/40 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-md transition-colors" title="View Details">
                           <Eye className="w-4 h-4" />
                         </Link>
-                        <button className="p-1.5 text-white/40 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-md transition-colors" title="Edit Team">
+                        <Link to={`/admin/v2/teams/${team.id}`} className="p-1.5 text-white/40 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-md transition-colors" title="Edit/Grade Team">
                           <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button className="p-1.5 text-white/40 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors" title="Delete Team">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        </Link>
                       </div>
                     </td>
                   </motion.tr>

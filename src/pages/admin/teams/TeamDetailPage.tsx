@@ -5,8 +5,9 @@ import {
   ArrowLeft, ExternalLink, Lock, Unlock, Users, Mail,
   FileText, BarChart3, ChevronRight, Edit3, Check, Presentation, Code2
 } from "lucide-react";
-import { getTeam, toggleTeamScoreLock, updateTeamSubmission, evaluateTeam, type Team } from "@/lib/admin-api";
+import { getTeam, toggleTeamScoreLock, updateTeamSubmission, evaluateTeam, updateTeam, type Team } from "@/lib/admin-api";
 import { toast } from "sonner";
+import { ensureAbsoluteUrl } from "@/lib/utils";
 
 function ScoreBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
   const pct = Math.min(100, (value / max) * 100);
@@ -62,6 +63,13 @@ export default function TeamDetailPage() {
   const [locking, setLocking] = useState(false);
   const [activeSection, setActiveSection] = useState<"scores" | "reasoning">("scores");
 
+  // Editing state for team details
+  const [editingTeam, setEditingTeam] = useState(false);
+  const [teamName, setTeamName] = useState("");
+  const [institution, setInstitution] = useState("");
+  const [teamCode, setTeamCode] = useState("");
+  const [savingTeam, setSavingTeam] = useState(false);
+
   // Editing state for submission
   const [editingProblem, setEditingProblem] = useState(false);
   const [problemText, setProblemText] = useState("");
@@ -77,6 +85,9 @@ export default function TeamDetailPage() {
     setLoading(true);
     getTeam(id).then((t) => {
       setTeam(t);
+      setTeamName(t.team_name);
+      setInstitution(t.institution || "");
+      setTeamCode(t.team_code || "");
       setProblemText(t.submission?.problem_statement || "");
       if (t.scores) {
         setEvalScores({
@@ -90,6 +101,25 @@ export default function TeamDetailPage() {
   };
 
   useEffect(load, [id]);
+
+  const handleSaveTeamDetails = async () => {
+    if (!id || !teamName.trim()) return;
+    setSavingTeam(true);
+    try {
+      await updateTeam(id, {
+        team_name: teamName.trim(),
+        institution: institution.trim() || undefined,
+        team_code: teamCode.trim() || undefined,
+      });
+      toast.success("Team details updated");
+      setEditingTeam(false);
+      load(); // reload to get full state
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update team details");
+    } finally {
+      setSavingTeam(false);
+    }
+  };
 
   const handleToggleLock = async () => {
     if (!id) return;
@@ -173,38 +203,99 @@ export default function TeamDetailPage() {
       {/* Header */}
       <div className="bg-[#0d0d1a] border border-white/[0.06] rounded-2xl p-6">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600/30 to-violet-600/30 border border-indigo-500/20 flex items-center justify-center">
-                <span className="text-xl font-bold text-white/70">{team.team_name[0]}</span>
+          <div className="flex-1">
+            {!editingTeam ? (
+              <>
+                <div className="flex items-center gap-3 mb-2 group">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600/30 to-violet-600/30 border border-indigo-500/20 flex items-center justify-center">
+                    <span className="text-xl font-bold text-white/70">{team.team_name[0]}</span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-xl font-bold text-white">{team.team_name}</h1>
+                      <button onClick={() => setEditingTeam(true)} className="opacity-0 group-hover:opacity-100 text-white/40 hover:text-white/80 transition-opacity">
+                        <Edit3 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <p className="text-white/40 text-sm">{team.institution || "No institution specified"}</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {team.team_code && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-white/[0.04] border border-white/[0.08] text-white/50">
+                      {team.team_code}
+                    </span>
+                  )}
+                  {submission?.submission_code && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+                      {submission.submission_code}
+                    </span>
+                  )}
+                  {isLocked && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-400/10 border border-red-400/20 text-red-400">
+                      <Lock className="w-3 h-3" /> Score Locked
+                    </span>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="space-y-4 pr-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-white/50 mb-1">Team Name *</label>
+                    <input 
+                      type="text" 
+                      value={teamName}
+                      onChange={(e) => setTeamName(e.target.value)}
+                      className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-sm text-white focus:border-indigo-500 outline-none" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-white/50 mb-1">Team Code</label>
+                    <input 
+                      type="text" 
+                      value={teamCode}
+                      onChange={(e) => setTeamCode(e.target.value)}
+                      className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-sm text-white focus:border-indigo-500 outline-none font-mono" 
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-white/50 mb-1">Institution</label>
+                  <input 
+                    type="text" 
+                    value={institution}
+                    onChange={(e) => setInstitution(e.target.value)}
+                    className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-sm text-white focus:border-indigo-500 outline-none" 
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={handleSaveTeamDetails}
+                    disabled={savingTeam || !teamName.trim()}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                  >
+                    {savingTeam ? "Saving..." : <><Check className="w-4 h-4" /> Save</>}
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setEditingTeam(false);
+                      setTeamName(team.team_name);
+                      setInstitution(team.institution || "");
+                      setTeamCode(team.team_code || "");
+                    }}
+                    className="px-4 py-2 bg-white/[0.06] hover:bg-white/10 text-white/70 hover:text-white rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
-              <div>
-                <h1 className="text-xl font-bold text-white">{team.team_name}</h1>
-                <p className="text-white/40 text-sm">{team.institution}</p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-3">
-              {team.team_code && (
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-white/[0.04] border border-white/[0.08] text-white/50">
-                  {team.team_code}
-                </span>
-              )}
-              {submission?.submission_code && (
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
-                  {submission.submission_code}
-                </span>
-              )}
-              {isLocked && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-400/10 border border-red-400/20 text-red-400">
-                  <Lock className="w-3 h-3" /> Score Locked
-                </span>
-              )}
-            </div>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-2 shrink-0">
             {submission?.demo_url && (
               <a
-                href={submission.demo_url}
+                href={ensureAbsoluteUrl(submission.demo_url)}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-2 px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 rounded-xl text-sm font-medium transition-colors border border-indigo-500/20"
@@ -214,7 +305,7 @@ export default function TeamDetailPage() {
             )}
             {submission?.repo_url && (
               <a
-                href={submission.repo_url}
+                href={ensureAbsoluteUrl(submission.repo_url)}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-2 px-4 py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 rounded-xl text-sm font-medium transition-colors border border-purple-500/20"

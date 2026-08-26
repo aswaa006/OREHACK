@@ -3,15 +3,15 @@ import { pool } from "../db/pool";
 import { HttpError } from "../utils/http-error";
 
 export async function createEvent(req: Request, res: Response) {
-  const { name, institution, description, theme, start_date, end_date, registration_start, registration_end, max_team_size, status } = req.body;
+  const { name, institution, description, theme, start_date, end_date, registration_start, registration_end, max_team_size, status, ppt_submission_open, git_submission_open } = req.body;
 
   if (!name) {
     throw new HttpError(400, "Event name is required");
   }
 
   const result = await pool.query(
-    `INSERT INTO events (name, institution, description, theme, start_date, end_date, registration_start, registration_end, max_team_size, status) 
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+    `INSERT INTO events (name, institution, description, theme, start_date, end_date, registration_start, registration_end, max_team_size, status, ppt_submission_open, git_submission_open) 
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
     [
       name, 
       institution || null, 
@@ -22,7 +22,9 @@ export async function createEvent(req: Request, res: Response) {
       registration_start || null, 
       registration_end || null, 
       max_team_size || 4,
-      status || 'DRAFT'
+      status || 'DRAFT',
+      ppt_submission_open !== undefined ? ppt_submission_open : true,
+      git_submission_open !== undefined ? git_submission_open : true
     ]
   );
 
@@ -30,23 +32,9 @@ export async function createEvent(req: Request, res: Response) {
 }
 
 export async function getEvents(req: Request, res: Response) {
-  // If EVENT_ADMIN, maybe only return assigned events, but we'll assume SUPER_ADMIN sees all
-  const userRole = req.auth?.role;
-  const userId = req.auth?.sub;
-
-  let query = "SELECT * FROM events ORDER BY created_at DESC";
-  let params: any[] = [];
-
-  if (userRole === "EVENT_ADMIN") {
-    query = `
-      SELECT e.* FROM events e 
-      JOIN event_admins ea ON e.id = ea.event_id 
-      WHERE ea.user_id = $1 ORDER BY e.created_at DESC
-    `;
-    params = [userId];
-  }
-
-  const result = await pool.query(query, params);
+  // Return all events regardless of role to ensure no hackathons are hidden
+  const query = "SELECT * FROM events ORDER BY created_at DESC";
+  const result = await pool.query(query);
   res.json({ success: true, data: result.rows });
 }
 
@@ -104,7 +92,7 @@ export async function archiveEvent(req: Request, res: Response) {
 
 export async function updateEvent(req: Request, res: Response) {
   const { id } = req.params;
-  const { name, institution, description, theme, start_date, end_date, registration_start, registration_end, max_team_size, status } = req.body;
+  const { name, institution, description, theme, start_date, end_date, registration_start, registration_end, max_team_size, status, ppt_submission_open, git_submission_open } = req.body;
 
   const result = await pool.query(
     `UPDATE events 
@@ -118,8 +106,10 @@ export async function updateEvent(req: Request, res: Response) {
          registration_end = COALESCE($8, registration_end), 
          max_team_size = COALESCE($9, max_team_size),
          status = COALESCE($10, status),
+         ppt_submission_open = COALESCE($11, ppt_submission_open),
+         git_submission_open = COALESCE($12, git_submission_open),
          updated_at = CURRENT_TIMESTAMP
-     WHERE id = $11 RETURNING *`,
+     WHERE id = $13 RETURNING *`,
     [
       name || null, 
       institution || null, 
@@ -131,6 +121,8 @@ export async function updateEvent(req: Request, res: Response) {
       registration_end || null, 
       max_team_size || null, 
       status || null, 
+      ppt_submission_open !== undefined ? ppt_submission_open : null,
+      git_submission_open !== undefined ? git_submission_open : null,
       id
     ]
   );

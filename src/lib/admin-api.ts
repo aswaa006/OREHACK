@@ -70,6 +70,8 @@ export interface Event {
   max_team_size: number;
   status: "DRAFT" | "REGISTRATION_OPEN" | "REGISTRATION_CLOSED" | "EVALUATION" | "COMPLETED" | "ARCHIVED";
   leaderboard_visible: boolean;
+  ppt_submission_open: boolean;
+  git_submission_open: boolean;
   slug?: string;
   created_at: string;
   updated_at: string;
@@ -363,6 +365,13 @@ export async function toggleTeamScoreLock(teamId: string) {
   return apiFetch(`/teams/${teamId}/toggle-lock`, { method: "POST" });
 }
 
+export async function updateTeam(teamId: string, data: { team_name: string; institution?: string; team_code?: string; }) {
+  return apiFetch(`/teams/${teamId}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
 export async function updateTeamSubmission(teamId: string, data: {
   problem_statement?: string;
   problem_description?: string;
@@ -496,6 +505,45 @@ export async function downloadLeaderboardCsv(eventId: string): Promise<void> {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+export async function downloadBackendCsv(eventId: string): Promise<void> {
+  const response = await apiFetchRaw(`/export/${eventId}/backend`);
+  if (!response.ok) throw new Error("Export failed");
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const filename = response.headers.get("Content-Disposition")?.match(/filename="([^"]+)"/)?.[1] ?? `backend_${eventId}.csv`;
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function getBackendExportData(eventId: string): Promise<any[]> {
+  const res = await apiFetch<any[]>(`/export/${eventId}/backend-data`);
+  return res.data;
+}
+
+export async function previewBackendImport(eventId: string, rows: any[], mode: "production" | "dev" = "production"): Promise<any> {
+  const res = await apiFetch<any>(`/backend/import/${eventId}/preview`, {
+    method: "POST",
+    body: JSON.stringify({ rows, mode }),
+  });
+  return res.data;
+}
+
+export async function confirmBackendImport(
+  eventId: string,
+  rows: any[],
+  fileName: string,
+  mode: "production" | "dev" = "production"
+): Promise<{ success: number; failed: number; total: number }> {
+  const res = await apiFetch<any>(`/backend/import/${eventId}/confirm`, {
+    method: "POST",
+    body: JSON.stringify({ rows, fileName, mode }),
+  });
+  return res.data;
 }
 
 // ── Users ────────────────────────────────────────────────────────────────────

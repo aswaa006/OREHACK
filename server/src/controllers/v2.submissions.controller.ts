@@ -21,7 +21,7 @@ async function generateSubmissionId(client: any): Promise<string> {
 }
 
 export async function createSubmission(req: Request, res: Response) {
-  const { event_id, team_name, institution, department, team_size, leader, members, problem_statement, problem_description, repo_url, demo_url } = req.body;
+  const { event_id, team_name, institution, department, team_size, leader, members, problem_statement, problem_description, repo_url, demo_url, ppt_url } = req.body;
 
   if (!event_id || !team_name || !leader || !problem_statement) {
     throw new HttpError(400, "Missing required fields");
@@ -62,9 +62,9 @@ export async function createSubmission(req: Request, res: Response) {
     // 4. Generate Submission ID & Create Submission
     const submissionId = await generateSubmissionId(client);
     const subResult = await client.query(
-      `INSERT INTO submissions (submission_id, team_id, problem_statement, problem_description, repo_url, demo_url)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [submissionId, team.id, problem_statement, problem_description, repo_url, demo_url]
+      `INSERT INTO submissions (submission_id, team_id, problem_statement, problem_description, repo_url, demo_url, ppt_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [submissionId, team.id, problem_statement, problem_description, repo_url, demo_url, ppt_url]
     );
 
     return {

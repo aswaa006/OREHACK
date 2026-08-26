@@ -5,14 +5,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2, ChevronRight, ChevronLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { CheckCircle2, ChevronRight, ChevronLeft, Loader2 } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 
 export default function SubmissionWizard() {
+  const { eventId } = useParams();
   const [step, setStep] = useState(1);
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [completedSubId, setCompletedSubId] = useState<string | null>(null);
+  const [eventConfig, setEventConfig] = useState<any>(null);
+  const [isLoadingConfig, setIsLoadingConfig] = useState(true);
+
+  React.useEffect(() => {
+    if (!eventId) {
+      setIsLoadingConfig(false);
+      return;
+    }
+    fetch(`/api/v2/public/events/${eventId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setEventConfig(data.data);
+      })
+      .catch(console.error)
+      .finally(() => setIsLoadingConfig(false));
+  }, [eventId]);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -27,6 +44,7 @@ export default function SubmissionWizard() {
     problemDescription: "",
     repoUrl: "",
     demoUrl: "",
+    pptUrl: "",
   });
 
   const updateForm = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -44,7 +62,7 @@ export default function SubmissionWizard() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          event_id: "demo-event", // Usually taken from URL params
+          event_id: eventId || "demo-event",
           team_name: formData.teamName,
           institution: formData.institution,
           department: formData.department,
@@ -59,6 +77,7 @@ export default function SubmissionWizard() {
           problem_description: formData.problemDescription,
           repo_url: formData.repoUrl,
           demo_url: formData.demoUrl,
+          ppt_url: formData.pptUrl,
         }),
       });
 
@@ -109,7 +128,13 @@ export default function SubmissionWizard() {
           <p className="text-neutral-400 mt-2">Complete the 3-step wizard to register your project.</p>
         </div>
 
-        {/* Stepper */}
+        {isLoadingConfig ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
+          </div>
+        ) : (
+          <>
+            {/* Stepper */}
         <div className="flex items-center justify-center mb-8">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex items-center">
@@ -199,10 +224,18 @@ export default function SubmissionWizard() {
                       <Textarea id="problemDescription" name="problemDescription" value={formData.problemDescription} onChange={updateForm} className="bg-neutral-950 border-neutral-800 text-white min-h-[100px]" />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="repoUrl" className="text-neutral-300">Repository URL *</Label>
-                        <Input id="repoUrl" name="repoUrl" value={formData.repoUrl} onChange={updateForm} className="bg-neutral-950 border-neutral-800 text-white" placeholder="https://github.com/..." />
-                      </div>
+                      {eventConfig?.git_submission_open !== false && (
+                        <div className="space-y-2">
+                          <Label htmlFor="repoUrl" className="text-neutral-300">Repository URL *</Label>
+                          <Input id="repoUrl" name="repoUrl" value={formData.repoUrl} onChange={updateForm} className="bg-neutral-950 border-neutral-800 text-white" placeholder="https://github.com/..." />
+                        </div>
+                      )}
+                      {eventConfig?.ppt_submission_open !== false && (
+                        <div className="space-y-2">
+                          <Label htmlFor="pptUrl" className="text-neutral-300">PPT URL *</Label>
+                          <Input id="pptUrl" name="pptUrl" value={formData.pptUrl} onChange={updateForm} className="bg-neutral-950 border-neutral-800 text-white" placeholder="https://..." />
+                        </div>
+                      )}
                       <div className="space-y-2">
                         <Label htmlFor="demoUrl" className="text-neutral-300">Demo URL (Optional)</Label>
                         <Input id="demoUrl" name="demoUrl" value={formData.demoUrl} onChange={updateForm} className="bg-neutral-950 border-neutral-800 text-white" placeholder="https://..." />
@@ -235,6 +268,8 @@ export default function SubmissionWizard() {
             </div>
           </CardContent>
         </Card>
+        </>
+        )}
       </div>
     </div>
   );

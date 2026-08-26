@@ -11,6 +11,7 @@ import { v2ParticipantsRouter } from "./v2.participants.routes";
 import { v2LeaderboardRouter } from "./v2.leaderboard.routes";
 import { v2ExportRouter } from "./v2.export.routes";
 import { v2UsersRouter } from "./v2.users.routes";
+import { v2BackendImportRouter } from "./v2.backend-import.routes";
 
 export const v2Router = Router();
 
@@ -47,5 +48,9 @@ v2Router.use("/leaderboard", v2LeaderboardRouter);
 // --- Export ---
 v2Router.use("/export", v2ExportRouter);
 
+// --- Backend CSV Import ---
+v2Router.use("/backend", v2BackendImportRouter);
+
 // --- Users & Audit ---
 v2Router.use("/users", v2UsersRouter);
+

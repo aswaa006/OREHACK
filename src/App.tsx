@@ -44,6 +44,8 @@ import ImportScoresPage from "./pages/admin/evaluation/ImportScoresPage";
 import ImportHistoryPage from "./pages/admin/evaluation/ImportHistoryPage";
 import LeaderboardAdminPage from "./pages/admin/evaluation/LeaderboardPage";
 import ExportsAdminPage from "./pages/admin/exports/ExportsPage";
+import BackendExportPage from "./pages/admin/exports/BackendExportPage";
+import BackendImportPage from "./pages/admin/exports/BackendImportPage";
 import UsersAdminPage from "./pages/admin/users/UsersPage";
 import AuditLogsAdminPage from "./pages/admin/audit/AuditLogsPage";
 import SettingsAdminPage from "./pages/admin/settings/SettingsPage";
@@ -199,6 +201,8 @@ const AnimatedRoutes = () => {
           <Route path="evaluation/imports" element={<ImportHistoryPage />} />
           <Route path="evaluation/leaderboard" element={<LeaderboardAdminPage />} />
           <Route path="exports" element={<ExportsAdminPage />} />
+          <Route path="backend-data" element={<BackendExportPage />} />
+          <Route path="backend-import" element={<BackendImportPage />} />
           <Route path="users" element={<UsersAdminPage />} />
           <Route path="audit-logs" element={<AuditLogsAdminPage />} />
           <Route path="settings" element={<SettingsAdminPage />} />

@@ -89,22 +89,22 @@ export async function exportEvaluationCsv(req: Request, res: Response) {
       COALESCE(s.repo_url, '') AS repo_url,
       LOWER(s.status) AS progress,
       COALESCE((
-        SELECT sc.points FROM scores sc
+        SELECT sc.points::text FROM scores sc
         JOIN score_categories cat ON cat.id = sc.category_id
         WHERE sc.submission_id = s.id AND LOWER(cat.name) = 'technical' LIMIT 1
       ), '') AS tech_scores,
       COALESCE((
-        SELECT sc.points FROM scores sc
+        SELECT sc.points::text FROM scores sc
         JOIN score_categories cat ON cat.id = sc.category_id
         WHERE sc.submission_id = s.id AND LOWER(cat.name) = 'innovation' LIMIT 1
       ), '') AS innov_scores,
       COALESCE((
-        SELECT sc.points FROM scores sc
+        SELECT sc.points::text FROM scores sc
         JOIN score_categories cat ON cat.id = sc.category_id
         WHERE sc.submission_id = s.id AND LOWER(cat.name) = 'completeness' LIMIT 1
       ), '') AS completeness_scores,
       COALESCE((
-        SELECT SUM(sc.points) FROM scores sc
+        SELECT SUM(sc.points)::text FROM scores sc
         WHERE sc.submission_id = s.id
       ), '') AS total_scores,
       COALESCE(s.reasoning, '') AS reasoning
@@ -201,4 +201,127 @@ export async function exportLeaderboardCsv(req: Request, res: Response) {
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", `attachment; filename="leaderboard_${safeEventName}_${Date.now()}.csv"`);
   res.send(csvContent);
+}
+
+/**
+ * BACKEND EXPORT — structured for Python backend
+ */
+export async function exportBackendCsv(req: Request, res: Response) {
+  const { eventId } = req.params;
+
+  const eventCheck = await pool.query("SELECT id, name FROM events WHERE id = $1", [eventId]);
+  if (eventCheck.rowCount === 0) throw new HttpError(404, "Event not found");
+  const eventName = eventCheck.rows[0].name;
+
+  const query = `
+    SELECT
+      COALESCE(t.team_code, t.id::text) AS team_id,
+      t.name AS team_name,
+      COALESCE(s.problem_statement, '') AS problem_statement,
+      COALESCE(s.repo_url, '') AS repo_url,
+      COALESCE(LOWER(s.status), 'queued') AS progress,
+      COALESCE((
+        SELECT SUM(sc.points)::text FROM scores sc
+        WHERE sc.submission_id = s.id
+      ), '') AS total_scores,
+      COALESCE((
+        SELECT sc.points::text FROM scores sc
+        JOIN score_categories cat ON cat.id = sc.category_id
+        WHERE sc.submission_id = s.id AND LOWER(cat.name) = 'technical' LIMIT 1
+      ), '') AS tech_scores,
+      COALESCE((
+        SELECT sc.points::text FROM scores sc
+        JOIN score_categories cat ON cat.id = sc.category_id
+        WHERE sc.submission_id = s.id AND LOWER(cat.name) = 'innovation' LIMIT 1
+      ), '') AS innov_scores,
+      COALESCE((
+        SELECT sc.points::text FROM scores sc
+        JOIN score_categories cat ON cat.id = sc.category_id
+        WHERE sc.submission_id = s.id AND LOWER(cat.name) = 'completeness' LIMIT 1
+      ), '') AS completeness_scores,
+      COALESCE(s.reasoning, '') AS reasoning,
+      COALESCE((
+        SELECT m.email FROM team_members m
+        WHERE m.team_id = t.id AND m.is_leader = true
+        LIMIT 1
+      ), '') AS password
+    FROM teams t
+    LEFT JOIN submissions s ON s.team_id = t.id
+    WHERE t.event_id = $1
+    ORDER BY t.created_at ASC
+  `;
+
+  const result = await pool.query(query, [eventId]);
+
+  const headers = [
+    "teamID", "Team_Name", "Problem_Statement", "Repo_URL", "Progress",
+    "Total_Scores", "Tech_Scores", "Innov_Scores", "Completeness_Scores",
+    "Reasoning", "password"
+  ];
+  const lines: string[] = [headers.join(",")];
+
+  for (const row of result.rows) {
+    lines.push(
+      buildCsvRow([
+        row.team_id, row.team_name, row.problem_statement, row.repo_url,
+        row.progress, row.total_scores, row.tech_scores, row.innov_scores,
+        row.completeness_scores, row.reasoning, row.password,
+      ])
+    );
+  }
+
+  const csvContent = lines.join("\n");
+  const safeEventName = eventName.replace(/[^a-z0-9_-]/gi, "_").toLowerCase();
+
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", `attachment; filename="backend_${safeEventName}_${Date.now()}.csv"`);
+  res.send(csvContent);
+}
+
+export async function getBackendExportData(req: Request, res: Response) {
+  const { eventId } = req.params;
+
+  const eventCheck = await pool.query("SELECT id, name FROM events WHERE id = $1", [eventId]);
+  if (eventCheck.rowCount === 0) throw new HttpError(404, "Event not found");
+
+  const query = `
+    SELECT
+      COALESCE(t.team_code, t.id::text) AS "teamID",
+      t.name AS "Team_Name",
+      COALESCE(s.problem_statement, '') AS "Problem_Statement",
+      COALESCE(s.repo_url, '') AS "Repo_URL",
+      COALESCE(LOWER(s.status), 'queued') AS "Progress",
+      COALESCE((
+        SELECT SUM(sc.points)::text FROM scores sc
+        WHERE sc.submission_id = s.id
+      ), '') AS "Total_Scores",
+      COALESCE((
+        SELECT sc.points::text FROM scores sc
+        JOIN score_categories cat ON cat.id = sc.category_id
+        WHERE sc.submission_id = s.id AND LOWER(cat.name) = 'technical' LIMIT 1
+      ), '') AS "Tech_Scores",
+      COALESCE((
+        SELECT sc.points::text FROM scores sc
+        JOIN score_categories cat ON cat.id = sc.category_id
+        WHERE sc.submission_id = s.id AND LOWER(cat.name) = 'innovation' LIMIT 1
+      ), '') AS "Innov_Scores",
+      COALESCE((
+        SELECT sc.points::text FROM scores sc
+        JOIN score_categories cat ON cat.id = sc.category_id
+        WHERE sc.submission_id = s.id AND LOWER(cat.name) = 'completeness' LIMIT 1
+      ), '') AS "Completeness_Scores",
+      COALESCE(s.reasoning, '') AS "Reasoning",
+      COALESCE((
+        SELECT m.email FROM team_members m
+        WHERE m.team_id = t.id AND m.is_leader = true
+        LIMIT 1
+      ), '') AS "password"
+    FROM teams t
+    LEFT JOIN submissions s ON s.team_id = t.id
+    WHERE t.event_id = $1
+    ORDER BY t.created_at ASC
+  `;
+
+  const result = await pool.query(query, [eventId]);
+  res.json({ data: result.rows });
 }
