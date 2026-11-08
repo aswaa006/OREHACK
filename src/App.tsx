@@ -243,24 +243,73 @@ const App = () => {
   const logoRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    const lenis = new Lenis({
+    const isMobile = () => {
+      if (typeof window === "undefined") return false;
+      return window.innerWidth <= 768;
+    };
+
+    if (isMobile()) {
+      document.documentElement.classList.remove("lenis", "lenis-smooth", "lenis-stopped");
+      return;
+    }
+
+    let lenis: Lenis | null = new Lenis({
       duration: 1.6,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
       wheelMultiplier: 0.85,
       lerp: 0.07,
-      syncTouch: true,
-      syncTouchLerp: 0.06,
+      syncTouch: false,
     });
 
+    let reqId: number | null = null;
     const raf = (time: number) => {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
+      if (lenis) {
+        lenis.raf(time);
+        reqId = requestAnimationFrame(raf);
+      }
     };
-    requestAnimationFrame(raf);
+    reqId = requestAnimationFrame(raf);
+
+    const handleResize = () => {
+      if (isMobile()) {
+        if (lenis) {
+          if (reqId) cancelAnimationFrame(reqId);
+          lenis.destroy();
+          lenis = null;
+          document.documentElement.classList.remove("lenis", "lenis-smooth", "lenis-stopped");
+        }
+      } else {
+        if (!lenis) {
+          lenis = new Lenis({
+            duration: 1.6,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            smoothWheel: true,
+            wheelMultiplier: 0.85,
+            lerp: 0.07,
+            syncTouch: false,
+          });
+          const newRaf = (time: number) => {
+            if (lenis) {
+              lenis.raf(time);
+              reqId = requestAnimationFrame(newRaf);
+            }
+          };
+          reqId = requestAnimationFrame(newRaf);
+        }
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      lenis.destroy();
+      window.removeEventListener("resize", handleResize);
+      if (reqId) cancelAnimationFrame(reqId);
+      if (lenis) {
+        lenis.destroy();
+        lenis = null;
+      }
+      document.documentElement.classList.remove("lenis", "lenis-smooth", "lenis-stopped");
     };
   }, []);
 

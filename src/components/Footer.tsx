@@ -3,7 +3,8 @@ import CurvedLoop from './CurvedLoop';
 const Footer = () => {
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+    const isMobile = window.innerWidth <= 768;
+    if (el) el.scrollIntoView({ behavior: isMobile ? "auto" : "smooth" });
   };
 
   const navLinks = [

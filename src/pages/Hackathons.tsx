@@ -392,7 +392,8 @@ const HackathonsPage = () => {
                         if (!track) return;
                         const scrollable = track.offsetHeight - window.innerHeight;
                         const targetP = N > 1 ? i / (N - 1) : 0;
-                        window.scrollTo({ top: track.offsetTop + targetP * scrollable, behavior: "smooth" });
+                        const isMobile = window.innerWidth <= 768;
+                        window.scrollTo({ top: track.offsetTop + targetP * scrollable, behavior: isMobile ? "auto" : "smooth" });
                       }}
                       style={{ display: "flex", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}
                     >

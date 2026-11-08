@@ -85,9 +85,7 @@ const ScrollStack = ({
       return card.offsetTop;
     });
 
-    const endElement = useWindowScroll
-      ? document.querySelector('.scroll-stack-end')
-      : scrollerRef.current?.querySelector('.scroll-stack-end');
+    const endElement = scrollerRef.current?.querySelector('.scroll-stack-end');
 
     if (endElement) {
       endOffsetRef.current = useWindowScroll
@@ -281,11 +279,7 @@ const ScrollStack = ({
     const scroller = scrollerRef.current;
     if (!scroller) return;
 
-    const cards = Array.from(
-      useWindowScroll
-        ? document.querySelectorAll('.scroll-stack-card')
-        : scroller.querySelectorAll('.scroll-stack-card')
-    );
+    const cards = Array.from(scroller.querySelectorAll('.scroll-stack-card'));
 
     cardsRef.current = cards;
     const transformsCache = lastTransformsRef.current;

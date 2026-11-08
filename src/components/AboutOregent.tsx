@@ -723,6 +723,9 @@ pre.og-code {
 /* ═══ TICKER ═══ */
 .og-ticker-wrap {
   overflow: hidden;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   padding: 10px 0; margin: 48px 0 0;
@@ -1058,6 +1061,9 @@ export default function AboutOregent() {
 
   /* ── High-sensitivity Scroll Snap (Splash Effect) ── */
   useEffect(() => {
+    // Only enable scroll snap on desktop (> 768px), disable entirely on mobile
+    if (window.innerWidth <= 768) return;
+
     const section = sectionRef.current;
     if (!section) return;
 
@@ -1065,6 +1071,7 @@ export default function AboutOregent() {
     let snapTimeout: ReturnType<typeof setTimeout>;
 
     const handleScrollSnap = (deltaY: number) => {
+      if (window.innerWidth <= 768) return;
       if (isSnapping) return;
       const rect = section.getBoundingClientRect();
       const windowHeight = window.innerHeight;
@@ -1089,23 +1096,11 @@ export default function AboutOregent() {
 
     const onWheel = (e: WheelEvent) => handleScrollSnap(e.deltaY);
 
-    let touchStartY = 0;
-    const onTouchStart = (e: TouchEvent) => { touchStartY = e.touches[0].clientY; };
-    const onTouchMove = (e: TouchEvent) => {
-      const touchY = e.touches[0].clientY;
-      const deltaY = touchStartY - touchY; // positive = scrolling down
-      handleScrollSnap(deltaY);
-    };
-
     window.addEventListener('wheel', onWheel, { passive: true });
-    window.addEventListener('touchstart', onTouchStart, { passive: true });
-    window.addEventListener('touchmove', onTouchMove, { passive: true });
 
     return () => {
       clearTimeout(snapTimeout);
       window.removeEventListener('wheel', onWheel);
-      window.removeEventListener('touchstart', onTouchStart);
-      window.removeEventListener('touchmove', onTouchMove);
     };
   }, []);
 

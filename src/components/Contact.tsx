@@ -439,8 +439,9 @@ const Contact = () => {
                       <button
                         onClick={() => {
                           const el = document.getElementById(link.id);
+                          const isMobile = window.innerWidth <= 768;
                           if (el) {
-                            el.scrollIntoView({ behavior: "smooth" });
+                            el.scrollIntoView({ behavior: isMobile ? "auto" : "smooth" });
                           } else {
                             window.location.href = `/#${link.id}`;
                           }

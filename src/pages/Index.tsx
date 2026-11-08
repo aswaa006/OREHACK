@@ -1,6 +1,7 @@
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
-import WhatWeDo from "@/components/WhatWeDo";
+import ProductsSection from "@/components/ProductsSection";
 import HowItWorks from "@/components/HowItWorks";
 import QuoteSection from "@/components/QuoteSection";
 import AboutOregent from "@/components/AboutOregent";
@@ -27,6 +28,14 @@ const techLogos = [
 
 const IndexContent = () => {
   const { isDayMode } = useTheme();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   return (
     <div
@@ -48,20 +57,24 @@ const IndexContent = () => {
 
       <HeroSection />
 
-      <WhatWeDo />
+      <ProductsSection />
+
       <QuoteSection />
 
       <div style={{ 
-        padding: '48px 0', 
+        padding: isMobile ? '24px 0' : '36px 0', 
         opacity: 0.8,
         color: isDayMode ? "#000000" : "#ffffff",
-        transition: "color 0.4s ease"
+        transition: "color 0.4s ease",
+        overflow: "hidden",
+        width: "100%",
+        maxWidth: "100vw",
       }}>
         <LogoLoop
           logos={techLogos}
-          speed={50}
-          logoHeight={48}
-          gap={120}
+          speed={isMobile ? 35 : 45}
+          logoHeight={isMobile ? 28 : 34}
+          gap={isMobile ? 64 : 88}
           fadeOut={true}
           fadeOutColor={isDayMode ? "#ffffff" : "#000000"}
           scaleOnHover={true}
