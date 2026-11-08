@@ -165,3 +165,73 @@ export function getAdminToken() {
 export function clearAdminToken() {
   localStorage.removeItem(ADMIN_TOKEN_KEY);
 }
+
+// ── PUBLIC API ENDPOINTS (V2) ───────────────────────────────────────────────
+
+const API_BASE = "/api/v2/public";
+
+export async function getPublicEvents() {
+  const res = await fetch(`${API_BASE}/events`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to fetch events");
+  return data.data;
+}
+
+export async function registerTeamV2(eventId: string, payload: {
+  teamCode: string;
+  institution: string;
+  teamName: string;
+  leaderName: string;
+  email: string;
+  phone: string;
+}) {
+  const res = await fetch(`${API_BASE}/events/${eventId}/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Registration failed");
+  
+  // Set token
+  if (data.data?.token) {
+    setTeamToken(data.data.token);
+  }
+  return data.data;
+}
+
+export async function loginTeamV2(eventId: string, payload: {
+  teamCode: string;
+}) {
+  const res = await fetch(`${API_BASE}/events/${eventId}/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Login failed");
+  
+  // Set token
+  if (data.data?.token) {
+    setTeamToken(data.data.token);
+  }
+  return data.data;
+}
+
+export async function getTeamDashboard(teamId: string) {
+  const res = await fetch(`${API_BASE}/teams/${teamId}/dashboard`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to fetch dashboard");
+  return data.data;
+}
+
+export async function submitStageLinks(teamId: string, pptLink: string, repoLink: string, problemStatement: string) {
+  const res = await fetch(`${API_BASE}/teams/${teamId}/submit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pptLink, repoLink, problemStatement }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to submit links");
+  return data;
+}

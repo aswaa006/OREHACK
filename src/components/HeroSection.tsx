@@ -254,7 +254,7 @@ const HeroSection = () => {
             }}
           >
             <span className="relative z-10 flex items-center gap-2">
-              OREHACK++
+              OREHACK
               <svg
                 className="w-4 h-4 transition-transform duration-300 -rotate-45 group-hover:rotate-0"
                 fill="none"
@@ -279,15 +279,18 @@ const HeroSection = () => {
           `}</style>
 
       {/* ── Marquee strip at bottom of hero fold ── */}
-      <div style={{
-        position: "absolute",
-        bottom: "20px",
-        left: 0,
-        right: 0,
-        padding: "18px 0px",
-        background: "transparent",
-        zIndex: 20,
-      }}>
+      <div
+        className="hero-marquee-container"
+        style={{
+          position: "absolute",
+          bottom: "30px",
+          left: 0,
+          right: 0,
+          padding: "18px 0px",
+          background: "transparent",
+          zIndex: 20,
+        }}
+      >
         <CurvedLoop
           marqueeText="Power fair and efficient hackathon evaluations ✦ Build a culture of innovation across institutions ✦ Enable colleges to run high-impact hackathons ✦ Drive students from learning to real execution ✦ "
           speed={1.2}

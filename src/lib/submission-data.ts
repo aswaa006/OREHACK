@@ -22,6 +22,9 @@ export type NormalizedSubmission = {
   innovation_breakdown: Record<string, number> | null;
   completeness_breakdown: Record<string, number> | null;
   evaluation_timestamp: string | null;
+  leader_name?: string | null;
+  leader_phone?: string | null;
+  problem_statement?: string | null;
 };
 
 type SubmissionRow = {
@@ -42,12 +45,15 @@ type SubmissionRow = {
   completeness_breakdown: Record<string, number> | null;
   evaluation_timestamp: string | null;
   submitted_at: string | null;
+  problem_statement: string | null;
 };
 
 type TeamRow = {
   id: string;
   team_id: string | null;
   team_name: string | null;
+  leader_name: string | null;
+  leader_phone: string | null;
 };
 
 type ScoreRow = {
@@ -75,7 +81,7 @@ export async function loadNormalizedSubmissions(options?: {
 
   let query = supabase
     .from("submissions")
-    .select("id, team_id, team_name, repository_url, status, final_score, technical_score, max_technical, innovation_score, max_innovation, completeness_score, max_completeness, technical_breakdown, innovation_breakdown, completeness_breakdown, evaluation_timestamp, submitted_at")
+    .select("id, team_id, team_name, repository_url, problem_statement, status, final_score, technical_score, max_technical, innovation_score, max_innovation, completeness_score, max_completeness, technical_breakdown, innovation_breakdown, completeness_breakdown, evaluation_timestamp, submitted_at")
     .order("submitted_at", { ascending: false })
     .limit(limit);
 
@@ -97,7 +103,7 @@ export async function loadNormalizedSubmissions(options?: {
   if (teamIds.length) {
     const { data: teamsData } = await supabase
       .from("teams")
-      .select("id, team_id, team_name")
+      .select("id, team_id, team_name, leader_name, leader_phone")
       .in("id", teamIds);
 
     for (const team of (teamsData || []) as TeamRow[]) {
@@ -148,6 +154,9 @@ export async function loadNormalizedSubmissions(options?: {
       innovation_breakdown: row.innovation_breakdown ?? null,
       completeness_breakdown: row.completeness_breakdown ?? null,
       evaluation_timestamp: row.evaluation_timestamp ?? score?.generated_at ?? null,
+      problem_statement: row.problem_statement ?? null,
+      leader_name: team?.leader_name ?? null,
+      leader_phone: team?.leader_phone ?? null,
     };
   });
 

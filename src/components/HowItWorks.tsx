@@ -1,4 +1,5 @@
 import ScrollStack, { ScrollStackItem } from "./ScrollStack";
+import { MobileScrollStack, MobileScrollStackItem } from "./MobileScrollStack";
 import { motion } from "framer-motion";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -149,18 +150,9 @@ const steps = [
           }} />
         </div>
       </motion.div>
-      <ScrollStack
-        useWindowScroll
-        itemDistance={60}
-        itemScale={0.04}
-        itemStackDistance={25}
-        stackPosition="15%"
-        scaleEndPosition="10%"
-        baseScale={0.88}
-        blurAmount={2}
-        unpinOnLastItem={true}
-      >
-        {processedSteps.map((s, idx) => {
+      {/* Shared card content renderer */}
+      {(() => {
+        const renderCardBody = (s: (typeof processedSteps)[0], idx: number) => {
           const isWhiteBg = isDayMode && s.bg === "#000000";
           const cardTextColor = isWhiteBg ? "#000000" : "#ffffff";
           const subTextColor = isWhiteBg ? "rgba(0,0,0,0.6)" : "rgba(255,255,255,0.6)";
@@ -168,97 +160,135 @@ const steps = [
           const tagBorderColor = isWhiteBg ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.2)";
 
           return (
-            <ScrollStackItem key={s.num}>
-              <div
-                className={`hiw-card ${isDayMode ? 'day-mode' : ''}`}
-                style={{
-                  background: s.themedBg,
-                  border: isDayMode ? "2px solid #000000" : (isWhiteBg ? "2px solid rgba(0,0,0,0.05)" : "2px solid #ffffff"),
-                  boxShadow: isDayMode ? "0 20px 40px rgba(0,0,0,0.05)" : "none"
-                }}
-              >
-                {/* Left content */}
-                <div className="hiw-card-left">
-                  <p className="hiw-step-label" style={{ color: labelTextColor }}>
-                    {s.label}
-                  </p>
-                  <h3 className="hiw-title" style={{ color: cardTextColor }}>{s.title}</h3>
-                  <p className="hiw-desc" style={{ color: subTextColor }}>{s.desc}</p>
-                  <div className="hiw-tags">
-                    {s.tags.map((tag) => (
-                      <span key={tag} className="hiw-tag" style={{ color: subTextColor, borderColor: tagBorderColor }}>
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+            <div
+              className={`hiw-card ${isDayMode ? 'day-mode' : ''}`}
+              style={{
+                background: s.themedBg,
+                border: isDayMode ? "2px solid #000000" : (isWhiteBg ? "2px solid rgba(0,0,0,0.05)" : "2px solid #ffffff"),
+                boxShadow: isDayMode ? "0 20px 40px rgba(0,0,0,0.05)" : "0 14px 40px rgba(0,0,0,0.45)"
+              }}
+            >
+              {/* Left content */}
+              <div className="hiw-card-left">
+                <p className="hiw-step-label" style={{ color: labelTextColor }}>
+                  {s.label}
+                </p>
+                <h3 className="hiw-title" style={{ color: cardTextColor }}>{s.title}</h3>
+                <p className="hiw-desc" style={{ color: subTextColor }}>{s.desc}</p>
+                <div className="hiw-tags">
+                  {s.tags.map((tag) => (
+                    <span key={tag} className="hiw-tag" style={{ color: subTextColor, borderColor: tagBorderColor }}>
+                      {tag}
+                    </span>
+                  ))}
                 </div>
+              </div>
 
-                {/* Right info box */}
-                <div className="hiw-card-right">
+              {/* Right info box */}
+              <div className="hiw-card-right">
+                <div
+                  className="hiw-info-box"
+                  style={{
+                    background: s.themedAccent,
+                    border: (isDayMode && s.themedAccent === "#ffffff") ? "1px solid rgba(0,0,0,0.1)" : "none",
+                    boxShadow: (isDayMode && s.themedAccent === "#ffffff") ? "0 10px 25px rgba(0,0,0,0.05)" : "none"
+                  }}
+                >
                   <div
-                    className="hiw-info-box"
+                    className="hiw-arrow-circle"
                     style={{
-                      background: s.themedAccent,
-                      border: (isDayMode && s.themedAccent === "#ffffff") ? "1px solid rgba(0,0,0,0.1)" : "none",
-                      boxShadow: (isDayMode && s.themedAccent === "#ffffff") ? "0 10px 25px rgba(0,0,0,0.05)" : "none"
+                      background: idx % 2 === 0 ? "#7c3aed" : (isDayMode ? "#000000" : "#ffffff"),
+                      color: idx % 2 === 0 ? "#ffffff" : (isDayMode ? "#ffffff" : "#000000")
                     }}
                   >
-                    <div
-                      className="hiw-arrow-circle"
-                      style={{
-                        background: idx % 2 === 0 ? "#7c3aed" : (isDayMode ? "#000000" : "#ffffff"),
-                        color: idx % 2 === 0 ? "#ffffff" : (isDayMode ? "#ffffff" : "#000000")
-                      }}
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     >
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2.5}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M7 17L17 7" />
-                        <path d="M7 7h10v10" />
-                      </svg>
-                    </div>
-                    <div className="hiw-info-block">
-                      <span
-                        className="hiw-info-label"
-                        style={{ color: idx % 2 === 0 ? (isDayMode ? "#7c3aed" : "#7c3aed") : (isDayMode ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.5)") }}
-                      >
-                        {s.infoLabel}
-                      </span>
-                      <span
-                        className="hiw-info-value"
-                        style={{ color: idx % 2 === 0 ? (isDayMode ? "#7c3aed" : "#7c3aed") : (isDayMode ? "#000000" : "#ffffff") }}
-                      >
-                        {s.infoValue}
-                      </span>
-                    </div>
-                    <div className="hiw-info-block">
-                      <span
-                        className="hiw-info-label"
-                        style={{ color: idx % 2 === 0 ? (isDayMode ? "#7c3aed" : "#7c3aed") : (isDayMode ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.5)") }}
-                      >
-                        {s.roleLabel}
-                      </span>
-                      <span
-                        className="hiw-info-value"
-                        style={{ color: idx % 2 === 0 ? (isDayMode ? "#7c3aed" : "#7c3aed") : (isDayMode ? "#000000" : "#ffffff") }}
-                      >
-                        {s.roleValue}
-                      </span>
-                    </div>
+                      <path d="M7 17L17 7" />
+                      <path d="M7 7h10v10" />
+                    </svg>
+                  </div>
+                  <div className="hiw-info-block">
+                    <span
+                      className="hiw-info-label"
+                      style={{ color: idx % 2 === 0 ? (isDayMode ? "#7c3aed" : "#7c3aed") : (isDayMode ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.5)") }}
+                    >
+                      {s.infoLabel}
+                    </span>
+                    <span
+                      className="hiw-info-value"
+                      style={{ color: idx % 2 === 0 ? (isDayMode ? "#7c3aed" : "#7c3aed") : (isDayMode ? "#000000" : "#ffffff") }}
+                    >
+                      {s.infoValue}
+                    </span>
+                  </div>
+                  <div className="hiw-info-block">
+                    <span
+                      className="hiw-info-label"
+                      style={{ color: idx % 2 === 0 ? (isDayMode ? "#7c3aed" : "#7c3aed") : (isDayMode ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.5)") }}
+                    >
+                      {s.roleLabel}
+                    </span>
+                    <span
+                      className="hiw-info-value"
+                      style={{ color: idx % 2 === 0 ? (isDayMode ? "#7c3aed" : "#7c3aed") : (isDayMode ? "#000000" : "#ffffff") }}
+                    >
+                      {s.roleValue}
+                    </span>
                   </div>
                 </div>
               </div>
-            </ScrollStackItem>
+            </div>
           );
-        })}
-      </ScrollStack>
+        };
+
+        return (
+          <>
+            {/* ── DESKTOP VIEW: 100% UNTOUCHED ORIGINAL SCROLLSTACK ── */}
+            <div className="hidden md:block">
+              <ScrollStack
+                useWindowScroll
+                itemDistance={60}
+                itemScale={0.04}
+                itemStackDistance={25}
+                stackPosition="15%"
+                scaleEndPosition="10%"
+                baseScale={0.88}
+                blurAmount={2}
+                unpinOnLastItem={true}
+              >
+                {processedSteps.map((s, idx) => (
+                  <ScrollStackItem key={`desktop-${s.num}`}>
+                    {renderCardBody(s, idx)}
+                  </ScrollStackItem>
+                ))}
+              </ScrollStack>
+            </div>
+
+            {/* ── MOBILE RESPONSIVE VIEW: SEPARATE DEDICATED SMOOTH STACK ── */}
+            <div className="block md:hidden">
+              <MobileScrollStack
+                pinTop={75}
+                stackGap={14}
+                stepDistance={300}
+              >
+                {processedSteps.map((s, idx) => (
+                  <MobileScrollStackItem key={`mobile-${s.num}`}>
+                    {renderCardBody(s, idx)}
+                  </MobileScrollStackItem>
+                ))}
+              </MobileScrollStack>
+            </div>
+          </>
+        );
+      })()}
     </section>
   );
 }

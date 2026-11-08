@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Shuffle from "./Shuffle";
 import { useTheme } from "@/context/ThemeContext";
+import { Menu, X } from "lucide-react";
 
 const NAV_SECTIONS = [
   { id: "home", label: "Home" },
@@ -14,7 +15,8 @@ const Navbar = () => {
   const [activeSection, setActiveSection] = useState<string>("");
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const { isDayMode, toggleTheme } = useTheme();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isDayMode } = useTheme();
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -23,7 +25,7 @@ const Navbar = () => {
   const ORIGIN_ADMIN_TARGET = "192421";
   const ORIGIN_ADMIN_SESSION_KEY = "orehack_origin_admin_auth";
 
-  /* ── Smart scroll visibility logic ── */
+  /* ── Desktop scroll hide/reveal logic ── */
   useEffect(() => {
     const handleScrollVisibility = () => {
       const currentScrollY = window.scrollY;
@@ -66,6 +68,23 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [location.pathname]);
 
+  /* ── Prevent background scroll when mobile menu is open ── */
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileMenuOpen]);
+
+  /* ── Close mobile menu on route change ── */
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
+
   /* ── Hidden admin key sequence ── */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -89,12 +108,14 @@ const Navbar = () => {
   }, [navigate]);
 
   const handleNavClick = (id: string) => {
+    setIsMobileMenuOpen(false);
     if (location.pathname !== "/") {
       navigate(`/#${id}`);
       return;
     }
     const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+    const isMobileViewport = window.innerWidth <= 768;
+    if (el) el.scrollIntoView({ behavior: isMobileViewport ? "auto" : "smooth" });
   };
 
   // Day mode colours
@@ -108,63 +129,52 @@ const Navbar = () => {
   const ctaText = isDayMode ? "#ffffff" : "#000000";
 
   return (
-    <motion.nav
-      initial={{ y: 0 }}
-      animate={{ y: isVisible ? 0 : -100 }}
-      transition={{
-        duration: 0.4,
-        ease: [0.22, 1, 0.36, 1],
-      }}
+    <>
+    <header
+      id="site-navbar"
+      className={`site-header-nav ${!isVisible && !isMobileMenuOpen ? "desktop-hidden" : ""}`}
       style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 50,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "0 140px",
-        height: "100px",
         background: navBg,
-        transition: "background 0.4s ease",
       }}
     >
-      {/* ── LEFT: OREHACK wordmark ── */}
+      {/* ── BRAND: Desktop Wordmark (Shown on desktop) ── */}
       <Link
         to="/"
-        style={{
-          textDecoration: "none",
-          userSelect: "none",
-          display: "flex",
-          alignItems: "center",
-        }}
+        onClick={() => setIsMobileMenuOpen(false)}
+        className="desktop-brand"
       >
-        <div style={{ display: "inline-block" }}>
-          <span
-            className="text-2xl font-bold tracking-[0.05em] orehack-liquid-text"
-            style={{
-              color: "#7c3aed",
-              fontFamily: "'Outfit', sans-serif",
-              fontWeight: 600,
-              letterSpacing: "-0.05em",
-              lineHeight: "2.4rem",
-              fontSize: "2rem",
-            }}
-          >
-            OREGENT .
-          </span>
-        </div>
+        <span
+          className="font-bold orehack-liquid-text nav-brand-text"
+          style={{
+            color: "#7c3aed",
+            fontFamily: "'Outfit', sans-serif",
+            fontWeight: 700,
+            letterSpacing: "-0.04em",
+            fontSize: "1.32rem",
+            lineHeight: "1.2",
+            whiteSpace: "nowrap",
+          }}
+        >
+          OREGENT .
+        </span>
       </Link>
 
-      {/* ── RIGHT: Nav links + theme toggle ── */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "48px",
-        }}
+      {/* ── BRAND: Mobile Pill Logo image (Shown on mobile, as requested) ── */}
+      <Link
+        to="/"
+        onClick={() => setIsMobileMenuOpen(false)}
+        className="mobile-pill-brand"
+        aria-label="Oregent Home"
       >
+        <img
+          src="/oregent-logo.png"
+          alt="Oregent"
+          className="mobile-pill-logo"
+        />
+      </Link>
+
+      {/* ── RIGHT: Desktop Nav links + CTA (Hidden on mobile via CSS) ── */}
+      <div className="desktop-nav-controls">
         {NAV_SECTIONS.map(({ id, label }) => {
           const isActive = activeSection === id;
           return (
@@ -197,7 +207,6 @@ const Navbar = () => {
               }}
             >
               {label}
-              {/* Active underline */}
               {isActive && (
                 <span
                   style={{
@@ -215,58 +224,7 @@ const Navbar = () => {
           );
         })}
 
-        {/* ── Theme Toggle Button ── */}
-        <button
-          id="theme-toggle-btn"
-          onClick={toggleTheme}
-          aria-label={isDayMode ? "Switch to Night mode" : "Switch to Day mode"}
-          style={{
-            background: "none",
-            border: isDayMode ? "1.5px solid rgba(0,0,0,0.18)" : "1.5px solid rgba(255,255,255,0.18)",
-            borderRadius: "50px",
-            width: "36px",
-            height: "36px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            color: isDayMode ? "#000000" : "#ffffff",
-            transition: "all 0.3s ease",
-          }}
-        >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.span
-              key={isDayMode ? "sun" : "moon"}
-              initial={{ opacity: 0, rotate: -30, scale: 0.7 }}
-              animate={{ opacity: 1, rotate: 0, scale: 1 }}
-              exit={{ opacity: 0, rotate: 30, scale: 0.7 }}
-              transition={{ duration: 0.25 }}
-              style={{ display: "flex", alignItems: "center" }}
-            >
-              {isDayMode ? (
-                /* Sun icon */
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="5" />
-                  <line x1="12" y1="1" x2="12" y2="3" />
-                  <line x1="12" y1="21" x2="12" y2="23" />
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                  <line x1="1" y1="12" x2="3" y2="12" />
-                  <line x1="21" y1="12" x2="23" y2="12" />
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                </svg>
-              ) : (
-                /* Moon icon */
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-                </svg>
-              )}
-            </motion.span>
-          </AnimatePresence>
-        </button>
-
-        {/* JOIN US CTA Button */}
+        {/* JOIN US CTA Button (Desktop) */}
         <button
           onClick={() => handleNavClick("contact")}
           className="group relative inline-flex items-center gap-2 px-5 py-1.5 rounded-full overflow-hidden transition-all duration-300 hover:scale-[1.05] hover:shadow-lg active:scale-[0.98]"
@@ -295,7 +253,200 @@ const Navbar = () => {
           </span>
         </button>
       </div>
-    </motion.nav>
+
+      {/* ── RIGHT: Mobile Pill Controls (JOIN US button + 2-bar menu button) ── */}
+      <div className="mobile-nav-controls">
+        <button
+          type="button"
+          onClick={() => handleNavClick("contact")}
+          className="mobile-pill-join"
+          style={{
+            background: ctaBg,
+            color: ctaText,
+            border: "none",
+            borderRadius: "9999px",
+            fontFamily: "'Outfit', 'Inter', sans-serif",
+            fontSize: "0.78rem",
+            fontWeight: 700,
+            cursor: "pointer",
+            padding: "6px 12px",
+            letterSpacing: "0.02em",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "4px",
+            transition: "transform 0.2s ease, opacity 0.2s ease",
+          }}
+        >
+          <span>JOIN US</span>
+          <svg
+            className="w-3 h-3 -rotate-45"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={3}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        </button>
+
+        {/* Menu Toggle Button (2-line hamburger matching user image / Close X) */}
+        <button
+          type="button"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+          style={{
+            background: "none",
+            border: "none",
+            padding: "6px 2px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: isDayMode ? "#000000" : "#ffffff",
+            cursor: "pointer",
+          }}
+        >
+          {isMobileMenuOpen ? (
+            <X size={22} strokeWidth={2.4} color={isDayMode ? "#000000" : "#ffffff"} />
+          ) : (
+            <div className="flex flex-col justify-center items-center gap-[5px] w-5 h-5">
+              <span
+                className="block h-[2px] w-5 rounded-full"
+                style={{ background: isDayMode ? "#000000" : "#ffffff" }}
+              />
+              <span
+                className="block h-[2px] w-5 rounded-full"
+                style={{ background: isDayMode ? "#000000" : "#ffffff" }}
+              />
+            </div>
+          )}
+        </button>
+      </div>
+    </header>
+
+    {/* ── Mobile Floating Menu Card & Backdrop (Matches pill design) ── */}
+    <AnimatePresence>
+      {isMobileMenuOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            key="mobile-nav-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9990] md:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+
+          {/* Floating Dropdown Card */}
+          <motion.div
+            key="mobile-nav-panel"
+            initial={{ opacity: 0, y: -10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.98 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="mobile-nav-dropdown-card md:hidden"
+            style={{
+              background: isDayMode ? "#ffffff" : "#000000",
+              borderColor: isDayMode ? "rgba(0, 0, 0, 0.12)" : "rgba(255, 255, 255, 0.22)",
+            }}
+          >
+            {/* Navigation links */}
+            <div className="flex flex-col gap-1 py-1">
+              {NAV_SECTIONS.map(({ id, label }) => {
+                const isActive = activeSection === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => handleNavClick(id)}
+                    className="w-full text-left py-3 px-3 rounded-xl flex items-center justify-between transition-colors"
+                    style={{
+                      background: isActive ? (isDayMode ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)") : "none",
+                      border: "none",
+                      cursor: "pointer",
+                      fontFamily: "'Outfit', 'Inter', sans-serif",
+                      fontSize: "1.25rem",
+                      fontWeight: 600,
+                      letterSpacing: "-0.02em",
+                      color: isActive ? "#7c3aed" : (isDayMode ? "#000000" : "#ffffff"),
+                    }}
+                  >
+                    <span>{label}</span>
+                    {isActive && (
+                      <span
+                        style={{
+                          width: "7px",
+                          height: "7px",
+                          borderRadius: "50%",
+                          background: "#7c3aed",
+                          boxShadow: "0 0 8px #7c3aed",
+                        }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  navigate("/hackathons");
+                }}
+                className="w-full text-left py-3 px-3 rounded-xl flex items-center justify-between transition-colors"
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontFamily: "'Outfit', 'Inter', sans-serif",
+                  fontSize: "1.25rem",
+                  fontWeight: 600,
+                  letterSpacing: "-0.02em",
+                  color: isDayMode ? "#000000" : "#ffffff",
+                }}
+              >
+                <span>Hackathons</span>
+              </button>
+            </div>
+
+            {/* Bottom Full-Width Pill CTA Button */}
+            <div
+              className="w-full pt-3 mt-2 border-t"
+              style={{ borderColor: isDayMode ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)" }}
+            >
+              <button
+                type="button"
+                onClick={() => handleNavClick("contact")}
+                className="w-full py-3.5 rounded-full flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+                style={{
+                  background: ctaBg,
+                  color: ctaText,
+                  fontFamily: "'Outfit', 'Inter', sans-serif",
+                  fontSize: "0.95rem",
+                  fontWeight: 700,
+                  border: "none",
+                  cursor: "pointer",
+                  boxShadow: isDayMode ? "0 4px 16px rgba(0,0,0,0.12)" : "0 4px 20px rgba(124,58,237,0.25)",
+                }}
+              >
+                <span>JOIN US</span>
+                <svg
+                  className="w-4 h-4 -rotate-45"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={3}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </button>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+    </>
   );
 };
 export default Navbar;

@@ -69,8 +69,24 @@ async function checkTable(table: HealthTableName, critical: boolean): Promise<He
   };
 }
 
-export async function runStartupHealthCheck(logToConsole = true): Promise<StartupHealthReport> {
-  const results = await Promise.all(TABLES.map((item) => checkTable(item.table, item.critical)));
+export async function runStartupHealthCheck(logToConsole = false): Promise<StartupHealthReport> {
+  // Check the first table first to test connectivity before firing 10 parallel requests
+  const firstCheck = await checkTable(TABLES[0].table, TABLES[0].critical);
+  
+  let results: HealthTableResult[];
+  if (!firstCheck.ok && (firstCheck.message.includes("Failed to fetch") || firstCheck.message.includes("NetworkError") || firstCheck.message.includes("not resolved") || firstCheck.message.includes("Unable to query"))) {
+    // Supabase host is offline/unreachable - avoid blasting 9 more failing network requests
+    results = TABLES.map((item, idx) => idx === 0 ? firstCheck : ({
+      table: item.table,
+      count: 0,
+      ok: false,
+      warning: !item.critical,
+      message: "Supabase host unreachable.",
+    }));
+  } else {
+    const remainingChecks = await Promise.all(TABLES.slice(1).map((item) => checkTable(item.table, item.critical)));
+    results = [firstCheck, ...remainingChecks];
+  }
 
   const hasWarnings = results.some((result) => result.warning);
   const hasErrors = results.some((result) => !result.ok);
@@ -83,22 +99,13 @@ export async function runStartupHealthCheck(logToConsole = true): Promise<Startu
   };
 
   if (logToConsole && typeof console !== "undefined") {
-    const level = hasErrors ? "error" : hasWarnings ? "warn" : "log";
-    const title = hasErrors
-      ? "[Startup Health] Database connectivity issues detected"
-      : hasWarnings
-        ? "[Startup Health] Connected with warnings"
-        : "[Startup Health] All checks passed";
-
-    console[level](title);
-    console.table(
-      results.map((result) => ({
-        table: result.table,
-        count: result.count,
-        status: result.ok ? (result.warning ? "warning" : "ok") : "error",
-        message: result.message,
-      })),
-    );
+    if (hasErrors) {
+      console.warn("[Startup Health] Database host is currently unreachable (offline/paused)");
+    } else if (hasWarnings) {
+      console.warn("[Startup Health] Connected with warnings");
+    } else {
+      console.log("[Startup Health] All checks passed");
+    }
   }
 
   return report;

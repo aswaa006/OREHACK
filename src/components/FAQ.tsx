@@ -54,7 +54,7 @@ const FAQ = () => {
 
   return (
     <section
-      className="relative z-10 py-20 px-6 md:px-16 lg:px-32"
+      className="relative z-10 pt-32 pb-20 md:py-20 px-4 sm:px-6 md:px-16 lg:px-32"
       style={{
         background: sectionBg,
         transition: "background 0.5s ease",
@@ -66,7 +66,7 @@ const FAQ = () => {
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
         viewport={{ once: true }}
-        className="mb-20 text-center"
+        className="mb-14 md:mb-20 text-center"
       >
         <p
           className="text-xs font-bold uppercase tracking-[0.2em] mb-4 orehack-liquid-text"
@@ -75,7 +75,7 @@ const FAQ = () => {
           (TRUST THE BUILD)
         </p>
         <h2
-          className="text-3xl md:text-5xl font-black m-0 uppercase flex flex-row items-baseline justify-center gap-4 md:gap-6 italic whitespace-nowrap"
+          className="text-[clamp(1.2rem,5.4vw,2.25rem)] sm:text-3xl md:text-5xl font-black m-0 uppercase flex flex-row flex-wrap md:flex-nowrap items-baseline justify-center gap-2 sm:gap-3 md:gap-6 italic md:whitespace-nowrap w-full max-w-full px-2 md:px-0"
           style={{
             fontFamily: 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
             letterSpacing: "-0.04em",

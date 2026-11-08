@@ -27,7 +27,7 @@ const CurvedLoop = ({
       <span key={index}>
         {part}
         {index < parts.length - 1 && (
-          <span style={{ color: '#7c3aed', margin: '0 0.8em' }}>✦</span>
+          <span className="curved-loop-star">✦</span>
         )}
       </span>
     ));
