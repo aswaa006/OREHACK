@@ -73,16 +73,6 @@ const CSS = `
   --text:   #000000;
   --muted:  #6b7280;
 }
-.og-about.day-mode::before {
-  content: '';
-  position: absolute; inset: 0;
-  background-image:
-    linear-gradient(rgba(124, 58, 237, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(124, 58, 237, 0.04) 1px, transparent 1px);
-  background-size: 60px 60px;
-  pointer-events: none;
-  z-index: 0;
-}
 .day-mode .og-search {
   background: rgba(255,255,255,.9);
   border: 1px solid rgba(124,58,237,.15);
@@ -158,15 +148,6 @@ const CSS = `
 .day-mode .og-c-e .og-orbit-word {
   color: #ffffff !important;
   opacity: 0.4;
-}
-.og-about:not(.day-mode)::before {
-  content: '';
-  position: absolute; inset: 0;
-  background-image:
-    linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
-  background-size: 60px 60px;
-  pointer-events: none;
 }
 .og-wrap { max-width: 1400px; margin: 0 auto; position: relative; z-index: 1; }
 
@@ -440,20 +421,31 @@ const CSS = `
 
 /* ═══ DEV — code block (Card A) ═══ */
 .og-c-a { display: flex; flex-direction: column; }
-.og-c-a .og-inner { padding-bottom: 14px; flex-shrink: 0; border-bottom: 1px solid var(--border); height: auto; }
-.og-code-area { flex: 1; position: relative; overflow: hidden; }
-.og-code-border {
-  position: absolute; inset: 10px;
-  border: 1px solid rgba(86,156,214,.15);
-  border-radius: 8px; background: rgba(86,156,214,.02);
-  pointer-events: none;
+.og-c-a .og-inner { padding-bottom: 8px !important; flex-shrink: 0; border-bottom: none !important; height: auto; }
+.og-code-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  margin: 0 16px 16px 16px;
+  border: 1px solid rgba(86,156,214,.18);
+  border-radius: 10px;
+  background: rgba(86,156,214,.02);
+  display: flex;
+  flex-direction: column;
 }
+.og-code-border { display: none; }
 pre.og-code {
-  position: absolute; inset: 10px;
+  position: relative;
+  inset: auto;
+  flex: 1;
   font-family: 'Space Mono', monospace;
-  font-size: .6rem; line-height: 1.8; color: #5a6a7a;
-  white-space: pre; padding: 12px 14px;
-  overflow: hidden; pointer-events: none;
+  font-size: .65rem;
+  line-height: 1.7;
+  color: #5a6a7a;
+  white-space: pre;
+  padding: 10px 12px;
+  overflow: hidden;
+  pointer-events: none;
 }
 .kw  { color: #c586c0; }
 .tag { color: #569cd6; }
@@ -780,17 +772,162 @@ pre.og-code {
   100% { left: 180%; opacity: 0; }
 }
 
+/* ═══ ADD-ONS: Mobile Badges, Stats & Mac Header ═══ */
+.og-mobile-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #c4b5fd;
+  background: rgba(124, 58, 237, 0.12);
+  border: 1px solid rgba(124, 58, 237, 0.28);
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+  width: fit-content;
+}
+.og-mb-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #a855f7;
+  box-shadow: 0 0 8px #a855f7;
+}
+.day-mode .og-mobile-badge {
+  color: #6d28d9;
+  background: rgba(124, 58, 237, 0.08);
+  border-color: rgba(124, 58, 237, 0.2);
+}
+.og-analytics-stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  box-shadow: inset 0 0 15px rgba(124, 58, 237, 0.05);
+}
+.day-mode .og-analytics-stats {
+  background: rgba(124, 58, 237, 0.04);
+  border-color: rgba(124, 58, 237, 0.12);
+}
+.og-stat-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.og-stat-val {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #f3e8ff;
+  font-family: 'Space Mono', monospace;
+}
+.day-mode .og-stat-val {
+  color: #4c1d95;
+}
+.og-stat-sub {
+  font-size: 0.65rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.og-stat-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.1);
+}
+.day-mode .og-stat-divider {
+  background: rgba(124, 58, 237, 0.15);
+}
+.og-code-mac-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+.mac-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.mac-red { background: #ef4444; opacity: 0.8; }
+.mac-yellow { background: #eab308; opacity: 0.8; }
+.mac-green { background: #22c55e; opacity: 0.8; }
+.mac-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-left: 6px;
+}
+
 /* Responsive */
 @media(max-width:860px){
+  .og-zoom {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    padding-top: 24px !important;
+    padding-bottom: 40px !important;
+    max-width: 580px;
+    margin-left: auto;
+    margin-right: auto;
+  }
   .og-bento {
     grid-template-columns: 1fr;
     grid-template-rows: auto;
-    height: auto; gap: 8px;
+    height: auto;
+    gap: 20px;
+    margin-top: 10px;
   }
   .og-c-a,.og-c-b,.og-c-c,.og-c-d,.og-c-e,.og-c-f,.og-c-g {
     grid-column: 1 !important;
     grid-row: auto !important;
-    min-height: 240px;
+    min-height: auto;
+  }
+  .og-card {
+    border-radius: 20px;
+    border-color: rgba(124, 58, 237, 0.22) !important;
+    background: linear-gradient(180deg, rgba(16, 12, 26, 0.9) 0%, rgba(10, 10, 12, 0.98) 100%) !important;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.7), 0 0 20px rgba(124, 58, 237, 0.12) !important;
+  }
+  .og-about.day-mode .og-card {
+    background: #ffffff !important;
+    border-color: rgba(124, 58, 237, 0.16) !important;
+    box-shadow: 0 8px 30px rgba(124, 58, 237, 0.1) !important;
+  }
+  .og-inner {
+    padding: 22px 20px !important;
+  }
+  .og-title {
+    font-size: 1.18rem !important;
+    margin-bottom: 8px !important;
+  }
+  .og-desc {
+    font-size: 0.88rem !important;
+    line-height: 1.6 !important;
+  }
+  .og-c-a .og-inner {
+    padding-bottom: 4px !important;
+  }
+  .og-code-area {
+    margin: 0 14px 14px 14px !important;
+    min-height: 150px;
+  }
+  pre.og-code {
+    font-size: 11px !important;
+    line-height: 1.5 !important;
+    padding: 8px 10px !important;
+  }
+  .og-c-e {
+    min-height: 280px !important;
   }
 }
 `;
@@ -1281,17 +1418,23 @@ export default function AboutOregent() {
           </div>
         </motion.div>
 
-        <div className={`og-zoom${started ? " og-anim" : ""} px-6 md:px-16 lg:px-32 pt-32 pb-20`}>
+        <div className={`og-zoom${started ? " og-anim" : ""} px-4 sm:px-8 md:px-16 lg:px-32 pt-8 sm:pt-14 md:pt-32 pb-16`}>
           <div className="og-bento bento-section" ref={gridRef}>
 
             {/* ═══ A — Startup Development (col1 top, 50%) ═══ */}
             <BentoCard className="og-c-a og-tex" delay={0.36}>
               <div className="og-inner">
+                <div className="og-mobile-badge"><span className="og-mb-dot" /><span>ENGINEERING</span></div>
                 <div className="og-title">Startup Development</div>
                 <div className="og-desc">Build scalable and high-performing products with clean code.</div>
               </div>
               <div className="og-code-area">
-                <div className="og-code-border" />
+                <div className="og-code-mac-header">
+                  <span className="mac-dot mac-red" />
+                  <span className="mac-dot mac-yellow" />
+                  <span className="mac-dot mac-green" />
+                  <span className="mac-title">orehack-core.ts</span>
+                </div>
                 <pre className="og-code" ref={codeRef} />
               </div>
             </BentoCard>
@@ -1299,14 +1442,34 @@ export default function AboutOregent() {
             {/* ═══ B — Analytics & Growth (col2 top, 33%) ═══ */}
             <BentoCard className="og-c-b og-tex" delay={0.22}>
               <div className="og-inner">
+                <div className="og-mobile-badge"><span className="og-mb-dot" style={{ background: '#38bdf8', boxShadow: '0 0 8px #38bdf8' }} /><span>DECISION INTELLIGENCE</span></div>
                 <div className="og-title">Analytics &amp; Growth</div>
                 <div className="og-desc">Real-time dashboards built for decisions, not decoration. We build data science and AI analytics systems that surface what actually matters - grounded, explainable, and deployable. Connect your tools, surface insights, and ship faster without the noise.</div>
+
+                {/* Visual Add-on: Live Metrics Strip */}
+                <div className="og-analytics-stats">
+                  <div className="og-stat-chip">
+                    <span className="og-stat-val">99.8%</span>
+                    <span className="og-stat-sub">Precision</span>
+                  </div>
+                  <div className="og-stat-divider" />
+                  <div className="og-stat-chip">
+                    <span className="og-stat-val">&lt;45ms</span>
+                    <span className="og-stat-sub">Latency</span>
+                  </div>
+                  <div className="og-stat-divider" />
+                  <div className="og-stat-chip">
+                    <span className="og-stat-val">Live</span>
+                    <span className="og-stat-sub">Telemetry</span>
+                  </div>
+                </div>
               </div>
             </BentoCard>
 
             {/* ═══ C — Oregent Teach (Swapped to col3 top) ═══ */}
             <BentoCard className="og-c-c og-tex" delay={0.44}>
               <div className="og-inner">
+                <div className="og-mobile-badge"><span className="og-mb-dot" style={{ background: '#ec4899', boxShadow: '0 0 8px #ec4899' }} /><span>EDUCATION</span></div>
                 <div className="og-title">Oregent Teach</div>
                 <div className="og-desc">Oregent Teach (formerly EyeQ) - practical, project-based technical education, 40 active students.</div>
 
@@ -1320,6 +1483,7 @@ export default function AboutOregent() {
             {/* ═══ D — Our Team (col1 bottom, 50%) — orbit animation ═══ */}
             <BentoCard className="og-c-d og-tex" delay={0.36}>
               <div className="og-inner">
+                <div className="og-mobile-badge"><span className="og-mb-dot" /><span>CORE CREW</span></div>
                 <div className="og-title">Our Team</div>
                 <div className="og-desc">Core engineering team with hands-on experience in full-stack, mobile, agentic AI, RAG, and cybersecurity. Built to ship.</div>
               </div>
@@ -1372,6 +1536,7 @@ export default function AboutOregent() {
             {/* ═══ F — Product & Strategy (Swapped to col3 bottom) ═══ */}
             <BentoCard className="og-c-f og-tex" delay={0.44}>
               <div className="og-inner">
+                <div className="og-mobile-badge"><span className="og-mb-dot" style={{ background: '#8b5cf6', boxShadow: '0 0 8px #8b5cf6' }} /><span>LIFECYCLE</span></div>
                 <div className="og-title">Product &amp; Strategy</div>
                 <div className="og-desc" style={{ display: 'flex', flexDirection: 'column' }}>
                   <span>AI-driven product development, automation, and deployment.</span>
@@ -1404,6 +1569,7 @@ export default function AboutOregent() {
             {/* ═══ G — AI-Powered Insights (col2 bottom, 33%) — thinking dots + strip ═══ */}
             <BentoCard className="og-c-g og-tex" delay={0.28}>
               <div className="og-inner">
+                <div className="og-mobile-badge"><span className="og-mb-dot" style={{ background: '#c084fc', boxShadow: '0 0 8px #c084fc' }} /><span>RAG ARCHITECTURE</span></div>
                 <div className="og-title">AI-Powered Insights</div>
                 <div className="og-desc">RAG-based intelligence platforms combining structured and unstructured data. Enabling explainable, context-aware AI insights at scale.</div>
                 <div className="og-strip-wrap" ref={stripRef} data-hovered="false" onMouseEnter={onStripEnter} onMouseLeave={onStripLeave}>

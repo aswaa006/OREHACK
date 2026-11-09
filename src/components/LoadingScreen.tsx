@@ -23,7 +23,8 @@ const ORBITAL_WORDS = [
 ];
 
 export function LoadingScreen({ onReveal }: Props) {
-    const [phase, setPhase] = useState<Phase>('animating');
+    const isDirectOrehack = typeof window !== 'undefined' && window.location.pathname.startsWith('/orehack');
+    const [phase, setPhase] = useState<Phase>(() => isDirectOrehack ? 'done' : 'animating');
     const [statusIdx, setStatusIdx] = useState(0);
     const [glitchActive, setGlitchActive] = useState(false);
 
@@ -36,6 +37,10 @@ export function LoadingScreen({ onReveal }: Props) {
         })), []);
 
     useEffect(() => {
+        if (isDirectOrehack) {
+            onReveal();
+            return;
+        }
         /* Cycle through status messages */
         const msgInterval = setInterval(() => {
             setStatusIdx(prev => {

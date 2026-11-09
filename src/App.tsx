@@ -60,6 +60,11 @@ import ProblemStatementsOverview from "./pages/ProblemStatementsOverview";
 
 import HackathonsPage from "./pages/Hackathons";
 import ThePage from "./pages/ThePage";
+import OrehackAuth from "./pages/OrehackAuth";
+import OrehackWorkbench from "./pages/OrehackWorkbench";
+import OrehackAdmin from "./pages/OrehackAdmin";
+import OrehackJuryPortal from "./pages/OrehackJury";
+import OrehackLeaderboard from "./pages/OrehackLeaderboard";
 import { runStartupHealthCheck } from "@/lib/health-check";
 import { ThemeProvider } from "./context/ThemeContext";
 
@@ -148,7 +153,7 @@ const WatermarkManager = ({ logoRef }: { logoRef: React.RefObject<HTMLImageEleme
     };
   }, [location.pathname, isLandingPage, logoRef]);
 
-  const isHiddenPage = location.pathname === "/" || location.pathname === "/the";
+  const isHiddenPage = location.pathname === "/" || location.pathname === "/the" || location.pathname.startsWith("/orehack");
 
   return <LogoBackgroundWatermark imgRef={logoRef} hidden={isHiddenPage} />;
 };
@@ -231,6 +236,11 @@ const AnimatedRoutes = () => {
 
         <Route path="/hackathons" element={<HackathonsPage />} />
         <Route path="/the" element={<ThePage />} />
+        <Route path="/orehack" element={<OrehackAuth />} />
+        <Route path="/orehack/workbench" element={<OrehackWorkbench />} />
+        <Route path="/orehack/admin" element={<OrehackAdmin />} />
+        <Route path="/orehack/jury" element={<OrehackJuryPortal />} />
+        <Route path="/orehack/leaderboard" element={<OrehackLeaderboard />} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>
@@ -239,7 +249,12 @@ const AnimatedRoutes = () => {
 };
 
 const App = () => {
-  const [isRevealed, setIsRevealed] = useState(false);
+  const [isRevealed, setIsRevealed] = useState(() => {
+    if (typeof window !== "undefined" && window.location.pathname.startsWith("/orehack")) {
+      return true;
+    }
+    return false;
+  });
   const logoRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {

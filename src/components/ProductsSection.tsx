@@ -243,6 +243,140 @@ const ProductsSection: React.FC = () => {
             ))}
           </div>
         </div>
+
+        {/* ── Second Product Card Container: OREGENT EDGE (Same ratio and layout) ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          viewport={{ once: true }}
+          className="relative rounded-[24px] md:rounded-[32px] p-2.5 sm:p-3.5 md:p-5 border border-white/10 mt-10 md:mt-14"
+          style={{
+            background: isDayMode ? "#f4f4f5" : "#0d0d0f",
+            boxShadow: isDayMode
+              ? "0 16px 40px rgba(0,0,0,0.06)"
+              : "0 20px 60px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08)",
+          }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 md:gap-5 items-stretch">
+            {/* ── Left Space: White Background with Blue Text ── */}
+            <div
+              className="md:col-span-5 lg:col-span-4 rounded-[18px] md:rounded-[24px] p-4 sm:p-6 lg:p-7 flex flex-col justify-between h-full"
+              style={{
+                background: "#ffffff",
+                boxShadow: "0 10px 28px rgba(0,0,0,0.1)",
+              }}
+            >
+              <div>
+                {/* Product Logo / Monogram */}
+                <div className="mb-3 sm:mb-4 flex items-center justify-center">
+                  <img
+                    src="/logofull.png"
+                    alt="OREGENT EDGE"
+                    className="h-14 sm:h-16 md:h-20 w-auto object-contain object-center"
+                  />
+                </div>
+
+                {/* Content description */}
+                <p
+                  className="text-[#0a2540] text-xs sm:text-[0.85rem] lg:text-[0.88rem] leading-relaxed font-normal"
+                  style={{ fontFamily: "'Outfit', sans-serif" }}
+                >
+                  <strong className="font-extrabold text-[#024cfd]">OREGENT EDGE</strong> is
+                  designed to transform how builders master technology. We don't just teach
+                  technology—we cultivate thinkers who solve real-world problems and build
+                  products that create impact via hackathons. A modern learning ecosystem
+                  bridging ideas, industry, and technology to train and prepare builders for
+                  hackathon excellence.
+                </p>
+              </div>
+
+              {/* Metric / Highlight Block + CTA Button */}
+              <div className="mt-4 pt-3.5 border-t border-[#024cfd]/15">
+                <div className="mb-3.5">
+                  <div
+                    className="text-2xl sm:text-3xl font-black text-[#024cfd] tracking-tight leading-none"
+                    style={{
+                      fontFamily:
+                        'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
+                    }}
+                  >
+                    HACKATHON-READY
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#024cfd]/80 mt-1">
+                    Hands-On Learning Ecosystem
+                  </div>
+                </div>
+
+                <a
+                  href="https://edge.oregent.in"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 bg-[#024cfd] hover:bg-[#013ed6] text-white px-5 py-2 rounded-full text-xs font-bold tracking-wide shadow-sm hover:shadow-md transition-all duration-300 group"
+                >
+                  <span>Visit</span>
+                  <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </a>
+              </div>
+            </div>
+
+            {/* ── Right Space: Image Showcase (Full Height Flush) ── */}
+            <div
+              className="md:col-span-7 lg:col-span-8 rounded-[18px] md:rounded-[24px] overflow-hidden relative flex items-center justify-center h-full min-h-[280px] sm:min-h-[340px] md:min-h-full border border-white/5"
+              style={{
+                background: isDayMode ? "#e4e4e7" : "#050507",
+              }}
+            >
+              <img
+                src="/Neon OREGENT EDGE Learning Poster.png"
+                alt="OREGENT EDGE Learning Poster"
+                className="w-full h-full object-cover object-center rounded-[16px] md:rounded-[22px] transform transition-transform duration-700 hover:scale-[1.02]"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ── Running Website URL Marquee for Oregent Edge (edge.oregent.in) ── */}
+        <div
+          className="relative w-full overflow-hidden mt-5 md:mt-7 py-2.5 border-y border-white/10"
+          style={{
+            maskImage:
+              "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+            WebkitMaskImage:
+              "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+          }}
+        >
+          <div className="animate-url-scroll items-center gap-8 md:gap-12 whitespace-nowrap">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <a
+                key={i}
+                href="https://edge.oregent.in"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2.5 text-xs sm:text-sm md:text-base font-semibold tracking-wider transition-opacity duration-200 hover:opacity-100 opacity-90 group cursor-pointer"
+                style={{ fontFamily: "'JetBrains Mono', monospace" }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-[#024cfd] shadow-[0_0_8px_#024cfd]" />
+                <span className="text-[#024cfd] font-black group-hover:text-[#38bdf8] transition-colors">
+                  edge
+                </span>
+                <span
+                  className={
+                    isDayMode
+                      ? "text-black/80 font-bold"
+                      : "text-white/95 font-bold"
+                  }
+                >
+                  .oregent.in
+                </span>
+                <span className="text-[#024cfd] text-xs opacity-80 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-200">
+                  ↗
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

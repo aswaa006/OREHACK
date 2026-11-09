@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
 import emailjs from "@emailjs/browser";
 import { useTheme } from "@/context/ThemeContext";
 import BlurText from "./BlurText";
+import OregentFacts from "./OregentFacts";
 
 // ✅ Fill in your EmailJS credentials below
 const EMAILJS_SERVICE_ID = "service_2ao7hsi";   // e.g. "service_abc123"
@@ -27,38 +27,6 @@ const itemVariants = {
     rotateX: 0,
     transition: { type: "spring" as const, stiffness: 100, damping: 15 },
   },
-};
-
-const FloatingOrb = ({ delay, size, x, y, color }: { delay: number; size: number; x: string; y: string; color: string }) => (
-  <motion.div
-    className={`absolute rounded-full ${color} blur-[120px] pointer-events-none`}
-    style={{ width: size, height: size, left: x, top: y }}
-    animate={{
-      scale: [1, 1.2, 1],
-      opacity: [0.15, 0.3, 0.15],
-      x: [0, 30, -20, 0],
-      y: [0, -20, 15, 0],
-    }}
-    transition={{
-      duration: 8,
-      repeat: Infinity,
-      delay,
-      ease: "easeInOut",
-    }}
-  />
-);
-
-const GridLine = ({ vertical = false, color = "bg-primary/5", isHidden = false }) => {
-  if (isHidden) return null;
-  return (
-    <div
-      className={`absolute ${vertical ? "w-px h-full" : "h-px w-full"} ${color}`}
-      style={{
-        left: vertical ? `${Math.random() * 100}%` : 0,
-        top: vertical ? 0 : `${Math.random() * 100}%`,
-      }}
-    />
-  );
 };
 
 const Contact = () => {
@@ -147,15 +115,13 @@ const Contact = () => {
     <section
       id="contact"
       ref={ref}
-      className="relative pt-12 pb-0 overflow-hidden"
-      style={{ transition: "background 0.5s ease" }}
+      className={`relative pt-12 pb-0 overflow-hidden ${isDayMode ? "bg-white" : "bg-black"}`}
+      style={{
+        backgroundColor: isDayMode ? "#ffffff" : "#000000",
+        background: isDayMode ? "#ffffff" : "#000000",
+        transition: "background 0.5s ease",
+      }}
     >
-      {/* Animated background */}
-      <FloatingOrb delay={0} size={400} x="10%" y="20%" color="bg-primary/20" />
-      <FloatingOrb delay={2} size={300} x="70%" y="60%" color="bg-pink-500/15" />
-      <FloatingOrb delay={4} size={250} x="50%" y="10%" color="bg-blue-500/10" />
-      <FloatingOrb delay={3} size={200} x="80%" y="15%" color="bg-indigo-500/10" />
-      {/* Grid lines decoration */}
       {/* Perspective container for 3D feel */}
       <div className="relative z-10 container mx-auto px-6 max-w-7xl" style={{ perspective: "1200px" }}>
 
@@ -169,7 +135,7 @@ const Contact = () => {
           >
             {/* Doodle-style Illustration */}
             <div className="relative w-full max-w-[380px]">
-              <svg viewBox="0 0 500 400" className="w-full h-auto drop-shadow-2xl">
+              <svg viewBox="0 0 500 400" className="w-full h-auto">
                 <defs>
                   <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" style={{ stopColor: '#7c3aed', stopOpacity: 1 }} />
@@ -177,10 +143,10 @@ const Contact = () => {
                   </linearGradient>
                 </defs>
                 {/* Laptop Body */}
-                <rect x="100" y="200" width="300" height="180" rx="20" fill={isDayMode ? "#f3f4f6" : "#1f2937"} stroke="url(#purpleGrad)" strokeWidth="3" />
-                <rect x="115" y="215" width="270" height="150" rx="10" fill={isDayMode ? "#fff" : "#0f172a"} />
+                <rect x="100" y="200" width="300" height="180" rx="20" fill={isDayMode ? "#f3f4f6" : "#0d0c12"} stroke="url(#purpleGrad)" strokeWidth="3" />
+                <rect x="115" y="215" width="270" height="150" rx="10" fill={isDayMode ? "#fff" : "#000000"} />
                 {/* Base */}
-                <path d="M80 380 L420 380 L440 400 L60 400 Z" fill={isDayMode ? "#e5e7eb" : "#374151"} stroke="url(#purpleGrad)" strokeWidth="2" />
+                <path d="M80 380 L420 380 L440 400 L60 400 Z" fill={isDayMode ? "#e5e7eb" : "#14131a"} stroke="url(#purpleGrad)" strokeWidth="2" />
 
                 {/* Flying Elements */}
                 <motion.g animate={{ y: [0, -15, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}>
@@ -248,7 +214,7 @@ const Contact = () => {
                   key={idx}
                   whileHover={{ x: 8 }}
                   onClick={() => setFormState({ ...formState, category: item })}
-                  className="flex items-center gap-2.5 p-1.5 rounded-xl cursor-pointer transition-all duration-300 border border-transparent hover:border-primary/20"
+                  className="relative flex items-center gap-2.5 p-1.5 rounded-xl cursor-pointer transition-all duration-300 border border-transparent hover:border-primary/20"
                   style={{
                     background: formState.category === item ? "rgba(124, 58, 237, 0.1)" : "transparent"
                   }}
@@ -262,13 +228,6 @@ const Contact = () => {
                       <Plus size={20} strokeWidth={2.5} />
                     </motion.div>
                   </div>
-                  {formState.category === item && (
-                    <motion.div
-                      layoutId="categoryFly"
-                      className="absolute inset-0 bg-primary/5 rounded-xl -z-10"
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    />
-                  )}
                 </motion.div>
               ))}
             </div>
@@ -316,11 +275,6 @@ const Contact = () => {
                     {/* Selected Category Display */}
                     <div className="relative">
                       <label className="block text-sm font-bold uppercase tracking-wider mb-2 opacity-60" style={{ color: headingColor }}>Selected Category</label>
-                      <motion.div
-                        layoutId="categoryFly"
-                        className="absolute inset-x-0 bottom-0 top-7 bg-primary/5 rounded-xl pointer-events-none -z-10"
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                      />
                       <div
                         className="w-full px-4 py-3 rounded-xl transition-all duration-300 font-bold flex items-center uppercase tracking-wider text-sm"
                         style={{
@@ -405,6 +359,9 @@ const Contact = () => {
         </div>
       </div>
 
+      {/* ── Oregent Facts / Capabilities Section (Last Section) ── */}
+      <OregentFacts />
+
       {/* ── Footer (embedded to avoid spacing gap) ─────────────────── */}
       <div
         className="relative z-10 mt-12 pt-12 pb-0 overflow-hidden"
@@ -416,7 +373,7 @@ const Contact = () => {
       >
         <div className="container mx-auto px-6">
           {/* Top section: Navigation + Social */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-10 mb-10">
             {/* Navigation */}
             <div>
               <h4
@@ -427,54 +384,36 @@ const Contact = () => {
               </h4>
               <ul className="space-y-3">
                 {[
-                  { label: "Home", id: "home", type: "scroll" },
-                  { label: "Empower", id: "how-it-works", type: "scroll" },
-                  { label: "About", id: "about", type: "scroll" },
-                  { label: "Contact", id: "contact", type: "scroll" },
-                  { label: "Hackathons", id: "hackathons", type: "link", path: "/hackathons" },
-                  { label: "T-H-E", id: "the", type: "link", path: "/the" },
+                  { label: "Home", id: "home" },
+                  { label: "Empower", id: "how-it-works" },
+                  { label: "About", id: "about" },
+                  { label: "Contact", id: "contact" },
                 ].map((link) => (
                   <li key={link.id}>
-                    {link.type === "scroll" ? (
-                      <button
-                        onClick={() => {
-                          const el = document.getElementById(link.id);
-                          const isMobile = window.innerWidth <= 768;
-                          if (el) {
-                            el.scrollIntoView({ behavior: isMobile ? "auto" : "smooth" });
-                          } else {
-                            window.location.href = `/#${link.id}`;
-                          }
-                        }}
-                        style={{
-                          transition: "all 0.3s ease",
-                          color: isDayMode ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.8)",
-                          background: "none",
-                          border: "none",
-                          padding: 0,
-                          cursor: "pointer"
-                        }}
-                        className="text-base"
-                        onMouseEnter={(e) => (e.currentTarget.style.color = footerLinkHover)}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = isDayMode ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.8)")}
-                      >
-                        {link.label}
-                      </button>
-                    ) : (
-                      <Link
-                        to={link.path!}
-                        style={{
-                          transition: "all 0.3s ease",
-                          color: isDayMode ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.8)",
-                          textDecoration: "none"
-                        }}
-                        className="text-base block"
-                        onMouseEnter={(e) => (e.currentTarget.style.color = footerLinkHover)}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = isDayMode ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.8)")}
-                      >
-                        {link.label}
-                      </Link>
-                    )}
+                    <button
+                      onClick={() => {
+                        const el = document.getElementById(link.id);
+                        const isMobile = window.innerWidth <= 768;
+                        if (el) {
+                          el.scrollIntoView({ behavior: isMobile ? "auto" : "smooth" });
+                        } else {
+                          window.location.href = `/#${link.id}`;
+                        }
+                      }}
+                      style={{
+                        transition: "all 0.3s ease",
+                        color: isDayMode ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.8)",
+                        background: "none",
+                        border: "none",
+                        padding: 0,
+                        cursor: "pointer"
+                      }}
+                      className="text-base"
+                      onMouseEnter={(e) => (e.currentTarget.style.color = footerLinkHover)}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = isDayMode ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.8)")}
+                    >
+                      {link.label}
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -515,7 +454,7 @@ const Contact = () => {
               </ul>
             </div>
 
-            <div className="flex flex-col items-center gap-4 origin-left">
+            <div className="col-span-2 md:col-span-1 flex flex-col items-center justify-center gap-4 pt-6 md:pt-0">
               <img
                 src={isDayMode ? "/oregent logo black.png" : "/oregent-logo.png"}
                 alt="Oregent"
