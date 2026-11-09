@@ -13,7 +13,6 @@ import {
   Code2,
   Sparkles,
   HelpCircle,
-  Edit3,
   Layers,
   Lock,
 } from "lucide-react";
@@ -496,14 +495,9 @@ export default function OrehackWorkbench() {
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <button
-                        onClick={() => setIsSubmitted(false)}
-                        className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors flex items-center justify-center gap-1.5"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                        <span>Update Repository URL</span>
-                      </button>
+                    <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center gap-2 text-xs text-emerald-300">
+                      <Lock className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Repository locked for evaluation</span>
                     </div>
                   </motion.div>
                 )}

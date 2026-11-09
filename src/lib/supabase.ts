@@ -1,10 +1,17 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+// Guaranteed fallback to Code Clash 2026 Supabase instance
+const supabaseUrl =
+  import.meta.env.VITE_SUPABASE_URL ||
+  "https://eezidlqxekfcnvtpfdox.supabase.co";
 
-if (!supabaseUrl || !supabaseAnonKey) {
-	throw new Error('Missing Supabase environment variables: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are required.');
-}
+const supabaseAnonKey =
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  "sb_publishable_5Z2_0jX5s9UnekCUBYhm0g_jN7aKuzh";
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+});
