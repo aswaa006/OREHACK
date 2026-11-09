@@ -1,5 +1,5 @@
 -- ==============================================================================
--- CODE CLASH 2026 - PRODUCTION DATABASE SCHEMA & POLICIES (CLEAN - NO MOCK DATA)
+-- CODE CLASH 2026 - PRODUCTION DATABASE SCHEMA & POLICIES (COMPLETE)
 -- Run in your Supabase SQL Editor:
 -- https://supabase.com/dashboard/project/eezidlqxekfcnvtpfdox/sql
 -- ==============================================================================
@@ -39,14 +39,33 @@ CREATE TABLE IF NOT EXISTS public.orehack_teams (
     problem_statement TEXT DEFAULT 'Emergency Response & Disaster Management Platform',
     repo_link TEXT,
     branch VARCHAR(50) DEFAULT 'main',
+    
+    -- Legacy / general jury assignment
     assigned_jury_id VARCHAR(50),
     assigned_jury_name VARCHAR(100),
+    
+    -- Round-wise jury assignments
+    assigned_jury_r1_id VARCHAR(50),
+    assigned_jury_r1_name VARCHAR(100),
+    assigned_jury_r2_id VARCHAR(50),
+    assigned_jury_r2_name VARCHAR(100),
+    assigned_jury_sidequest_id VARCHAR(50),
+    assigned_jury_sidequest_name VARCHAR(100),
+
+    -- Round-wise scores
     r1_score NUMERIC(5,2) DEFAULT 0,       -- Max 35
     r2_jury_score NUMERIC(5,2) DEFAULT 0,  -- Max 50
     r2_tool_score NUMERIC(5,2) DEFAULT 0,  -- Out of 30, contributes 30% in R2
     r2_score NUMERIC(5,2) DEFAULT 0,       -- Final R2 score (Max 50)
     sidequest_score NUMERIC(5,2) DEFAULT 0,-- Max 25
     total_score NUMERIC(5,2) DEFAULT 0,    -- Grand Total (Max 110)
+
+    -- Full rubrics breakdown and tool evaluation details
+    r1_breakdown JSONB DEFAULT '{}'::jsonb,
+    r2_breakdown JSONB DEFAULT '{}'::jsonb,
+    sidequest_breakdown JSONB DEFAULT '{}'::jsonb,
+    tool_evaluation JSONB DEFAULT '{}'::jsonb,
+
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -67,13 +86,24 @@ CREATE TABLE IF NOT EXISTS public.orehack_evaluations (
     CONSTRAINT unique_team_jury_round UNIQUE (team_name, jury_id, round)
 );
 
--- 5. ENABLE ROW LEVEL SECURITY
+-- 5. ADMIN USERS TABLE (Dynamic credentials)
+CREATE TABLE IF NOT EXISTS public.orehack_admins (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(100) NOT NULL,
+    role VARCHAR(50) DEFAULT 'superadmin',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 6. ENABLE ROW LEVEL SECURITY
 ALTER TABLE public.orehack_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orehack_jury ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orehack_teams ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orehack_evaluations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.orehack_admins ENABLE ROW LEVEL SECURITY;
 
--- 6. PUBLIC ACCESS POLICIES (anon client)
+-- 7. PUBLIC ACCESS POLICIES (anon client)
 DROP POLICY IF EXISTS "Allow public on orehack_settings" ON public.orehack_settings;
 CREATE POLICY "Allow public on orehack_settings" ON public.orehack_settings FOR ALL USING (true) WITH CHECK (true);
 
@@ -86,12 +116,15 @@ CREATE POLICY "Allow public on orehack_teams" ON public.orehack_teams FOR ALL US
 DROP POLICY IF EXISTS "Allow public on orehack_evaluations" ON public.orehack_evaluations;
 CREATE POLICY "Allow public on orehack_evaluations" ON public.orehack_evaluations FOR ALL USING (true) WITH CHECK (true);
 
--- 7. CLEAN EXISTING MOCK DATA
-DELETE FROM public.orehack_evaluations;
-DELETE FROM public.orehack_teams;
-DELETE FROM public.orehack_jury;
+DROP POLICY IF EXISTS "Allow public on orehack_admins" ON public.orehack_admins;
+CREATE POLICY "Allow public on orehack_admins" ON public.orehack_admins FOR ALL USING (true) WITH CHECK (true);
 
--- 8. SEED CLEAN EVENT CONFIGURATION
+-- 8. SEED ADMIN CREDENTIALS (admin / coboorehack)
+INSERT INTO public.orehack_admins (username, password, role)
+VALUES ('admin', 'coboorehack', 'superadmin')
+ON CONFLICT (username) DO UPDATE SET password = EXCLUDED.password, updated_at = NOW();
+
+-- 9. SEED CLEAN EVENT CONFIGURATION
 INSERT INTO public.orehack_settings (
     id, 
     submissions_open, 

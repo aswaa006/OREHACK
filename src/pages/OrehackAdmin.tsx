@@ -58,6 +58,9 @@ import {
   clearTeamEvaluationStatus,
   DEFAULT_COMMON_PROBLEM_STATEMENT,
   DEFAULT_COMMON_PROBLEM_DESCRIPTION,
+  checkSupabaseConnection,
+  OREHACK_SQL_SCHEMA,
+  authenticateOrehackAdmin,
   OrehackTeam,
   OrehackJury,
   OrehackEvaluation,
@@ -70,6 +73,7 @@ export default function OrehackAdmin() {
   const [adminUsername, setAdminUsername] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
   const [authError, setAuthError] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Data states
   const [settings, setSettings] = useState<OrehackEventSettings>({
@@ -117,6 +121,15 @@ export default function OrehackAdmin() {
   const [selectedTeamForToolAudit, setSelectedTeamForToolAudit] = useState<OrehackTeam | null>(null);
   const [isToolAuditModalOpen, setIsToolAuditModalOpen] = useState(false);
   const toolScoreFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Supabase cloud database health check
+  const [dbHealth, setDbHealth] = useState<{
+    connected: boolean;
+    tablesExist: boolean;
+    error?: string;
+    url: string;
+  } | null>(null);
+  const [isSqlModalOpen, setIsSqlModalOpen] = useState(false);
 
   // Form states
   const [teamForm, setTeamForm] = useState<Partial<OrehackTeam>>({
@@ -172,7 +185,7 @@ export default function OrehackAdmin() {
     const searchParams = new URLSearchParams(window.location.search);
     const isAuthed =
       sessionStorage.getItem("orehack_admin_session") === "true" ||
-      searchParams.get("key") === "cobotex2026";
+      searchParams.get("key") === "coboorehack";
     if (isAuthed) {
       setIsAdminAuthenticated(true);
       sessionStorage.setItem("orehack_admin_session", "true");
@@ -181,33 +194,42 @@ export default function OrehackAdmin() {
   }, []);
 
   const loadAllData = async () => {
-    const [fetchedSettings, fetchedTeams, fetchedJury, fetchedEvals] = await Promise.all([
+    const [fetchedSettings, fetchedTeams, fetchedJury, fetchedEvals, health] = await Promise.all([
       getEventSettings(),
       getAllTeams(),
       getAllJury(),
       getAllEvaluations(),
+      checkSupabaseConnection(),
     ]);
     setSettings(fetchedSettings);
     setTeams(fetchedTeams);
     setJuryList(fetchedJury);
     setEvaluations(fetchedEvals);
+    setDbHealth(health);
     setPsTitle(fetchedSettings.common_problem_statement || DEFAULT_COMMON_PROBLEM_STATEMENT);
     setPsDescription(fetchedSettings.common_problem_description || DEFAULT_COMMON_PROBLEM_DESCRIPTION);
   };
 
-  const handleAdminLogin = (e: React.FormEvent) => {
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      (adminUsername.trim() === "admin" || adminUsername.trim() === "orehack") &&
-      adminPassword.trim() === "cobotex2026"
-    ) {
-      setIsAdminAuthenticated(true);
-      sessionStorage.setItem("orehack_admin_session", "true");
-      toast.success("Admin access granted.");
-      loadAllData();
-    } else {
-      setAuthError("Invalid Admin credentials. (Default: admin / cobotex2026)");
-      toast.error("Invalid credentials.");
+    setIsLoggingIn(true);
+    setAuthError("");
+    try {
+      const res = await authenticateOrehackAdmin(adminUsername, adminPassword);
+      if (res.success) {
+        setIsAdminAuthenticated(true);
+        sessionStorage.setItem("orehack_admin_session", "true");
+        toast.success("Admin access granted.");
+        await loadAllData();
+      } else {
+        setAuthError(res.error || "Invalid Admin username or passkey.");
+        toast.error(res.error || "Invalid credentials.");
+      }
+    } catch (err: any) {
+      setAuthError("Failed to authenticate. Please check connection.");
+      toast.error("Authentication error.");
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -794,9 +816,10 @@ export default function OrehackAdmin() {
             </div>
             <button
               type="submit"
-              className="w-full py-3.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] hover:from-[#8b5cf6] hover:to-[#7c3aed] shadow-lg transition-all"
+              disabled={isLoggingIn}
+              className="w-full py-3.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] hover:from-[#8b5cf6] hover:to-[#7c3aed] shadow-lg transition-all disabled:opacity-50"
             >
-              Access Control Deck →
+              {isLoggingIn ? "Verifying Credentials..." : "Access Control Deck →"}
             </button>
           </form>
 
@@ -868,6 +891,64 @@ export default function OrehackAdmin() {
 
       {/* ── Main Dashboard Container ── */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* ── Supabase Database Status / Warning Banner ── */}
+        {dbHealth && !dbHealth.tablesExist && (
+          <div className="p-4 sm:p-5 rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-950/40 via-amber-900/20 to-black/60 backdrop-blur-md shadow-lg shadow-amber-950/20">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 shrink-0">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-bold text-amber-200 text-sm">
+                      Supabase Cloud Database Tables Not Created
+                    </h4>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      PGRST205: Tables Missing
+                    </span>
+                  </div>
+                  <p className="text-xs text-amber-300/80 mt-1 max-w-2xl leading-relaxed">
+                    Data currently persists only in this browser's local memory. To sync teams, jury scores, and the leaderboard across all devices on <span className="underline font-mono text-white">oregent.in</span>, copy and execute the SQL schema in your Supabase SQL Editor.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <button
+                  onClick={() => setIsSqlModalOpen(true)}
+                  className="px-3.5 py-2 text-xs font-bold rounded-xl bg-amber-500/20 text-amber-200 border border-amber-500/40 hover:bg-amber-500/30 transition-all flex items-center gap-1.5 shadow-sm"
+                >
+                  <FileText className="w-3.5 h-3.5" /> View / Copy SQL
+                </button>
+                <a
+                  href="https://supabase.com/dashboard/project/eezidlqxekfcnvtpfdox/sql"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3.5 py-2 text-xs font-bold rounded-xl bg-purple-600 hover:bg-purple-500 text-white transition-all flex items-center gap-1.5 shadow-md shadow-purple-600/20"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" /> Open Supabase SQL Editor ↗
+                </a>
+                <button
+                  onClick={async () => {
+                    const h = await checkSupabaseConnection();
+                    setDbHealth(h);
+                    if (h.tablesExist) {
+                      toast.success("Supabase tables detected! Cloud sync active.");
+                      loadAllData();
+                    } else {
+                      toast.error("Tables still not found in Supabase schema. Make sure you clicked 'Run' in Supabase SQL editor.");
+                    }
+                  }}
+                  className="p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-white/80 hover:text-white transition-all"
+                  title="Re-check Supabase Connection"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {/* ── Event Orchestration & Master Switches ── */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Submissions Switch */}
@@ -3049,6 +3130,67 @@ export default function OrehackAdmin() {
                 >
                   Close Audit Details
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* ── SQL Schema Migration Modal ── */}
+        {isSqlModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-3xl max-h-[85vh] p-6 rounded-3xl bg-[#0e0c18] border border-white/10 shadow-2xl flex flex-col space-y-4"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                <div className="flex items-center gap-2.5">
+                  <FileText className="w-5 h-5 text-purple-400" />
+                  <div>
+                    <h3 className="text-base font-bold text-white">Supabase SQL Schema</h3>
+                    <p className="text-xs text-zinc-400">Run this in your Supabase SQL Editor once to set up all tables and policies.</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsSqlModalOpen(false)}
+                  className="p-1 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-auto bg-black/60 p-4 rounded-xl border border-white/5 font-mono text-[11px] text-zinc-300 leading-relaxed max-h-[50vh]">
+                <pre>{OREHACK_SQL_SCHEMA}</pre>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                <a
+                  href="https://supabase.com/dashboard/project/eezidlqxekfcnvtpfdox/sql"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs text-purple-300 hover:text-white inline-flex items-center gap-1 underline"
+                >
+                  Open Supabase SQL Editor (eezidlqxekfcnvtpfdox) ↗
+                </a>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(OREHACK_SQL_SCHEMA);
+                      toast.success("SQL script copied to clipboard! Paste it into Supabase SQL Editor and click 'Run'.");
+                    }}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white transition-all shadow-md shadow-purple-600/30 flex items-center gap-1.5"
+                  >
+                    <span>📋 Copy SQL to Clipboard</span>
+                  </button>
+                  <button
+                    onClick={() => setIsSqlModalOpen(false)}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>
