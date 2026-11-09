@@ -237,7 +237,7 @@ const HeroSection = () => {
 
         <div className="flex items-center gap-4 pt-10">
           <button
-            onClick={scrollToHackathons}
+            onClick={() => navigate("/orehack")}
             className="group relative inline-flex items-center gap-3 px-8 py-3 rounded-full overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-lg active:scale-[0.98]"
             style={{
               fontFamily: "'Outfit', 'Inter', sans-serif",

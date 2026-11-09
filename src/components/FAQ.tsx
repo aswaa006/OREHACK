@@ -54,7 +54,7 @@ const FAQ = () => {
 
   return (
     <section
-      className="relative z-10 pt-32 pb-20 md:py-20 px-4 sm:px-6 md:px-16 lg:px-32"
+      className="relative z-10 pt-12 sm:pt-16 md:py-24 pb-16 md:pb-24 px-5 sm:px-8 md:px-16 lg:px-32"
       style={{
         background: sectionBg,
         transition: "background 0.5s ease",
@@ -66,7 +66,7 @@ const FAQ = () => {
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
         viewport={{ once: true }}
-        className="mb-14 md:mb-20 text-center"
+        className="mb-10 sm:mb-14 md:mb-20 text-center max-w-2xl mx-auto"
       >
         <p
           className="text-xs font-bold uppercase tracking-[0.2em] mb-4 orehack-liquid-text"
@@ -98,7 +98,7 @@ const FAQ = () => {
           </span>
         </h2>
 
-        <div style={{ position: "relative", marginTop: "2.5rem", height: "2px" }}>
+        <div style={{ position: "relative", marginTop: "2rem", height: "2px" }}>
           <div style={{
             width: "100%",
             height: "1px",
@@ -118,7 +118,7 @@ const FAQ = () => {
         </div>
 
         <p 
-          className="text-base max-w-xl mx-auto italic mt-8"
+          className="text-sm sm:text-base max-w-xl mx-auto italic mt-6 md:mt-8 px-2"
           style={{
             fontFamily: 'ui-serif, Georgia, serif',
             color: subtitleColor,
@@ -129,9 +129,9 @@ const FAQ = () => {
         </p>
       </motion.div>
 
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-2xl sm:max-w-3xl mx-auto w-full px-1 sm:px-4">
         {/* Accordion List */}
-        <div className="space-y-4">
+        <div className="space-y-1 sm:space-y-2">
           {faqs.map((faq, index) => (
             <motion.div
               key={index}
@@ -143,10 +143,10 @@ const FAQ = () => {
             >
               <button
                 onClick={() => toggleFAQ(index)}
-                className="w-full py-6 flex items-center justify-between text-left group transition-all duration-300"
+                className="w-full py-5 sm:py-6 flex items-center justify-between text-left gap-4 group transition-all duration-300"
               >
                 <span 
-                  className="text-lg md:text-xl font-medium transition-colors duration-300"
+                  className="text-base sm:text-lg md:text-xl font-medium transition-colors duration-300 pr-2 leading-snug"
                   style={{
                     fontFamily: "'Outfit', sans-serif",
                     color: openIndex === index ? "#7c3aed" : questionColor,
@@ -161,7 +161,7 @@ const FAQ = () => {
                   {faq.question}
                 </span>
                 <div
-                  className="transition-transform duration-500 scale-125"
+                  className="flex-shrink-0 transition-transform duration-500 scale-110 sm:scale-125"
                   style={{
                     color: openIndex === index ? "#7c3aed" : iconColor,
                     transform: openIndex === index ? "rotate(180deg)" : "none",
@@ -181,7 +181,7 @@ const FAQ = () => {
                     className="overflow-hidden"
                   >
                     <p 
-                      className="pb-6 text-base leading-relaxed italic max-w-2xl"
+                      className="pt-1 pb-5 sm:pb-6 text-sm sm:text-base leading-relaxed italic max-w-2xl pr-4"
                       style={{
                         fontFamily: 'ui-serif, Georgia, serif',
                         color: answerColor,
